@@ -1,0 +1,283 @@
+From 1cde148be41829c17d94a6b2d4b39e502b01f388 Mon Sep 17 00:00:00 2001
+From: ian <ian.t.roy@gmail.com>
+Date: Mon, 3 Dec 2012 14:26:01 -0500
+Subject: [PATCH] Patch Set 1/2: Add an "Automatically Connect" option for
+ WiFi networks Updated white spaces
+
+Change-Id: I80c7a698de183691094352367913cc73f2863810
+---
+ wifi/java/android/net/wifi/WifiConfigStore.java   |   58 ++++++++++++++++++++-
+ wifi/java/android/net/wifi/WifiConfiguration.java |   15 ++++++
+ wifi/java/android/net/wifi/WifiManager.java       |    8 +++
+ wifi/java/android/net/wifi/WifiStateMachine.java  |    1 +
+ 4 files changed, 80 insertions(+), 2 deletions(-)
+
+diff --git a/wifi/java/android/net/wifi/WifiConfigStore.java b/wifi/java/android/net/wifi/WifiConfigStore.java
+index e9f3480..9c4eede 100644
+--- a/wifi/java/android/net/wifi/WifiConfigStore.java
++++ b/wifi/java/android/net/wifi/WifiConfigStore.java
+@@ -141,6 +141,7 @@ class WifiConfigStore {
+     private static final String PROXY_PORT_KEY = "proxyPort";
+     private static final String EXCLUSION_LIST_KEY = "exclusionList";
+     private static final String EOS = "eos";
++    private static final String AUTO_CONNECT_KEY = "autoConnect";
+ 
+     private WifiNative mWifiNative;
+ 
+@@ -178,7 +179,7 @@ class WifiConfigStore {
+     void enableAllNetworks() {
+         boolean networkEnabledStateChanged = false;
+         for(WifiConfiguration config : mConfiguredNetworks.values()) {
+-            if(config != null && config.status == Status.DISABLED) {
++            if(config != null && config.status == Status.DISABLED && config.autoConnect) {
+                 if(mWifiNative.enableNetwork(config.networkId, false)) {
+                     networkEnabledStateChanged = true;
+                     config.status = Status.ENABLED;
+@@ -194,6 +195,21 @@ class WifiConfigStore {
+         }
+     }
+ 
++    /**
++     * disable all networks that don't have autoConnect set and save config.
++     */
++    void setStateFromAutoConnectAllNetworks() {
++        for(WifiConfiguration config : mConfiguredNetworks.values()) {
++            if(config != null) {
++                if (config.status == Status.DISABLED && config.autoConnect) {
++                    enableNetwork(config.networkId, false);
++                } else if (config.status == Status.ENABLED && !config.autoConnect) {
++                    disableNetwork(config.networkId);
++                }
++            }
++        }
++
++    }
+ 
+     /**
+      * Selects the specified network for connection. This involves
+@@ -221,10 +237,13 @@ class WifiConfigStore {
+             mLastPriority = 0;
+         }
+ 
++        boolean tmpAutoConnect = true;
++        tmpAutoConnect = mConfiguredNetworks.get(netId).autoConnect;
+         // Set to the highest priority and save the configuration.
+         WifiConfiguration config = new WifiConfiguration();
+         config.networkId = netId;
+         config.priority = ++mLastPriority;
++        config.autoConnect = tmpAutoConnect;
+ 
+         addOrUpdateNetworkNative(config);
+         mWifiNative.saveConfig();
+@@ -277,6 +296,9 @@ class WifiConfigStore {
+                     if (config.status == Status.CURRENT) {
+                         config.status = Status.ENABLED;
+                     }
++                    else if (!config.autoConnect) {
++                       config.status = Status.DISABLED;
++                    }
+                     break;
+                 default:
+                     //do nothing, retain the existing state
+@@ -797,6 +819,8 @@ class WifiConfigStore {
+                                 break;
+                         }
+                         if (writeToFile) {
++                            out.writeUTF(AUTO_CONNECT_KEY);
++                            out.writeUTF((config.autoConnect ? "True" : "False"));
+                             out.writeUTF(ID_KEY);
+                             out.writeInt(configKey(config));
+                         }
+@@ -849,10 +873,12 @@ class WifiConfigStore {
+                 IpAssignment ipAssignment = IpAssignment.UNASSIGNED;
+                 ProxySettings proxySettings = ProxySettings.UNASSIGNED;
+                 LinkProperties linkProperties = new LinkProperties();
++                boolean autoConnect = true;
+                 String proxyHost = null;
+                 int proxyPort = -1;
+                 String exclusionList = null;
+                 String key;
++                String value;
+ 
+                 do {
+                     key = in.readUTF();
+@@ -885,6 +911,13 @@ class WifiConfigStore {
+                         } else if (key.equals(DNS_KEY)) {
+                             linkProperties.addDns(
+                                     NetworkUtils.numericToInetAddress(in.readUTF()));
++                        } else if (key.equals(AUTO_CONNECT_KEY)) {
++                            value = in.readUTF();
++                            if (value.equals("True")) {
++                                autoConnect = true;
++                            } else {
++                                autoConnect = false;
++                            }
+                         } else if (key.equals(PROXY_SETTINGS_KEY)) {
+                             proxySettings = ProxySettings.valueOf(in.readUTF());
+                         } else if (key.equals(PROXY_HOST_KEY)) {
+@@ -941,6 +974,7 @@ class WifiConfigStore {
+                                 loge("Ignore invalid proxy settings while reading");
+                                 break;
+                         }
++                        config.autoConnect = autoConnect;
+                     }
+                 } else {
+                     if (DBG) log("Missing id while parsing configuration");
+@@ -1188,6 +1222,7 @@ class WifiConfigStore {
+             WifiConfiguration newConfig) {
+         boolean ipChanged = false;
+         boolean proxyChanged = false;
++        boolean autoConnectChanged = false;
+         LinkProperties linkProperties = new LinkProperties();
+ 
+         switch (newConfig.ipAssignment) {
+@@ -1253,6 +1288,19 @@ class WifiConfigStore {
+                 break;
+         }
+ 
++        boolean newAutoConnect = newConfig.autoConnect;
++        boolean currentAutoConnect = currentConfig.autoConnect;
++        if (newAutoConnect == currentAutoConnect) {
++            autoConnectChanged = false;
++        } else {
++            autoConnectChanged = true;
++            if (newAutoConnect) {
++                enableNetwork(newConfig.networkId, false);
++            } else {
++                disableNetwork(newConfig.networkId);
++            }
++        }
++
+         if (!ipChanged) {
+             addIpSettingsFromConfig(linkProperties, currentConfig);
+         } else {
+@@ -1274,7 +1322,13 @@ class WifiConfigStore {
+             }
+         }
+ 
+-        if (ipChanged || proxyChanged) {
++        if (!autoConnectChanged) {
++            currentConfig.autoConnect = currentConfig.autoConnect;
++        } else {
++            currentConfig.autoConnect = newConfig.autoConnect;
++        }
++
++        if (ipChanged || proxyChanged || autoConnectChanged) {
+             currentConfig.linkProperties = linkProperties;
+             writeIpAndProxyConfigurations();
+             sendConfiguredNetworksChangedBroadcast(currentConfig,
+diff --git a/wifi/java/android/net/wifi/WifiConfiguration.java b/wifi/java/android/net/wifi/WifiConfiguration.java
+index 0a846fd..223f965 100644
+--- a/wifi/java/android/net/wifi/WifiConfiguration.java
++++ b/wifi/java/android/net/wifi/WifiConfiguration.java
+@@ -77,6 +77,8 @@ public class WifiConfiguration implements Parcelable {
+     /** {@hide} */
+     public static final String hiddenSSIDVarName = "scan_ssid";
+     /** {@hide} */
++    public static final String autoConnectVarName = "autoConnect";
++    /** {@hide} */
+     public static final int INVALID_NETWORK_ID = -1;
+ 
+     /** {@hide} */
+@@ -399,12 +401,18 @@ public class WifiConfiguration implements Parcelable {
+      */
+     public LinkProperties linkProperties;
+ 
++    /**
++     * @hide
++     */
++    public boolean autoConnect;
++
+     public WifiConfiguration() {
+         networkId = INVALID_NETWORK_ID;
+         SSID = null;
+         BSSID = null;
+         priority = 0;
+         hiddenSSID = false;
++        status = WifiConfiguration.Status.DISABLED;
+         disableReason = DISABLED_UNKNOWN_REASON;
+         allowedKeyManagement = new BitSet();
+         allowedProtocols = new BitSet();
+@@ -419,6 +427,7 @@ public class WifiConfiguration implements Parcelable {
+         }
+         ipAssignment = IpAssignment.UNASSIGNED;
+         proxySettings = ProxySettings.UNASSIGNED;
++        autoConnect = false;
+         linkProperties = new LinkProperties();
+     }
+ 
+@@ -506,6 +515,8 @@ public class WifiConfiguration implements Parcelable {
+         sbuf.append("\n");
+         sbuf.append("Proxy settings: " + proxySettings.toString());
+         sbuf.append("\n");
++        sbuf.append("Auto Connect: " + (autoConnect ? "True" : "False"));
++        sbuf.append("\n");
+         sbuf.append(linkProperties.toString());
+         sbuf.append("\n");
+ 
+@@ -579,6 +590,7 @@ public class WifiConfiguration implements Parcelable {
+             wepTxKeyIndex = source.wepTxKeyIndex;
+             priority = source.priority;
+             hiddenSSID = source.hiddenSSID;
++            status = source.status;
+             allowedKeyManagement   = (BitSet) source.allowedKeyManagement.clone();
+             allowedProtocols       = (BitSet) source.allowedProtocols.clone();
+             allowedAuthAlgorithms  = (BitSet) source.allowedAuthAlgorithms.clone();
+@@ -590,6 +602,7 @@ public class WifiConfiguration implements Parcelable {
+             }
+             ipAssignment = source.ipAssignment;
+             proxySettings = source.proxySettings;
++            autoConnect = source.autoConnect;
+             linkProperties = new LinkProperties(source.linkProperties);
+         }
+     }
+@@ -619,6 +632,7 @@ public class WifiConfiguration implements Parcelable {
+         }
+         dest.writeString(ipAssignment.name());
+         dest.writeString(proxySettings.name());
++        dest.writeInt(autoConnect ? 1 : 0);
+         dest.writeParcelable(linkProperties, flags);
+     }
+ 
+@@ -650,6 +664,7 @@ public class WifiConfiguration implements Parcelable {
+ 
+                 config.ipAssignment = IpAssignment.valueOf(in.readString());
+                 config.proxySettings = ProxySettings.valueOf(in.readString());
++                config.autoConnect = in.readInt() != 0;
+                 config.linkProperties = in.readParcelable(null);
+                 return config;
+             }
+diff --git a/wifi/java/android/net/wifi/WifiManager.java b/wifi/java/android/net/wifi/WifiManager.java
+index a48d54e..d4a8108 100644
+--- a/wifi/java/android/net/wifi/WifiManager.java
++++ b/wifi/java/android/net/wifi/WifiManager.java
+@@ -1049,6 +1049,14 @@ public class WifiManager {
+      */
+     public boolean stopWifi() {
+         try {
++            for (WifiConfiguration config : getConfiguredNetworks()) {
++                if (config != null) {
++                    if (!config.autoConnect) {
++                        disableNetwork(config.networkId);
++                    }
++                }
++            }
++            saveConfiguration();
+             mService.stopWifi();
+             return true;
+         } catch (RemoteException e) {
+diff --git a/wifi/java/android/net/wifi/WifiStateMachine.java b/wifi/java/android/net/wifi/WifiStateMachine.java
+index ce1ad1d..623fd41 100644
+--- a/wifi/java/android/net/wifi/WifiStateMachine.java
++++ b/wifi/java/android/net/wifi/WifiStateMachine.java
+@@ -747,6 +747,7 @@ public class WifiStateMachine extends StateMachine {
+             sendMessage(obtainMessage(CMD_LOAD_DRIVER, WIFI_STATE_ENABLING, 0));
+             sendMessage(CMD_START_SUPPLICANT);
+         } else {
++            mWifiConfigStore.setStateFromAutoConnectAllNetworks();
+             sendMessage(CMD_STOP_SUPPLICANT);
+             /* Argument is the state that is entered upon success */
+             sendMessage(obtainMessage(CMD_UNLOAD_DRIVER, WIFI_STATE_DISABLED, 0));
+-- 
+1.7.10.4
+

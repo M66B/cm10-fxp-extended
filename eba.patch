@@ -1,0 +1,59 @@
+From 7993d74083045d7fc10adcecd60db96779311983 Mon Sep 17 00:00:00 2001
+From: Sravan Kumar Ambapuram <asravan@codeaurora.org>
+Date: Mon, 30 Jul 2012 15:35:17 -0700
+Subject: [PATCH] Triggering EarlySuspend based on BackLight brightness
+
+EarlySuspend is triggered currently based on just timeout. Due to this,
+backlight brightness is not coming down to zero.
+
+Change-Id: If89ec6650308109630dbb7ee1be0b96df4ed3534
+CRs-Fixed: 381087
+
+Allowing display turning off animation before Early suspend.
+
+This change passes display turning off information to
+animation call so that display off animation can be played
+before early suspend call.
+Reverted two and three changes in the below list with this patch.
+Changes introduced in previous patch were:
+1.Send early suspend call after display baclklight off
+2.All animations off once display goes to dim.
+3.Removed duration to turn off screen as i don't see this in ICS.
+
+Change-Id: Id411fe2c4d4fd219fc198405d6c2f221a87874ff
+---
+ services/java/com/android/server/PowerManagerService.java |   11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/services/java/com/android/server/PowerManagerService.java b/services/java/com/android/server/PowerManagerService.java
+index 4b6b935..17805cf 100644
+--- a/services/java/com/android/server/PowerManagerService.java
++++ b/services/java/com/android/server/PowerManagerService.java
+@@ -2381,6 +2381,14 @@ public class PowerManagerService extends IPowerManager.Stub
+                     Message msg = mScreenBrightnessHandler
+                             .obtainMessage(ANIMATE_LIGHTS, mask, newValue);
+                     mScreenBrightnessHandler.sendMessageDelayed(msg, delay);
++                } else {
++                    final boolean doScreenAnimation = (mask & (SCREEN_BRIGHT_BIT | SCREEN_ON_BIT)) != 0;
++                    final boolean turnOff = currentValue == PowerManager.BRIGHTNESS_OFF;
++                    if (turnOff && doScreenAnimation) {
++                        // Cancel all pending animations since we're turning off
++                        mScreenBrightnessHandler.removeCallbacksAndMessages(null);
++                        screenOffFinishedAnimatingLocked(mScreenOffReason);
++                    }
+                 }
+             }
+         }
+@@ -2444,9 +2452,6 @@ public class PowerManagerService extends IPowerManager.Stub
+                     final boolean doScreenAnim = (mask & (SCREEN_BRIGHT_BIT | SCREEN_ON_BIT)) != 0;
+                     final boolean turningOff = endValue == PowerManager.BRIGHTNESS_OFF;
+                     if (turningOff && doScreenAnim) {
+-                        // Cancel all pending animations since we're turning off
+-                        mScreenBrightnessHandler.removeCallbacksAndMessages(null);
+-                        screenOffFinishedAnimatingLocked(mScreenOffReason);
+                         duration = 200; // TODO: how long should this be?
+                     }
+                     if (doScreenAnim) {
+-- 
+1.7.10.4
+

@@ -1,0 +1,398 @@
+From c4c0bf809c7c83a030c30c00ef3b9578c7f3f795 Mon Sep 17 00:00:00 2001
+From: James Sullins <jcsullins@gmail.com>
+Date: Thu, 10 Jan 2013 03:03:55 -0600
+Subject: [PATCH] add criticalBatteryShutdownLevel; fix plugged/charging
+ status
+
+This does two things:
+
+ * Adds a criticalBatteryShutdownLevel config value so device
+   maintainers can choose a battery level to force shutdown
+   instead of relying on the hardcoded 0% shutdown.
+
+ * Reworks "isPowered/isPluggued/isCharging" code to correctly report
+   charging status.  Note that some devices can draw more than 500mA,
+   so "plugged" != "charging" (as is assumed in existing code).
+   This faulty assumption can result in incorrect charging status
+   reported and inability to shutdown at critical battery level.
+
+Change-Id: I6b3282df6513a8c235b0f4cdfd9e16f531e34166
+---
+ core/res/res/values/config.xml                     |    4 +++
+ core/res/res/values/public.xml                     |    1 +
+ .../src/com/android/systemui/power/PowerUI.java    |   11 +++---
+ .../statusbar/policy/BatteryController.java        |    6 ++--
+ .../policy/impl/KeyguardUpdateMonitor.java         |   16 ++++++---
+ .../java/com/android/server/BatteryService.java    |   38 ++++++++++++--------
+ .../com/android/server/PowerManagerService.java    |   22 +++++++-----
+ services/java/com/android/server/Watchdog.java     |    2 +-
+ 8 files changed, 65 insertions(+), 35 deletions(-)
+
+diff --git a/core/res/res/values/config.xml b/core/res/res/values/config.xml
+index 3bfbe28..491c531 100755
+--- a/core/res/res/values/config.xml
++++ b/core/res/res/values/config.xml
+@@ -469,6 +469,10 @@
+ 
+     <bool name="config_use_strict_phone_number_comparation">false</bool>
+ 
++    <!-- Shutdown the device when battery level is at or below this level
++         and the device is not being charged.  -->
++    <integer name="config_criticalBatteryShutdownLevel">0</integer>
++
+     <!-- Display low battery warning when battery level dips to this value.
+          Also, the battery stats are flushed to disk when we hit this level.  -->
+     <integer name="config_criticalBatteryWarningLevel">4</integer>
+diff --git a/core/res/res/values/public.xml b/core/res/res/values/public.xml
+index 61f3b88..4155955 100644
+--- a/core/res/res/values/public.xml
++++ b/core/res/res/values/public.xml
+@@ -1452,6 +1452,7 @@
+   <java-symbol type="id" name="replace_message" />
+   <java-symbol type="fraction" name="config_dimBehindFadeDuration" />
+   <java-symbol type="integer" name="config_carDockKeepsScreenOn" />
++  <java-symbol type="integer" name="config_criticalBatteryShutdownLevel" />
+   <java-symbol type="integer" name="config_criticalBatteryWarningLevel" />
+   <java-symbol type="integer" name="config_datause_notification_type" />
+   <java-symbol type="integer" name="config_datause_polling_period_sec" />
+diff --git a/packages/SystemUI/src/com/android/systemui/power/PowerUI.java b/packages/SystemUI/src/com/android/systemui/power/PowerUI.java
+index 3c30f5d..b6b7eb1 100644
+--- a/packages/SystemUI/src/com/android/systemui/power/PowerUI.java
++++ b/packages/SystemUI/src/com/android/systemui/power/PowerUI.java
+@@ -120,6 +120,8 @@ public class PowerUI extends SystemUI {
+ 
+                 final boolean plugged = mPlugType != 0;
+                 final boolean oldPlugged = oldPlugType != 0;
++                final boolean charging = mBatteryStatus == BatteryManager.BATTERY_STATUS_CHARGING;
++                final boolean oldCharging = oldBatteryStatus == BatteryManager.BATTERY_STATUS_CHARGING;
+ 
+                 int oldBucket = findBatteryLevelBucket(oldBatteryLevel);
+                 int bucket = findBatteryLevelBucket(mBatteryLevel);
+@@ -134,6 +136,7 @@ public class PowerUI extends SystemUI {
+                     Slog.d(TAG, "invalidCharger " + oldInvalidCharger + " --> " + mInvalidCharger);
+                     Slog.d(TAG, "bucket         " + oldBucket + " --> " + bucket);
+                     Slog.d(TAG, "plugged        " + oldPlugged + " --> " + plugged);
++                    Slog.d(TAG, "charging       " + oldCharging + " --> " + charging);
+                 }
+ 
+                 if (oldInvalidCharger == 0 && mInvalidCharger != 0) {
+@@ -147,17 +150,17 @@ public class PowerUI extends SystemUI {
+                     return;
+                 }
+ 
+-                if (!plugged
+-                        && (bucket < oldBucket || oldPlugged)
++                if (!charging
++                        && (bucket < oldBucket || oldCharging)
+                         && mBatteryStatus != BatteryManager.BATTERY_STATUS_UNKNOWN
+                         && bucket < 0) {
+                     showLowBatteryWarning();
+ 
+                     // only play SFX when the dialog comes up or the bucket changes
+-                    if (bucket != oldBucket || oldPlugged) {
++                    if (bucket != oldBucket || oldCharging) {
+                         playLowBatterySound();
+                     }
+-                } else if (plugged || (bucket > oldBucket && bucket > 0)) {
++                } else if (charging || (bucket > oldBucket && bucket > 0)) {
+                     dismissLowBatteryWarning();
+                 } else if (mBatteryLevelTextView != null) {
+                     showLowBatteryWarning();
+diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/policy/BatteryController.java b/packages/SystemUI/src/com/android/systemui/statusbar/policy/BatteryController.java
+index 767d383..f735c64 100644
+--- a/packages/SystemUI/src/com/android/systemui/statusbar/policy/BatteryController.java
++++ b/packages/SystemUI/src/com/android/systemui/statusbar/policy/BatteryController.java
+@@ -63,6 +63,7 @@ public class BatteryController extends BroadcastReceiver {
+     private static final int BATTERY_TEXT_STYLE_MIN     = R.string.status_bar_settings_battery_meter_min_format;
+ 
+     private boolean mBatteryPlugged = false;
++    private boolean mBatteryCharging = false;
+     private int mBatteryStyle;
+     private int mBatteryIcon = BATTERY_ICON_STYLE_NORMAL;
+ 
+@@ -111,6 +112,7 @@ public class BatteryController extends BroadcastReceiver {
+         if (action.equals(Intent.ACTION_BATTERY_CHANGED)) {
+             final int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0);
+             mBatteryPlugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0) != 0;
++            mBatteryCharging = intent.getIntExtra(BatteryManager.EXTRA_STATUS, BatteryManager.BATTERY_STATUS_UNKNOWN) == BatteryManager.BATTERY_STATUS_CHARGING;
+             int N = mIconViews.size();
+             for (int i=0; i<N; i++) {
+                 ImageView v = mIconViews.get(i);
+@@ -135,12 +137,12 @@ public class BatteryController extends BroadcastReceiver {
+ 
+         if (mBatteryStyle == BATTERY_STYLE_NORMAL) {
+             mIcon = (View.VISIBLE);
+-            mIconStyle = mBatteryPlugged ? BATTERY_ICON_STYLE_CHARGE
++            mIconStyle = mBatteryCharging ? BATTERY_ICON_STYLE_CHARGE
+                     : BATTERY_ICON_STYLE_NORMAL;
+         } else if (mBatteryStyle == BATTERY_STYLE_PERCENT) {
+             mIcon = (View.VISIBLE);
+             mText = (View.VISIBLE);
+-            mIconStyle = mBatteryPlugged ? BATTERY_ICON_STYLE_CHARGE_MIN
++            mIconStyle = mBatteryCharging ? BATTERY_ICON_STYLE_CHARGE_MIN
+                     : BATTERY_ICON_STYLE_NORMAL_MIN;
+         }
+ 
+diff --git a/policy/src/com/android/internal/policy/impl/KeyguardUpdateMonitor.java b/policy/src/com/android/internal/policy/impl/KeyguardUpdateMonitor.java
+index 1f9d0e3..711e470 100644
+--- a/policy/src/com/android/internal/policy/impl/KeyguardUpdateMonitor.java
++++ b/policy/src/com/android/internal/policy/impl/KeyguardUpdateMonitor.java
+@@ -22,6 +22,8 @@ import android.content.Context;
+ import android.content.Intent;
+ import android.content.IntentFilter;
+ import android.database.ContentObserver;
++import static android.os.BatteryManager.BATTERY_STATUS_CHARGING;
++import static android.os.BatteryManager.BATTERY_STATUS_DISCHARGING;
+ import static android.os.BatteryManager.BATTERY_STATUS_FULL;
+ import static android.os.BatteryManager.BATTERY_STATUS_UNKNOWN;
+ import static android.os.BatteryManager.BATTERY_HEALTH_UNKNOWN;
+@@ -384,7 +386,7 @@ public class KeyguardUpdateMonitor {
+             for (int i = 0; i < mInfoCallbacks.size(); i++) {
+                 // TODO: pass BatteryStatus object to onRefreshBatteryInfo() instead...
+                 mInfoCallbacks.get(i).onRefreshBatteryInfo(
+-                    shouldShowBatteryInfo(),isPluggedIn(batteryStatus), batteryStatus.level);
++                    shouldShowBatteryInfo(),isCharging(batteryStatus), batteryStatus.level);
+             }
+         }
+     }
+@@ -437,6 +439,10 @@ public class KeyguardUpdateMonitor {
+                 || status.plugged == BatteryManager.BATTERY_PLUGGED_USB;
+     }
+ 
++    private static boolean isCharging(BatteryStatus status) {
++        return status.status == BatteryManager.BATTERY_STATUS_CHARGING;
++    }
++
+     private static boolean isBatteryUpdateInteresting(BatteryStatus old, BatteryStatus current, Context context) {
+         final boolean nowPluggedIn = isPluggedIn(current);
+         final boolean wasPluggedIn = isPluggedIn(old);
+@@ -613,7 +619,7 @@ public class KeyguardUpdateMonitor {
+         if (!mInfoCallbacks.contains(callback)) {
+             mInfoCallbacks.add(callback);
+             // Notify listener of the current state
+-            callback.onRefreshBatteryInfo(shouldShowBatteryInfo(),isPluggedIn(mBatteryStatus),
++            callback.onRefreshBatteryInfo(shouldShowBatteryInfo(),isCharging(mBatteryStatus),
+                     mBatteryStatus.level);
+             callback.onTimeChanged();
+             callback.onRingerModeChanged(mRingMode);
+@@ -676,8 +682,10 @@ public class KeyguardUpdateMonitor {
+     }
+ 
+     public boolean shouldShowBatteryInfo() {
+-        return isPluggedIn(mBatteryStatus) || isBatteryLow(mBatteryStatus)
+-                       || shouldAlwaysShowBatteryInfo(mContext);
++        return (isPluggedIn(mBatteryStatus) && isDeviceCharged())
++			|| isCharging(mBatteryStatus)
++			|| isBatteryLow(mBatteryStatus)
++            || shouldAlwaysShowBatteryInfo(mContext);
+     }
+ 
+     public static boolean shouldAlwaysShowBatteryInfo(Context context) {
+diff --git a/services/java/com/android/server/BatteryService.java b/services/java/com/android/server/BatteryService.java
+index a049730..4e8d388 100644
+--- a/services/java/com/android/server/BatteryService.java
++++ b/services/java/com/android/server/BatteryService.java
+@@ -81,7 +81,10 @@ class BatteryService extends Binder {
+ 
+     // Used locally for determining when to make a last ditch effort to log
+     // discharge stats before the device dies.
+-    private int mCriticalBatteryLevel;
++    private int mCriticalBatteryWarnLevel;
++
++    // Try to shutdown device before it dies
++    private int mCriticalBatteryShutdownLevel;
+ 
+     private static final int DUMP_MAX_LENGTH = 24 * 1024;
+     private static final String[] DUMPSYS_ARGS = new String[] { "--checkin", "-u" };
+@@ -156,8 +159,10 @@ class BatteryService extends Binder {
+         mLed = new Led(context, lights);
+         mBatteryStats = BatteryStatsService.getService();
+ 
+-        mCriticalBatteryLevel = mContext.getResources().getInteger(
++        mCriticalBatteryWarnLevel = mContext.getResources().getInteger(
+                 com.android.internal.R.integer.config_criticalBatteryWarningLevel);
++        mCriticalBatteryShutdownLevel = mContext.getResources().getInteger(
++                com.android.internal.R.integer.config_criticalBatteryShutdownLevel);
+         mLowBatteryWarningLevel = mContext.getResources().getInteger(
+                 com.android.internal.R.integer.config_lowBatteryWarningLevel);
+         mLowBatteryCloseWarningLevel = mContext.getResources().getInteger(
+@@ -180,12 +185,15 @@ class BatteryService extends Binder {
+         update();
+     }
+ 
+-    final boolean isPowered() {
+-        // assume we are powered if battery state is unknown so the "stay on while plugged in" option will work.
++    final boolean isPlugged() {
+         return (mAcOnline || mUsbOnline || mBatteryStatus == BatteryManager.BATTERY_STATUS_UNKNOWN);
+     }
+ 
+-    final boolean isPowered(int plugTypeSet) {
++    final boolean isCharging() {
++        return (mBatteryStatus == BatteryManager.BATTERY_STATUS_CHARGING);
++    }
++
++    final boolean isPlugged(int plugTypeSet) {
+         // assume we are powered if battery state is unknown so
+         // the "stay on while plugged in" option will work.
+         if (mBatteryStatus == BatteryManager.BATTERY_STATUS_UNKNOWN) {
+@@ -233,14 +241,14 @@ class BatteryService extends Binder {
+ 
+     void systemReady() {
+         // check our power situation now that it is safe to display the shutdown dialog.
+-        shutdownIfNoPower();
++        shutdownIfCriticalPower();
+         shutdownIfOverTemp();
+     }
+ 
+-    private final void shutdownIfNoPower() {
++    private final void shutdownIfCriticalPower() {
+         // shut down gracefully if our battery is critically low and we are not powered.
+         // wait until the system has booted before attempting to display the shutdown dialog.
+-        if (mBatteryLevel == 0 && !isPowered() && ActivityManagerNative.isSystemReady()) {
++        if (mBatteryLevel <= mCriticalBatteryShutdownLevel && !isCharging() && ActivityManagerNative.isSystemReady()) {
+             Intent intent = new Intent(Intent.ACTION_REQUEST_SHUTDOWN);
+             intent.putExtra(Intent.EXTRA_KEY_CONFIRM, false);
+             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+@@ -270,7 +278,7 @@ class BatteryService extends Binder {
+         boolean logOutlier = false;
+         long dischargeDuration = 0;
+ 
+-        mBatteryLevelCritical = mBatteryLevel <= mCriticalBatteryLevel;
++        mBatteryLevelCritical = mBatteryLevel <= mCriticalBatteryWarnLevel;
+         if (mAcOnline) {
+             mPlugType = BatteryManager.BATTERY_PLUGGED_AC;
+         } else if (mUsbOnline) {
+@@ -288,7 +296,7 @@ class BatteryService extends Binder {
+             // Should never happen.
+         }
+         
+-        shutdownIfNoPower();
++        shutdownIfCriticalPower();
+         shutdownIfOverTemp();
+ 
+         boolean dockBatteryChanged = false;
+@@ -351,8 +359,8 @@ class BatteryService extends Binder {
+                 logOutlier = true;
+             }
+ 
+-            final boolean plugged = mPlugType != BATTERY_PLUGGED_NONE;
+-            final boolean oldPlugged = mLastPlugType != BATTERY_PLUGGED_NONE;
++            final boolean charging = (mBatteryStatus == BatteryManager.BATTERY_STATUS_CHARGING);
++            final boolean oldCharging = (mLastBatteryStatus == BatteryManager.BATTERY_STATUS_CHARGING);
+ 
+             /* The ACTION_BATTERY_LOW broadcast is sent in these situations:
+              * - is just un-plugged (previously was plugged) and battery level is
+@@ -360,10 +368,10 @@ class BatteryService extends Binder {
+              * - is not plugged and battery level falls to WARNING boundary
+              *   (becomes <= mLowBatteryWarningLevel).
+              */
+-            final boolean sendBatteryLow = !plugged
++            final boolean sendBatteryLow = !charging
+                     && mBatteryStatus != BatteryManager.BATTERY_STATUS_UNKNOWN
+                     && mBatteryLevel <= mLowBatteryWarningLevel
+-                    && (oldPlugged || mLastBatteryLevel > mLowBatteryWarningLevel);
++                    && (oldCharging || mLastBatteryLevel > mLowBatteryWarningLevel);
+ 
+             sendIntent();
+ 
+@@ -530,7 +538,7 @@ class BatteryService extends Binder {
+             return com.android.internal.R.drawable.stat_sys_battery;
+         } else if (mBatteryStatus == BatteryManager.BATTERY_STATUS_NOT_CHARGING
+                 || mBatteryStatus == BatteryManager.BATTERY_STATUS_FULL) {
+-            if (isPowered() && mBatteryLevel >= 100) {
++            if (isPlugged() && mBatteryLevel >= 100) {
+                 return com.android.internal.R.drawable.stat_sys_battery_charge;
+             } else {
+                 return com.android.internal.R.drawable.stat_sys_battery;
+diff --git a/services/java/com/android/server/PowerManagerService.java b/services/java/com/android/server/PowerManagerService.java
+index 588b9f3..661bcb0 100644
+--- a/services/java/com/android/server/PowerManagerService.java
++++ b/services/java/com/android/server/PowerManagerService.java
+@@ -256,7 +256,8 @@ public class PowerManagerService extends IPowerManager.Stub
+     private ScreenBrightnessAnimator mScreenBrightnessAnimator;
+     private boolean mWaitingForFirstLightSensor = false;
+     private boolean mStillNeedSleepNotification;
+-    private boolean mIsPowered = false;
++    private boolean mIsPlugged = false;
++    private boolean mIsCharging = false;
+     private IActivityManager mActivityService;
+     private IBatteryStats mBatteryStats;
+     private BatteryService mBatteryService;
+@@ -454,10 +455,12 @@ public class PowerManagerService extends IPowerManager.Stub
+         @Override
+         public void onReceive(Context context, Intent intent) {
+             synchronized (mLocks) {
+-                boolean wasPowered = mIsPowered;
+-                mIsPowered = mBatteryService.isPowered();
++                boolean wasPlugged = mIsPlugged;
++                boolean wasCharging = mIsCharging;
++                mIsPlugged = mBatteryService.isPlugged();
++                mIsCharging = mBatteryService.isCharging();
+ 
+-                if (mIsPowered != wasPowered) {
++                if (mIsPlugged != wasPlugged) {
+                     // update mStayOnWhilePluggedIn wake lock
+                     updateWakeLockLocked();
+ 
+@@ -472,7 +475,7 @@ public class PowerManagerService extends IPowerManager.Stub
+                     // turn on.  Some devices want this because they don't have a
+                     // charging LED.
+                     synchronized (mLocks) {
+-                        if (!wasPowered || (mPowerState & SCREEN_ON_BIT) != 0 ||
++                        if (!wasPlugged || (mPowerState & SCREEN_ON_BIT) != 0 ||
+                                 mUnplugTurnsOnScreen) {
+                             forceUserActivityLocked();
+                         }
+@@ -816,7 +819,7 @@ public class PowerManagerService extends IPowerManager.Stub
+ 
+     private void updateWakeLockLocked() {
+         final int stayOnConditions = getStayOnConditionsLocked();
+-        if (stayOnConditions != 0 && mBatteryService.isPowered(stayOnConditions)) {
++        if (stayOnConditions != 0 && mBatteryService.isPlugged(stayOnConditions)) {
+             // keep the device on if we're plugged in and mStayOnWhilePluggedIn is set.
+             mStayOnWhilePluggedInScreenDimLock.acquire();
+             mStayOnWhilePluggedInPartialLock.acquire();
+@@ -1242,7 +1245,8 @@ public class PowerManagerService extends IPowerManager.Stub
+ 
+         synchronized (mLocks) {
+             pw.println("Power Manager State:");
+-            pw.println("  mIsPowered=" + mIsPowered
++            pw.println("  mIsPlugged=" + mIsPlugged
++                    + " mIsCharging=" + mIsCharging
+                     + " mPowerState=" + mPowerState
+                     + " mScreenOffTime=" + (SystemClock.elapsedRealtime()-mScreenOffTime)
+                     + " ms");
+@@ -2056,7 +2060,7 @@ public class PowerManagerService extends IPowerManager.Stub
+     }
+ 
+     private boolean batteryIsLow() {
+-        return (!mIsPowered &&
++        return (!mIsCharging &&
+                 mBatteryService.getBatteryLevel() <= LOW_BATTERY_THRESHOLD);
+     }
+ 
+@@ -2183,7 +2187,7 @@ public class PowerManagerService extends IPowerManager.Stub
+                         steps = (int)(ANIM_STEPS*ratio);
+                     }
+                     final int stayOnConditions = getStayOnConditionsLocked();
+-                    if (stayOnConditions != 0 && mBatteryService.isPowered(stayOnConditions)) {
++                    if (stayOnConditions != 0 && mBatteryService.isPlugged(stayOnConditions)) {
+                         // If the "stay on while plugged in" option is
+                         // turned on, then the screen will often not
+                         // automatically turn off while plugged in.  To
+diff --git a/services/java/com/android/server/Watchdog.java b/services/java/com/android/server/Watchdog.java
+index c239382..7f0d60d 100644
+--- a/services/java/com/android/server/Watchdog.java
++++ b/services/java/com/android/server/Watchdog.java
+@@ -343,7 +343,7 @@ public class Watchdog extends Thread {
+      * text of why it is not a good time.
+      */
+     String shouldWeBeBrutalLocked(long curTime) {
+-        if (mBattery == null || !mBattery.isPowered()) {
++        if (mBattery == null || !mBattery.isPlugged()) {
+             return "battery";
+         }
+ 
+-- 
+1.7.10.4
+

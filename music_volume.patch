@@ -1,0 +1,13 @@
+diff --git a/media/java/android/media/AudioService.java b/media/java/android/media/AudioService.java
+index 5dcec1a..c6d5592 100644
+--- a/media/java/android/media/AudioService.java
++++ b/media/java/android/media/AudioService.java
+@@ -221,7 +221,7 @@ public class AudioService extends IAudioService.Stub implements OnFinished {
+         5,  // STREAM_VOICE_CALL
+         7,  // STREAM_SYSTEM
+         7,  // STREAM_RING
+-        15, // STREAM_MUSIC
++        30, // STREAM_MUSIC
+         7,  // STREAM_ALARM
+         7,  // STREAM_NOTIFICATION
+         15, // STREAM_BLUETOOTH_SCO

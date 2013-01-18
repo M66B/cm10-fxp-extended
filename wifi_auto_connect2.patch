@@ -1,0 +1,174 @@
+From 2a79816d3cd9ef16dd426981a0fd862b97abdf58 Mon Sep 17 00:00:00 2001
+From: ian <ian.t.roy@gmail.com>
+Date: Mon, 3 Dec 2012 15:15:10 -0500
+Subject: [PATCH] Patch Set 2/2: Add an "Automatically Connect" option for
+ WiFi networks Updated white spaces and boolean logic Added
+ missing layout file More White space fixes
+
+Change-Id: I21063589809afcfe836790fcbc90eae177aae08c
+---
+ res/layout/wifi_dialog.xml                         |   11 +++++++-
+ res/values/strings.xml                             |    2 ++
+ src/com/android/settings/wifi/AccessPoint.java     |    3 +++
+ .../settings/wifi/WifiConfigController.java        |   27 ++++++++++++++++++++
+ 4 files changed, 42 insertions(+), 1 deletion(-)
+
+diff --git a/res/layout/wifi_dialog.xml b/res/layout/wifi_dialog.xml
+index c0e98e7..9011a8f 100644
+--- a/res/layout/wifi_dialog.xml
++++ b/res/layout/wifi_dialog.xml
+@@ -75,7 +75,7 @@
+                             android:prompt="@string/wifi_eap_method"
+                             android:entries="@array/wifi_eap_method" />
+                 </LinearLayout>
+-                
++
+                 <LinearLayout android:id="@+id/l_phase2"
+                         android:visibility="gone"
+                         style="@style/wifi_item" >
+@@ -165,6 +165,15 @@
+             </LinearLayout>
+         </LinearLayout>
+ 
++        <LinearLayout android:id="@+id/wifi_auto_connect_toggle"
++                    style="@style/wifi_item"
++                    android:visibility="gone">
++            <CheckBox android:id="@+id/wifi_auto_connect_togglebox"
++                    style="@style/wifi_item_content"
++                    android:textSize="14sp"
++                    android:text="@string/wifi_auto_connect" />
++        </LinearLayout>
++
+         <LinearLayout android:id="@+id/wifi_advanced_toggle"
+                     style="@style/wifi_item"
+                     android:visibility="gone">
+diff --git a/res/values/strings.xml b/res/values/strings.xml
+index 5931dae..5864bb2 100644
+--- a/res/values/strings.xml
++++ b/res/values/strings.xml
+@@ -1257,6 +1257,8 @@
+     <string name="wifi_setup_wps">Automatic setup (WPS)</string>
+ 
+     <!-- Dialog for Access Points --> <skip />
++    <!-- Label for automatically_connect -->
++    <string name="wifi_auto_connect">Automatically Connect</string>
+     <!-- Label to show/hide advanced options -->
+     <string name="wifi_show_advanced">Show advanced options</string>
+     <!-- Title for the WPS setup dialog [CHAR LIMIT=50] -->
+diff --git a/src/com/android/settings/wifi/AccessPoint.java b/src/com/android/settings/wifi/AccessPoint.java
+index 5a7a768..4a73543 100644
+--- a/src/com/android/settings/wifi/AccessPoint.java
++++ b/src/com/android/settings/wifi/AccessPoint.java
+@@ -61,6 +61,7 @@ class AccessPoint extends Preference {
+     String bssid;
+     int security;
+     int networkId;
++    boolean autoConnect;
+     boolean wpsAvailable = false;
+ 
+     PskType pskType = PskType.UNKNOWN;
+@@ -187,6 +188,7 @@ class AccessPoint extends Preference {
+         bssid = config.BSSID;
+         security = getSecurity(config);
+         networkId = config.networkId;
++        autoConnect = config.autoConnect;
+         mRssi = Integer.MAX_VALUE;
+         mConfig = config;
+     }
+@@ -199,6 +201,7 @@ class AccessPoint extends Preference {
+         if (security == SECURITY_PSK)
+             pskType = getPskType(result);
+         networkId = -1;
++        autoConnect = true;
+         mRssi = result.level;
+         mScanResult = result;
+     }
+diff --git a/src/com/android/settings/wifi/WifiConfigController.java b/src/com/android/settings/wifi/WifiConfigController.java
+index 2598a0e..84e99c5 100644
+--- a/src/com/android/settings/wifi/WifiConfigController.java
++++ b/src/com/android/settings/wifi/WifiConfigController.java
+@@ -118,6 +118,7 @@ public class WifiConfigController implements TextWatcher,
+     private IpAssignment mIpAssignment = IpAssignment.UNASSIGNED;
+     private ProxySettings mProxySettings = ProxySettings.UNASSIGNED;
+     private LinkProperties mLinkProperties = new LinkProperties();
++    private boolean mAutoConnect;
+ 
+     // True when this instance is used in SetupWizard XL context.
+     private final boolean mInXlSetupWizard;
+@@ -160,6 +161,9 @@ public class WifiConfigController implements TextWatcher,
+         mProxySettingsSpinner = (Spinner) mView.findViewById(R.id.proxy_settings);
+         mProxySettingsSpinner.setOnItemSelectedListener(this);
+ 
++        boolean showAutoConnectField = false;
++        boolean showAutoConnectFieldValue = false;
++
+         if (mAccessPoint == null) { // new network
+             mConfigUi.setTitle(R.string.wifi_add_network);
+ 
+@@ -182,6 +186,9 @@ public class WifiConfigController implements TextWatcher,
+ 
+             showIpConfigFields();
+             showProxyFields();
++            mView.findViewById(R.id.wifi_auto_connect_toggle).setVisibility(View.VISIBLE);
++            ((CheckBox) mView.findViewById(R.id.wifi_auto_connect_togglebox)).setChecked(true);
++            mView.findViewById(R.id.wifi_auto_connect_togglebox).setOnClickListener(this);
+             mView.findViewById(R.id.wifi_advanced_toggle).setVisibility(View.VISIBLE);
+             mView.findViewById(R.id.wifi_advanced_togglebox).setOnClickListener(this);
+ 
+@@ -230,12 +237,25 @@ public class WifiConfigController implements TextWatcher,
+                 } else {
+                     mProxySettingsSpinner.setSelection(PROXY_NONE);
+                 }
++                
++                showAutoConnectField = true;
++                showAutoConnectFieldValue = config.autoConnect;
+             }
+ 
+             if (mAccessPoint.networkId == INVALID_NETWORK_ID || mEdit) {
+                 showSecurityFields();
+                 showIpConfigFields();
+                 showProxyFields();
++                mView.findViewById(R.id.wifi_auto_connect_toggle).setVisibility(View.VISIBLE);
++                WifiConfiguration config = mAccessPoint.getConfig();
++                if (mEdit) {
++                    showAutoConnectField = false;
++                    ((CheckBox) mView.findViewById(R.id.wifi_auto_connect_togglebox)).setChecked(config.autoConnect);
++                } else {
++                    mAutoConnect = true;
++                    ((CheckBox) mView.findViewById(R.id.wifi_auto_connect_togglebox)).setChecked(true);
++                }
++                mView.findViewById(R.id.wifi_auto_connect_togglebox).setOnClickListener(this);
+                 mView.findViewById(R.id.wifi_advanced_toggle).setVisibility(View.VISIBLE);
+                 mView.findViewById(R.id.wifi_advanced_togglebox).setOnClickListener(this);
+                 if (showAdvancedFields) {
+@@ -243,6 +263,10 @@ public class WifiConfigController implements TextWatcher,
+                     mView.findViewById(R.id.wifi_advanced_fields).setVisibility(View.VISIBLE);
+                 }
+             }
++            
++            if (showAutoConnectField) {
++                addRow(group, R.string.wifi_auto_connect, (showAutoConnectFieldValue ? context.getString(R.string.yes) : context.getString(R.string.no)));
++            }
+ 
+             if (mEdit) {
+                 mConfigUi.setSubmitButton(context.getString(R.string.wifi_save));
+@@ -388,6 +412,7 @@ public class WifiConfigController implements TextWatcher,
+         config.proxySettings = mProxySettings;
+         config.ipAssignment = mIpAssignment;
+         config.linkProperties = new LinkProperties(mLinkProperties);
++        config.autoConnect = mAutoConnect;
+ 
+         return config;
+     }
+@@ -752,6 +777,8 @@ public class WifiConfigController implements TextWatcher,
+             } else {
+                 mView.findViewById(R.id.wifi_advanced_fields).setVisibility(View.GONE);
+             }
++        } else if (view.getId() == R.id.wifi_auto_connect_togglebox) {
++            mAutoConnect = ((CheckBox) view).isChecked();
+         }
+     }
+ 
+-- 
+1.7.10.4
+

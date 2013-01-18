@@ -1,0 +1,1086 @@
+diff --git a/fs/yaffs2/Makefile b/fs/yaffs2/Makefile
+index 6a8729c..70d2ed2 100644
+--- a/fs/yaffs2/Makefile
++++ b/fs/yaffs2/Makefile
+@@ -5,6 +5,7 @@
+ obj-$(CONFIG_YAFFS_FS) += yaffs.o
+ 
+ yaffs-y := yaffs_ecc.o yaffs_vfs.o yaffs_guts.o yaffs_checkptrw.o
++yaffs-y += yaffs_crypto.o yaffs_pbkdf2.o
+ yaffs-y += yaffs_packedtags1.o yaffs_packedtags2.o yaffs_nand.o
+ yaffs-y += yaffs_tagscompat.o
+ yaffs-y += yaffs_mtdif.o yaffs_mtdif1.o yaffs_mtdif2.o
+diff --git a/fs/yaffs2/yaffs_crypto.c b/fs/yaffs2/yaffs_crypto.c
+new file mode 100644
+index 0000000..0bac4e7
+--- /dev/null
++++ b/fs/yaffs2/yaffs_crypto.c
+@@ -0,0 +1,339 @@
++/*
++ * Copyright (C) 2011 Whisper Systems <moxie@whispersys.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * version 2 as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU Library General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ */
++
++/*
++ * This code has two responsibilities:
++ *
++ * 1) Password-based encrypting / decrypting the key descriptor block for
++ *    the FS.
++ *
++ * 2) Encrypting / Decrypting FS pages as they are written to / from disk.
++ *
++ */
++
++#include "linux/scatterlist.h"
++#include "linux/random.h"
++#include "linux/string.h"
++
++#include "yaffs_crypto.h"
++#include "yaffs_pbkdf2.h"
++
++#define PASSWORD_ITERATIONS 4000
++
++static void initialize_tweak_bytes(u8 *tweak_bytes, int tweak)
++{
++	int j;
++
++	for (j=0;j<AES_BLOCK_SIZE;j++) {
++		tweak_bytes[j] = (u8) (tweak & 0xFF);
++		tweak = tweak >> 8;
++	}
++}
++
++static void HMAC_sha1(const u8 *key, int key_length,
++		      void *input, int input_length,
++		      u8 *output)
++{
++	struct scatterlist sg[1];
++	struct hash_desc desc;
++	struct crypto_hash *hash_tfm = crypto_alloc_hash("hmac(sha1)", 0, CRYPTO_ALG_ASYNC);
++
++	desc.tfm = hash_tfm;
++	desc.flags = 0;
++
++	sg_set_buf(&sg[0], input, input_length);
++
++	crypto_hash_init(&desc);
++	crypto_hash_setkey(desc.tfm, key, key_length);
++	crypto_hash_digest(&desc, &sg[0], input_length, output);
++
++	crypto_free_hash(hash_tfm);
++}
++
++static void AES_cbc(const u8 *iv, int iv_length,
++		    const u8 *key, int key_length,
++		    const u8 *input, int input_length,
++		    u8 *output, int encrypt)
++{
++	struct scatterlist src[1];
++	struct scatterlist dst[1];
++	struct blkcipher_desc desc;
++	struct crypto_blkcipher *cipher = crypto_alloc_blkcipher("cbc(aes)", 0, 0);
++
++	crypto_blkcipher_setkey(cipher, key, key_length);
++
++	sg_init_table(dst, 1);
++	sg_init_table(src, 1);
++
++	sg_set_buf(&dst[0], output, input_length);
++	sg_set_buf(&src[0], input, input_length);
++
++	desc.tfm = cipher;
++	desc.flags = 0;
++
++	crypto_blkcipher_set_iv(cipher, iv, iv_length);
++
++	if (encrypt)
++		crypto_blkcipher_encrypt(&desc, dst, src, input_length);
++	else
++		crypto_blkcipher_decrypt(&desc, dst, src, input_length);
++
++	crypto_free_blkcipher(cipher);
++}
++
++static void AES_xts(struct crypto_blkcipher *cipher, int tweak,
++		    const u8 *input, u8 *output,
++		    int length, int encrypt)
++{
++	struct blkcipher_desc desc;
++	struct scatterlist dst[1];
++	struct scatterlist src[1];
++
++	u8 tweak_bytes[AES_BLOCK_SIZE];
++	initialize_tweak_bytes(tweak_bytes, tweak);
++
++	sg_init_table(dst, 1);
++	sg_init_table(src, 1);
++
++	sg_set_buf(&dst[0], output, length);
++	sg_set_buf(&src[0], input, length);
++
++	desc.tfm = cipher;
++	desc.flags = 0;
++	desc.info = tweak_bytes;
++
++	if (encrypt)
++		crypto_blkcipher_encrypt_iv(&desc, &dst[0], &src[0], length);
++	else
++		crypto_blkcipher_decrypt_iv(&desc, &dst[0], &src[0], length);
++}
++
++void AES_xts_encrypt(struct crypto_blkcipher *cipher,
++		     const u8 *page_plaintext, u8 *page_ciphertext,
++		     int page_tweak, int page_size,
++		     const u8 *tags_plaintext, u8 *tags_ciphertext,
++		     int tags_tweak, int tags_size)
++{
++	int missing_bytes;
++	u8 block_aligned_tags_plaintext[AES_BLOCK_SIZE];
++	u8 block_aligned_tags_ciphertext[AES_BLOCK_SIZE];
++
++	AES_xts(cipher, page_tweak,
++		page_plaintext, page_ciphertext,
++		page_size, 1);
++
++	missing_bytes = sizeof(block_aligned_tags_plaintext) - tags_size;
++
++	memcpy(block_aligned_tags_plaintext, tags_plaintext, tags_size);
++	memcpy(block_aligned_tags_plaintext + tags_size,
++	       page_ciphertext + (page_size - missing_bytes),
++	       missing_bytes);
++
++	AES_xts(cipher, tags_tweak,
++		block_aligned_tags_plaintext, block_aligned_tags_ciphertext,
++		sizeof(block_aligned_tags_plaintext), 1);
++
++	memcpy(page_ciphertext + (page_size-missing_bytes),
++	       block_aligned_tags_ciphertext,
++	       missing_bytes);
++	memcpy(tags_ciphertext, block_aligned_tags_ciphertext + missing_bytes,
++	       tags_size);
++}
++
++void AES_xts_decrypt(struct crypto_blkcipher *cipher,
++		     u8 *page_ciphertext, u8 *page_plaintext,
++		     int page_tweak, int page_size,
++		     u8 *tags_ciphertext, u8 *tags_plaintext,
++		     int tags_tweak, int tags_size)
++{
++	int missing_bytes;
++	u8 block_aligned_tags_ciphertext[AES_BLOCK_SIZE];
++	u8 block_aligned_tags_plaintext[AES_BLOCK_SIZE];
++
++	missing_bytes = sizeof(block_aligned_tags_ciphertext) - tags_size;
++
++	memcpy(block_aligned_tags_ciphertext,
++	       page_ciphertext + (page_size - missing_bytes),
++	       missing_bytes);
++	memcpy(block_aligned_tags_ciphertext + missing_bytes,
++	       tags_ciphertext,
++	       tags_size);
++
++	AES_xts(cipher, tags_tweak,
++		block_aligned_tags_ciphertext, block_aligned_tags_plaintext,
++		sizeof(block_aligned_tags_ciphertext), 0);
++
++	memcpy(tags_plaintext, block_aligned_tags_plaintext, tags_size);
++	memcpy(page_ciphertext + (page_size - missing_bytes),
++	       block_aligned_tags_plaintext + tags_size,
++	       missing_bytes);
++
++	AES_xts(cipher, page_tweak,
++		page_ciphertext, page_plaintext,
++		page_size, 0);
++}
++
++int yaffs_generate_keys(u8 *key_buffer, int key_size)
++{
++	get_random_bytes(key_buffer, key_size);
++	return 1;
++}
++
++int yaffs_decrypt_keys_from_page(char *password, u8 *page, u8 *keys)
++{
++	int i;
++	u8 password_key[16];
++	u8 mac_key[20];
++	u8 our_mac[20];
++
++	struct yaffs_key_descriptor_block *key_block;
++	key_block = (struct yaffs_key_descriptor_block *)page;
++
++	if (key_block->version_number != 1) {
++		printk(KERN_INFO "Version number (%d) on block is not 1!", key_block->version_number);
++
++		printk(KERN_INFO "Descriptor dump:\n");
++		for (i=0;i<sizeof(struct yaffs_key_descriptor_block);i++)
++			printk("0x%02x, ", page[i]);
++
++		printk(KERN_INFO "\n");
++
++		return -1;
++	}
++
++	printk(KERN_INFO "Pulled key salt:\n");
++	for (i=0;i<sizeof(key_block->key_salt);i++)
++		printk("0x%02x, ", key_block->key_salt[i]);
++
++	printk(KERN_INFO "\n");
++
++	printk(KERN_INFO "Pulled mac salt:\n");
++	for (i=0;i<sizeof(key_block->mac_salt);i++)
++		printk("0x%02x, ", key_block->mac_salt[i]);
++
++	printk(KERN_INFO "\n");
++
++	printk(KERN_INFO "Pulled their MAC:\n");
++	for (i=0;i<sizeof(key_block->mac);i++)
++		printk("0x%02x, ", key_block->mac[i]);
++
++	printk(KERN_INFO "\n");
++
++	yaffs_pbkdf2(password, strlen(password),
++		     key_block->key_salt, sizeof(key_block->key_salt),
++		     key_block->iteration_count,
++		     password_key, sizeof(password_key));
++
++	yaffs_pbkdf2(password, strlen(password),
++		     key_block->mac_salt, sizeof(key_block->mac_salt),
++		     key_block->iteration_count,
++		     mac_key, sizeof(mac_key));
++
++	HMAC_sha1(mac_key, sizeof(mac_key),
++		  key_block,
++		  sizeof(struct yaffs_key_descriptor_block) - sizeof(key_block->mac),
++		  our_mac);
++
++	if (memcmp(our_mac, key_block->mac, sizeof(our_mac)) != 0) {
++		printk(KERN_INFO "Calculated mac does not match!\nOur mac:\n");
++		for (i=0;i<sizeof(our_mac);i++)
++			printk("0x%02x, ", our_mac[i]);
++
++		printk(KERN_INFO "\n");
++
++		printk(KERN_INFO "Their mac:\n");
++		for (i=0;i<sizeof(key_block->mac);i++)
++			printk("0x%02x, ", key_block->mac[i]);
++
++		printk(KERN_INFO "\n");
++
++		return -1;
++	}
++
++	AES_cbc(password_key, sizeof(password_key),
++		key_block->iv, sizeof(key_block->iv),
++		key_block->keys, sizeof(key_block->keys),
++		keys, 0);
++
++	return 1;
++}
++
++int yaffs_encrypt_keys_to_page(char *password,
++			    u8 *page, int page_length,
++			    u8 *keys, int keys_length)
++{
++	int i;
++	u8 password_key[16];
++	u8 mac_key[20];
++
++	struct yaffs_key_descriptor_block *key_block;
++
++	if (sizeof(struct yaffs_key_descriptor_block) > page_length)
++		return -1;
++
++	key_block = (struct yaffs_key_descriptor_block *)page;
++	key_block->version_number = 1;
++	key_block->iteration_count = PASSWORD_ITERATIONS;
++
++	get_random_bytes(key_block->key_salt, sizeof(key_block->key_salt));
++	get_random_bytes(key_block->mac_salt, sizeof(key_block->mac_salt));
++	get_random_bytes(key_block->iv, sizeof(key_block->iv));
++
++	printk(KERN_INFO "Generated key salt:\n");
++	for (i=0;i<sizeof(key_block->key_salt);i++)
++		printk("0x%02x, ", key_block->key_salt[i]);
++
++	printk(KERN_INFO "\n");
++
++	printk(KERN_INFO "Generated mac salt:\n");
++	for (i=0;i<sizeof(key_block->mac_salt);i++)
++		printk("0x%02x, ", key_block->mac_salt[i]);
++
++	printk(KERN_INFO "\n");
++
++	printk(KERN_INFO "Generated IV:\n");
++	for (i=0;i<sizeof(key_block->iv);i++)
++		printk("0x%02x, ", key_block->iv[i]);
++
++	printk(KERN_INFO "\n");
++
++	yaffs_pbkdf2(password, strlen(password),
++		     key_block->key_salt, sizeof(key_block->key_salt),
++		     PASSWORD_ITERATIONS, password_key, sizeof(password_key));
++
++	yaffs_pbkdf2(password, strlen(password),
++		     key_block->mac_salt, sizeof(key_block->mac_salt),
++		     PASSWORD_ITERATIONS, mac_key, sizeof(mac_key));
++
++	AES_cbc(password_key, sizeof(password_key),
++		key_block->iv, sizeof(key_block->iv),
++		keys, keys_length,
++		key_block->keys, 1);
++
++	HMAC_sha1(mac_key, sizeof(mac_key),
++		  key_block,
++		  sizeof(struct yaffs_key_descriptor_block) - sizeof(key_block->mac),
++		  key_block->mac);
++
++	printk(KERN_INFO "Generated MAC:\n");
++	for (i=0;i<sizeof(key_block->mac);i++)
++		printk("0x%02x, ", key_block->mac[i]);
++
++	printk(KERN_INFO "\n");
++
++	return 1;
++}
+diff --git a/fs/yaffs2/yaffs_crypto.h b/fs/yaffs2/yaffs_crypto.h
+new file mode 100644
+index 0000000..a6ef0c0
+--- /dev/null
++++ b/fs/yaffs2/yaffs_crypto.h
+@@ -0,0 +1,63 @@
++/*
++ * Copyright (C) 2011 Whisper Systems <moxie@whispersys.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * version 2 as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU Library General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ */
++
++#ifndef __YAFFS_CRYPTO_H__
++#define __YAFFS_CRYPTO_H__
++
++#define AES_BLOCK_SIZE 16
++#define XTS_KEY_SIZE 32
++#define SHA1_DIGEST_SIZE 20
++
++#include "linux/crypto.h"
++
++struct yaffs_key_descriptor_block {
++	u32 version_number;
++	u32 iteration_count;
++
++	u8 key_salt[16];
++	u8 mac_salt[16];
++
++	u8 iv[AES_BLOCK_SIZE];
++	u8 keys[XTS_KEY_SIZE];
++
++	u8 mac[SHA1_DIGEST_SIZE];
++};
++
++
++void AES_xts_encrypt(struct crypto_blkcipher *cipher,
++		     const u8 *page_plaintext, u8 *page_ciphertext,
++		     int page_tweak, int page_size,
++		     const u8 *tags_plaintext, u8 *tags_ciphertext,
++		     int tags_tweak, int tags_size);
++
++void AES_xts_decrypt(struct crypto_blkcipher *cipher,
++		     u8 *page_ciphertext, u8 *page_plaintext,
++		     int page_tweak, int page_size,
++		     u8 *tags_ciphertext, u8 *tags_plaintext,
++		     int tags_tweak, int tags_size);
++
++int yaffs_generate_keys(u8 *key_buffer, int key_size);
++
++int yaffs_encrypt_keys_to_page(char *password,
++			       u8 *page, int page_length,
++			       u8 *keys, int keys_length);
++
++int yaffs_decrypt_keys_from_page(char *password, u8 *page, u8 *keys);
++
++
++
++#endif
+diff --git a/fs/yaffs2/yaffs_guts.h b/fs/yaffs2/yaffs_guts.h
+index 6ec8a47..5ef10d7 100644
+--- a/fs/yaffs2/yaffs_guts.h
++++ b/fs/yaffs2/yaffs_guts.h
+@@ -17,6 +17,7 @@
+ #define __YAFFS_GUTS_H__
+ 
+ #include "yportenv.h"
++#include "linux/crypto.h"
+ 
+ #define YAFFS_OK	1
+ #define YAFFS_FAIL  0
+@@ -722,6 +723,9 @@ struct yaffs_dev {
+ 	unsigned oldest_dirty_seq;
+ 	unsigned oldest_dirty_block;
+ 
++	struct crypto_blkcipher *cipher;
++	int is_encrypted_fs;
++
+ 	/* Block refreshing */
+ 	int refresh_skip;	/* A skip down counter.
+ 				 * Refresh happens when this gets to zero. */
+diff --git a/fs/yaffs2/yaffs_mtdif2.c b/fs/yaffs2/yaffs_mtdif2.c
+index 1058ec3..6d726c0 100644
+--- a/fs/yaffs2/yaffs_mtdif2.c
++++ b/fs/yaffs2/yaffs_mtdif2.c
+@@ -25,6 +25,7 @@
+ #include "yaffs_packedtags2.h"
+ 
+ #include "yaffs_linux.h"
++#include "yaffs_crypto.h"
+ 
+ /* NB For use with inband tags....
+  * We assume that the data buffer is of size total_bytes_per_chunk so
+@@ -46,6 +47,8 @@ int nandmtd2_write_chunk_tags(struct yaffs_dev *dev, int nand_chunk,
+ 
+ 	struct yaffs_packed_tags2 pt;
+ 
++	u8 *encrypted_data = NULL;
++
+ 	int packed_tags_size =
+ 	    dev->param.no_tags_ecc ? sizeof(pt.t) : sizeof(pt);
+ 	void *packed_tags_ptr =
+@@ -74,15 +77,34 @@ int nandmtd2_write_chunk_tags(struct yaffs_dev *dev, int nand_chunk,
+ 		yaffs_pack_tags2(&pt, tags, !dev->param.no_tags_ecc);
+ 	}
+ 
++	if (dev->is_encrypted_fs) {
++		if (dev->param.inband_tags)
++			BUG();
++
++		encrypted_data = yaffs_get_temp_buffer(dev);
++		memcpy(encrypted_data, data, dev->param.total_bytes_per_chunk);
++
++		AES_xts_encrypt(dev->cipher,
++				encrypted_data, encrypted_data,
++				nand_chunk * 2, dev->param.total_bytes_per_chunk,
++				packed_tags_ptr+SEQUENCE_OFFSET,
++				packed_tags_ptr+SEQUENCE_OFFSET,
++				(nand_chunk * 2) + 1,
++				packed_tags_size-SEQUENCE_OFFSET);
++	}
++
+ #if (LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 17))
+ 	ops.mode = MTD_OOB_AUTO;
+ 	ops.ooblen = (dev->param.inband_tags) ? 0 : packed_tags_size;
+ 	ops.len = dev->param.total_bytes_per_chunk;
+ 	ops.ooboffs = 0;
+-	ops.datbuf = (u8 *) data;
++	ops.datbuf = dev->is_encrypted_fs ? encrypted_data : (u8 *) data;
+ 	ops.oobbuf = (dev->param.inband_tags) ? NULL : packed_tags_ptr;
+ 	retval = mtd->write_oob(mtd, addr, &ops);
+ 
++	if (dev->is_encrypted_fs && encrypted_data)
++		yaffs_release_temp_buffer(dev, encrypted_data);
++
+ #else
+ 	if (!dev->param.inband_tags) {
+ 		retval =
+@@ -109,6 +131,10 @@ int nandmtd2_read_chunk_tags(struct yaffs_dev *dev, int nand_chunk,
+ 	struct mtd_oob_ops ops;
+ #endif
+ 	size_t dummy;
++
++	struct yaffs_ext_tags placeholder_tags;
++	u8 *encrypted_data = NULL;
++
+ 	int retval = 0;
+ 	int local_data = 0;
+ 
+@@ -135,15 +161,25 @@ int nandmtd2_read_chunk_tags(struct yaffs_dev *dev, int nand_chunk,
+ 	}
+ 
+ #if (LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 17))
+-	if (dev->param.inband_tags || (data && !tags))
++	if (dev->is_encrypted_fs) {
++		encrypted_data = yaffs_get_temp_buffer(dev);
++
++		if (!tags)
++			tags = &placeholder_tags;
++	}
++
++	if (dev->param.inband_tags || (data && !tags)) {
++		if (dev->is_encrypted_fs)
++			BUG();
++
+ 		retval = mtd->read(mtd, addr, dev->param.total_bytes_per_chunk,
+ 				   &dummy, data);
+-	else if (tags) {
++	} else if (tags) {
+ 		ops.mode = MTD_OOB_AUTO;
+ 		ops.ooblen = packed_tags_size;
+-		ops.len = data ? dev->data_bytes_per_chunk : packed_tags_size;
++		ops.len = (data || encrypted_data) ? dev->data_bytes_per_chunk : packed_tags_size;
+ 		ops.ooboffs = 0;
+-		ops.datbuf = data;
++		ops.datbuf = dev->is_encrypted_fs ? encrypted_data : data;
+ 		ops.oobbuf = yaffs_dev_to_lc(dev)->spare_buffer;
+ 		retval = mtd->read_oob(mtd, addr, &ops);
+ 	}
+@@ -165,6 +201,8 @@ int nandmtd2_read_chunk_tags(struct yaffs_dev *dev, int nand_chunk,
+ #endif
+ 
+ 	if (dev->param.inband_tags) {
++		if (dev->is_encrypted_fs)
++			BUG();
+ 		if (tags) {
+ 			struct yaffs_packed_tags2_tags_only *pt2tp;
+ 			pt2tp =
+@@ -177,6 +215,27 @@ int nandmtd2_read_chunk_tags(struct yaffs_dev *dev, int nand_chunk,
+ 			memcpy(packed_tags_ptr,
+ 			       yaffs_dev_to_lc(dev)->spare_buffer,
+ 			       packed_tags_size);
++
++			if (dev->is_encrypted_fs) {
++				if (pt.t.seq_number != 0xFFFFFFFF) {
++					AES_xts_decrypt(dev->cipher,
++							encrypted_data,
++							encrypted_data,
++							nand_chunk * 2,
++							dev->data_bytes_per_chunk,
++							packed_tags_ptr+SEQUENCE_OFFSET,
++							packed_tags_ptr+SEQUENCE_OFFSET,
++							(nand_chunk * 2) + 1,
++							packed_tags_size-SEQUENCE_OFFSET);
++				}
++
++				if (data)
++					memcpy(data, encrypted_data,
++                                               dev->param.total_bytes_per_chunk);
++
++				yaffs_release_temp_buffer(dev, encrypted_data);
++			}
++
+ 			yaffs_unpack_tags2(tags, &pt, !dev->param.no_tags_ecc);
+ 		}
+ 	}
+diff --git a/fs/yaffs2/yaffs_packedtags2.h b/fs/yaffs2/yaffs_packedtags2.h
+index 675e719..08e36d2 100644
+--- a/fs/yaffs2/yaffs_packedtags2.h
++++ b/fs/yaffs2/yaffs_packedtags2.h
+@@ -21,6 +21,8 @@
+ #include "yaffs_guts.h"
+ #include "yaffs_ecc.h"
+ 
++#define SEQUENCE_OFFSET sizeof(unsigned int)
++
+ struct yaffs_packed_tags2_tags_only {
+ 	unsigned seq_number;
+ 	unsigned obj_id;
+diff --git a/fs/yaffs2/yaffs_pbkdf2.c b/fs/yaffs2/yaffs_pbkdf2.c
+new file mode 100644
+index 0000000..ca8d9d1
+--- /dev/null
++++ b/fs/yaffs2/yaffs_pbkdf2.c
+@@ -0,0 +1,110 @@
++/*
++ * Copyright 2004 Clemens Fruhwirth <clemens@endorphin.org>
++ * Copyright 2006 Ivan Deras Tabora  <ideras@gmail.com> (adapted to work with Linux Crypto API)
++ * Copyright 2011 Whisper Systems   <moxie@whispersys.com> (minor adaptions for YAFFS2)
++ *
++ * Implementation of PBKDF2-HMAC-SHA1 according to RFC 2898.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * version 2 as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU Library General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ */
++
++#include "linux/crypto.h"
++#include "linux/types.h"
++#include "linux/scatterlist.h"
++
++#include "yaffs_pbkdf2.h"
++#include "yaffs_crypto.h"
++
++static void inline xor_block(u8 const *src1, u8 const *src2, char *dst, size_t n)
++{
++	while (n--)
++		*dst++ = *src1++ ^ *src2++;
++}
++
++/*
++ * This function implements PBKDF2-HMAC-SHA1 according to RFC 2898
++ */
++int yaffs_pbkdf2(const char *pwd, size_t pwd_len,
++		 const char *salt, size_t salt_len,
++		 unsigned int iterations,
++		 char *d_key, size_t d_key_len)
++{
++	/* U_n is the buffer for U_n values */
++	unsigned char U_n[SHA1_DIGEST_SIZE];
++	/* F_buf is the XOR buffer for F function */
++	char F_buf[SHA1_DIGEST_SIZE];
++	struct scatterlist sg[4];
++	u32 j, i = 1, i_network_ordered;
++	struct hash_desc desc;
++	int retval;
++
++	struct crypto_hash *hash_tfm;
++
++	hash_tfm   = crypto_alloc_hash("hmac(sha1)",0,CRYPTO_ALG_ASYNC);
++	desc.tfm   = hash_tfm;
++	desc.flags = 0;
++
++	/* The first hash iteration is done different, therefore
++	   we reduce iterations to conveniently use it as a loop
++	   counter */
++	iterations--;
++
++	/* Setup the scatterlists */
++	sg_set_buf(&sg[0], (void*)pwd, pwd_len);
++	sg_set_buf(&sg[1], (void*)salt, salt_len);
++	sg_set_buf(&sg[2], (void*)&i_network_ordered, sizeof(u32));
++	sg_set_buf(&sg[3], (void*)U_n, SHA1_DIGEST_SIZE);
++
++	crypto_hash_init(&desc);
++	crypto_hash_setkey(desc.tfm, (u8 *)pwd, pwd_len);
++	crypto_hash_final(&desc, U_n);
++	memset(U_n, 0, SHA1_DIGEST_SIZE);
++
++	while(d_key_len > 0) {
++		unsigned int blocksize = d_key_len<SHA1_DIGEST_SIZE? d_key_len : SHA1_DIGEST_SIZE;
++
++		j = iterations;
++
++		// U_1 hashing
++		i_network_ordered = cpu_to_be32(i);
++
++		crypto_hash_init(&desc);
++		crypto_hash_setkey(desc.tfm, (u8 *)pwd, pwd_len);
++		crypto_hash_update(&desc, &sg[1], salt_len);
++
++		crypto_hash_update(&desc, &sg[2], sizeof(u32));
++		crypto_hash_final(&desc, U_n);
++
++		memcpy(F_buf, U_n, SHA1_DIGEST_SIZE);
++
++		// U_n hashing
++		while(j--) {
++			crypto_hash_init(&desc);
++			crypto_hash_setkey(hash_tfm, (u8 *)pwd, pwd_len);
++			crypto_hash_digest(&desc, &sg[3], SHA1_DIGEST_SIZE, U_n);
++
++			xor_block((u8 *)F_buf, (u8 *)U_n, F_buf, SHA1_DIGEST_SIZE);
++		}
++		memcpy(d_key, F_buf, blocksize);
++
++		d_key += blocksize;
++		d_key_len -= blocksize;
++		i++;
++	}
++
++	crypto_free_hash(hash_tfm);
++
++	retval = 0;
++	return retval;
++}
+diff --git a/fs/yaffs2/yaffs_pbkdf2.h b/fs/yaffs2/yaffs_pbkdf2.h
+new file mode 100644
+index 0000000..a77602a
+--- /dev/null
++++ b/fs/yaffs2/yaffs_pbkdf2.h
+@@ -0,0 +1,4 @@
++int yaffs_pbkdf2(const char *pwd, size_t pwd_len,
++		 const char *salt, size_t salt_len,
++		 unsigned int iterations,
++		 char *d_key, size_t d_key_len);
+diff --git a/fs/yaffs2/yaffs_vfs.c b/fs/yaffs2/yaffs_vfs.c
+index 50fd7c1..4913c52 100644
+--- a/fs/yaffs2/yaffs_vfs.c
++++ b/fs/yaffs2/yaffs_vfs.c
+@@ -170,6 +170,10 @@ static uint32_t YCALCBLOCKS(uint64_t partition_size, uint32_t block_size)
+ #include "yaffs_mtdif.h"
+ #include "yaffs_mtdif1.h"
+ #include "yaffs_mtdif2.h"
++#include "yaffs_crypto.h"
++#include "yaffs_pbkdf2.h"
++
++#include "yaffs_packedtags2.h"
+ 
+ unsigned int yaffs_trace_mask = YAFFS_TRACE_BAD_BLOCKS | YAFFS_TRACE_ALWAYS;
+ unsigned int yaffs_wr_attempts = YAFFS_WR_ATTEMPTS;
+@@ -2534,6 +2538,8 @@ static void yaffs_touch_super(struct yaffs_dev *dev)
+ 		sb->s_dirt = 1;
+ }
+ 
++#define MAX_OPT_LEN 256
++
+ struct yaffs_options {
+ 	int inband_tags;
+ 	int skip_checkpoint_read;
+@@ -2546,9 +2552,31 @@ struct yaffs_options {
+ 	int empty_lost_and_found;
+ 	int empty_lost_and_found_overridden;
+ 	int disable_summary;
++	int create_encrypted_filesystem;
++	int unlock_encrypted_filesystem;
++	char password[MAX_OPT_LEN+1];
+ };
+ 
+-#define MAX_OPT_LEN 30
++static int parse_option_passphrase(struct yaffs_options *options, const char *option)
++{
++	int offset = 0;
++	memset(options->password, 0, sizeof(options->password));
++
++	while (option && *option && *option != '=')
++		option++;
++
++	if (!option || *option != '=') return -1;
++	else                           option++;
++
++	while (option && *option && offset < (sizeof(options->password) - 1)) {
++		options->password[offset] = *option;
++		option++;
++		offset++;
++	}
++
++	return 0;
++}
++
+ static int yaffs_parse_options(struct yaffs_options *options,
+ 			       const char *options_str)
+ {
+@@ -2604,6 +2632,12 @@ static int yaffs_parse_options(struct yaffs_options *options,
+ 		} else if (!strcmp(cur_opt, "no-checkpoint")) {
+ 			options->skip_checkpoint_read = 1;
+ 			options->skip_checkpoint_write = 1;
++		} else if (strstr(cur_opt, "unlock_encrypted=") != NULL) {
++			options->unlock_encrypted_filesystem = 1;
++			parse_option_passphrase(options, cur_opt);
++		} else if (strstr(cur_opt, "create_encrypted=") != NULL) {
++			options->create_encrypted_filesystem = 1;
++			parse_option_passphrase(options, cur_opt);
+ 		} else {
+ 			printk(KERN_INFO "yaffs: Bad mount option \"%s\"\n",
+ 			       cur_opt);
+@@ -2614,6 +2648,213 @@ static int yaffs_parse_options(struct yaffs_options *options,
+ 	return error;
+ }
+ 
++static int yaffs_erase_filesystem(struct yaffs_dev *dev) {
++	int i;
++
++	for (i=dev->param.start_block;i<dev->param.end_block;i++) {
++		enum yaffs_block_state state;
++		u32 sequence_number;
++
++		dev->param.query_block_fn(dev, i, &state, &sequence_number);
++
++		/* if (state != YAFFS_BLOCK_STATE_DEAD) */
++		dev->param.erase_fn(dev, i);
++	}
++
++	return 1;
++}
++
++static int yaffs_find_first_good_block(struct yaffs_dev *dev) {
++	int i;
++
++	for (i=dev->param.start_block;i<dev->param.end_block;i++) {
++		enum yaffs_block_state state;
++		u32 sequence_number;
++
++		dev->param.query_block_fn(dev, i, &state, &sequence_number);
++
++		if (state != YAFFS_BLOCK_STATE_DEAD && state == YAFFS_BLOCK_STATE_EMPTY)
++			return i;
++	}
++
++	return -1;
++}
++
++static int yaffs_write_keys_to_block(struct yaffs_dev *dev, char *password,
++				     u8 *keys, int key_length,
++				     int key_management_block)
++{
++	u8 *page;
++	struct yaffs_ext_tags tags;
++
++	if (key_length > dev->param.total_bytes_per_chunk)
++		return -1;
++
++	page = kmalloc(dev->param.total_bytes_per_chunk, GFP_NOFS);
++
++	memset(page, 0, dev->param.total_bytes_per_chunk);
++	memset(&tags, 0, sizeof(tags));
++
++	yaffs_encrypt_keys_to_page(password,
++				   page, dev->param.total_bytes_per_chunk,
++				   keys, key_length);
++
++	tags.chunk_used = 1;
++	tags.obj_id = 31337;
++	tags.chunk_id = 0;
++	tags.seq_number = 31337;
++	tags.extra_available = 1;
++	tags.extra_length = 31337;
++
++	if (dev->param.write_chunk_tags_fn(dev, key_management_block *
++						dev->param.chunks_per_block,
++					   page, &tags) == YAFFS_FAIL)
++	{
++		kfree(page);
++		return -1;
++	}
++
++	kfree(page);
++	return 1;
++}
++
++static int yaffs_create_encrypted_filesystem(struct yaffs_dev *dev,
++					     char *password) {
++	u8 keys[32];
++	int key_management_block;
++
++	dev->data_bytes_per_chunk = dev->param.total_bytes_per_chunk;
++
++	if (yaffs_erase_filesystem(dev) == -1) {
++		printk(KERN_INFO "Erase FS failed!\n");
++		return -1;
++	}
++
++	if ((key_management_block = yaffs_find_first_good_block(dev)) == -1) {
++		printk(KERN_INFO "Finding good block failed!\n");
++		return -1;
++	}
++
++	if (yaffs_generate_keys(keys, sizeof(keys)) == -1) {
++		printk(KERN_INFO "Unable to generate encrypted FS key material!\n");
++		return -1;
++	}
++
++	if (yaffs_write_keys_to_block(dev, password, keys, sizeof(keys),
++				      key_management_block) == -1) {
++		printk(KERN_INFO "Writing keys to block failed!\n");
++		return -1;
++	}
++
++	dev->cipher = crypto_alloc_blkcipher("xts(aes)", 0, 0);
++	crypto_blkcipher_setkey(dev->cipher, keys, sizeof(keys));
++	dev->param.start_block = key_management_block + 1;
++
++	printk(KERN_INFO "Creating encrypted FS success!\n");
++
++	return 1;
++}
++
++static int yaffs_find_key_management_block(struct yaffs_dev *dev) {
++	struct yaffs_ext_tags tags;
++	int i;
++
++	for (i=dev->param.start_block;i<dev->param.end_block;i++) {
++		enum yaffs_block_state state;
++		u32 sequence_number;
++
++		dev->param.query_block_fn(dev, i, &state, &sequence_number);
++
++		if (state != YAFFS_BLOCK_STATE_DEAD) {
++			if (dev->param.read_chunk_tags_fn(dev,
++						i * dev->param.chunks_per_block,
++					       NULL, &tags) != YAFFS_OK)
++				return -1;
++
++		if (tags.obj_id == 31337 && tags.seq_number == 31337)
++			return i;
++		else
++			return -1;
++
++		}
++	}
++
++	return -1;
++}
++
++static int yaffs_load_keys(struct yaffs_dev *dev, char *password,
++			   int key_management_block)
++{
++	struct yaffs_ext_tags tags;
++	u8 keys[32];
++	u8 *page = kmalloc(dev->param.total_bytes_per_chunk, GFP_NOFS);
++
++	memset(page, 0, dev->param.total_bytes_per_chunk);
++
++	if (dev->param.read_chunk_tags_fn(dev, key_management_block
++					       * dev->param.chunks_per_block,
++					  page, &tags) != YAFFS_OK)
++		return -1;
++
++	if (yaffs_decrypt_keys_from_page(password, page, keys) == -1)
++		return -1;
++
++	printk(KERN_INFO "Tags ObjectID, SEQ#: %d, %d\n", tags.obj_id, tags.seq_number);
++
++	dev->cipher = crypto_alloc_blkcipher("xts(aes)", 0, 0);
++	crypto_blkcipher_setkey(dev->cipher, keys, sizeof(keys));
++
++	kfree(page);
++
++	return 1;
++}
++
++static int yaffs_unlock_encrypted_filesystem(struct yaffs_dev *dev,
++					     char *password)
++{
++	int key_management_block;
++
++	dev->data_bytes_per_chunk = dev->param.total_bytes_per_chunk;
++
++	if ((key_management_block = yaffs_find_key_management_block(dev)) == -1)
++		return -1;
++
++	printk(KERN_INFO "Found key management block: %d\n", key_management_block);
++
++	if (yaffs_load_keys(dev, password, key_management_block) == -1)
++		return -1;
++
++	printk(KERN_INFO "Loaded keys!\n");
++
++	dev->param.start_block = key_management_block + 1;
++
++	printk(KERN_INFO "Encrypted FS successfully mounted!\n");
++
++	return 1;
++}
++
++static int yaffs_ensure_not_encrypted_filesystem(struct yaffs_dev *dev) {
++	if (yaffs_find_key_management_block(dev) == -1)
++		return 1;
++
++	return -1;
++}
++
++static int yaffs_ensure_encrypted_filesystem_requirements(struct yaffs_dev *dev)
++{
++	if (dev->param.inband_tags) {
++		printk("yaffs: Inband tags are not supported with encrypted filesystems.\n");
++		return -1;
++	}
++
++	if (!dev->param.no_tags_ecc) {
++		printk("yaffs: ECC must be managed by MTD for encrypted filesystem support.\n");
++		return -1;
++	}
++
++	return 1;
++}
++
+ static struct super_block *yaffs_internal_read_super(int yaffs_version,
+ 						     struct super_block *sb,
+ 						     void *data, int silent)
+@@ -2665,7 +2906,10 @@ static struct super_block *yaffs_internal_read_super(int yaffs_version,
+ 	if (!data_str)
+ 		data_str = "";
+ 
+-	printk(KERN_INFO "yaffs: passed flags \"%s\"\n", data_str);
++	if (strstr(data_str, "encrypted") != NULL)
++		printk(KERN_INFO "yaffs: passed flags <REDACTED>\n");
++	else
++		printk(KERN_INFO "yaffs: passed flags \"%s\"\n", data_str);
+ 
+ 	memset(&options, 0, sizeof(options));
+ 
+@@ -2944,6 +3188,59 @@ static struct super_block *yaffs_internal_read_super(int yaffs_version,
+ 
+ 	yaffs_gross_lock(dev);
+ 
++	if (options.create_encrypted_filesystem ||
++	    options.unlock_encrypted_filesystem)
++	{
++		if (yaffs_ensure_encrypted_filesystem_requirements(dev) == -1) {
++			yaffs_trace(YAFFS_TRACE_ALWAYS,
++				"yaffs: Filesystem does not meet prerequisites for encryption support.");
++
++			printk(KERN_EMERG "yaffs: Filesystem does not meet prerequisites for encryption support.");
++			return NULL;
++		}
++	}
++
++	if (options.create_encrypted_filesystem) {
++		if (yaffs_create_encrypted_filesystem(dev,
++						      options.password) == -1)
++		{
++			yaffs_trace(YAFFS_TRACE_ALWAYS,
++				"yaffs: Failed to create encrypted filesystem.");
++
++			printk(KERN_EMERG "yaffs: Failed to create encrypted filesystem.\n");
++			return NULL;
++		}
++
++		dev->is_encrypted_fs = 1;
++	}
++
++	if (options.unlock_encrypted_filesystem) {
++		if (yaffs_unlock_encrypted_filesystem(dev,
++						      options.password) == -1)
++		{
++			yaffs_trace(YAFFS_TRACE_ALWAYS,
++				"yaffs: Failed to unlock encrypted filesystem.");
++
++			printk(KERN_EMERG "yaffs: Failed to unlock encrypted filesystem.\n");
++			return NULL;
++		}
++
++		dev->is_encrypted_fs = 1;
++	}
++
++	if (!options.create_encrypted_filesystem &&
++	    !options.unlock_encrypted_filesystem)
++	{
++		if (yaffs_ensure_not_encrypted_filesystem(dev) == -1) {
++			yaffs_trace(YAFFS_TRACE_ALWAYS,
++				"yaffs: This is an encrypted filesystem, " \
++				"you must specify a passphrase.");
++
++			printk(KERN_EMERG "yaffs: This is an encrypted filesystem, you must specify a passphrase.\n");
++			return NULL;
++		}
++	}
++
+ 	err = yaffs_guts_initialise(dev);
+ 
+ 	yaffs_trace(YAFFS_TRACE_OS,
+@@ -3150,6 +3447,7 @@ static char *yaffs_dump_dev_part1(char *buf, struct yaffs_dev *dev)
+ 	buf += sprintf(buf, "n_unlinked_files..... %u\n",
+ 				dev->n_unlinked_files);
+ 	buf += sprintf(buf, "refresh_count........ %u\n", dev->refresh_count);
++	buf += sprintf(buf, "is_encrypted......... %d\n", dev->is_encrypted_fs);
+ 	buf += sprintf(buf, "n_bg_deletions....... %u\n", dev->n_bg_deletions);
+ 	buf += sprintf(buf, "tags_used............ %u\n", dev->tags_used);
+ 	buf += sprintf(buf, "summary_used......... %u\n", dev->summary_used);

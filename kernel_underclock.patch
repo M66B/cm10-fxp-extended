@@ -1,0 +1,62 @@
+diff --git a/arch/arm/mach-msm/acpuclock-7x30.c b/arch/arm/mach-msm/acpuclock-7x30.c
+index 318e4d0..050a3ea 100644
+--- a/arch/arm/mach-msm/acpuclock-7x30.c
++++ b/arch/arm/mach-msm/acpuclock-7x30.c
+@@ -79,25 +79,28 @@ struct clkctl_acpu_speed {
+ static struct clock_state drv_state = { 0 };
+ 
+ static struct cpufreq_frequency_table freq_table[] = {
+-	{ 0, 134400 },
+-	{ 1, 184320 },
+-	{ 2, 249600 },
+-	{ 3, 364800 },
+-	{ 4, 460800 },
+-	{ 5, 576000 },
+-	{ 6, 652800 },
+-	{ 7, 768000 },
++	{ 0, 24576 },
++	{ 1, 61440 },
++	{ 2, 134400 },
++	{ 3, 184320 },
++	// 192000
++	{ 4, 249600 },
++	{ 5, 364800 },
++	{ 6, 460800 },
++	{ 7, 576000 },
++	{ 8, 652800 },
++	{ 9, 768000 },
+ 	/* 806.4MHz is updated to 1024MHz at runtime for MSM8x55. */
+-	{ 8, 806400 },
+-	{ 9, 921600 },
+-	{ 10, 1017600 },
+-	{ 11, 1113600 },
+-	{ 12, 1209600 },
+-	{ 13, 1305600 },
+-	{ 14, 1401600 },
+-	{ 15, 1516800 },
+-	{ 16, 1612800 },
+-	{ 17, CPUFREQ_TABLE_END },
++	{ 10, 806400 },
++	{ 11, 921600 },
++	{ 12, 1017600 },
++	{ 13, 1113600 },
++	{ 14, 1209600 },
++	{ 15, 1305600 },
++	{ 16, 1401600 },
++	{ 17, 1516800 },
++	{ 18, 1612800 },
++	{ 19, CPUFREQ_TABLE_END },
+ };
+ 
+ /* Use negative numbers for sources that can't be enabled/disabled */
+@@ -110,8 +113,8 @@ static struct cpufreq_frequency_table freq_table[] = {
+  * know all the h/w requirements.
+  */
+ static struct clkctl_acpu_speed acpu_freq_tbl[] = {
+-//	{ 24576,  SRC_LPXO, 0, 0,  30720000,  900, VDD_RAW(900) },
+-//	{ 61440,  PLL_3,    5, 11, 61440000,  900, VDD_RAW(900) },
++	{ 24576,  SRC_LPXO, 0, 0,  30720000,  900, VDD_RAW(900) },
++	{ 61440,  PLL_3,    5, 11, 61440000,  900, VDD_RAW(900) },
+ 	{ 134400, PLL_3,    5, 5,  61440000,  900, VDD_RAW(900) },
+ 	{ 184320, PLL_3,    5, 4,  61440000,  900, VDD_RAW(900) },
+ 	{ MAX_AXI_KHZ, SRC_AXI, 1, 0, 61440000, 900, VDD_RAW(900) },

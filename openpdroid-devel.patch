@@ -1,0 +1,574 @@
+diff --git a/media/java/android/media/MediaRecorder.java b/media/java/android/media/MediaRecorder.java
+index 728bf37..7cc8398 100644
+--- a/media/java/android/media/MediaRecorder.java
++++ b/media/java/android/media/MediaRecorder.java
+@@ -1124,10 +1124,12 @@ public class MediaRecorder
+ 	    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ 		String packageName[] = getPackageName();
+ 		if(!skip){
+-			if(ACTUAL_STATE == STATE_RECORD_BOTH && packageName != null && packageName.length > 0)
++			if (ACTUAL_STATE == STATE_RECORD_BOTH && packageName != null && packageName.length > 0) {
+ 				pSetMan.notification(packageName[0], 0, PrivacySettings.REAL, PrivacySettings.DATA_CAMERA, null, null);
+-			else if(packageName != null && packageName.length > 0)
++			} else if (packageName != null && packageName.length > 0) {
+ 				pSetMan.notification(packageName[0], 0, PrivacySettings.REAL, PrivacySettings.DATA_RECORD_AUDIO, null, null);
++			}
++			deletedFile = true;
+ 		}
+ 
+         if (mPath != null) {
+diff --git a/privacy/java/android/privacy/IPrivacySettingsManager.aidl b/privacy/java/android/privacy/IPrivacySettingsManager.aidl
+index e67230e..e602f53 100644
+--- a/privacy/java/android/privacy/IPrivacySettingsManager.aidl
++++ b/privacy/java/android/privacy/IPrivacySettingsManager.aidl
+@@ -27,4 +27,8 @@ interface IPrivacySettingsManager
+     boolean setEnabled(boolean enable);
+     boolean setNotificationsEnabled(boolean enable);
+     void setBootCompleted();
++    void setDebugFlagInt(String flagName, int value);
++    int getDebugFlagInt(String flagName);
++    void setDebugFlagBool(String flagName, boolean value);
++    boolean getDebugFlagBool(String flagName);
+ }
+diff --git a/privacy/java/android/privacy/PrivacyPersistenceAdapter.java b/privacy/java/android/privacy/PrivacyPersistenceAdapter.java
+index 621bc1f..4cff577 100644
+--- a/privacy/java/android/privacy/PrivacyPersistenceAdapter.java
++++ b/privacy/java/android/privacy/PrivacyPersistenceAdapter.java
+@@ -22,6 +22,7 @@ import android.database.sqlite.SQLiteDatabase;
+ import android.database.sqlite.SQLiteException;
+ import android.os.FileUtils;
+ import android.util.Log;
++import android.util.LruCache;
+ 
+ import java.io.File;
+ import java.io.FileOutputStream;
+@@ -47,7 +48,9 @@ public final class PrivacyPersistenceAdapter {
+     private static final int RETRY_QUERY_COUNT = 5;
+     private static final String DATABASE_FILE = "/data/system/privacy.db";
+     private static final int DATABASE_VERSION = 4;
+-    private static final boolean LOG_LOCKING = false;
++    private static final boolean LOG_LOCKING = true;
++    private static final boolean LOG_OPEN_AND_CLOSE = true;
++    private static final boolean LOG_CACHE = true;
+     public static final int DUMMY_UID = -1;
+ 
+     /**
+@@ -57,6 +60,14 @@ public final class PrivacyPersistenceAdapter {
+     public static volatile Integer sDbAccessThreads = 0;
+     public static volatile int sDbVersion;
+ 
++    /**
++     * START DEBUG VARIABLES
++     */
++    private static volatile boolean useCache = true;
++    private static volatile boolean openAndCloseDb = true;
++    /**
++     * END DEBUG VARIABLES
++     */
+     // Used to lock the database during multi-statement operations to prevent
+     // internally inconsistent data reads.
+     // Multiple locks could be used to improve efficiency (i.e. for different tables)
+@@ -67,6 +78,15 @@ public final class PrivacyPersistenceAdapter {
+      */
+     public static final String SETTINGS_DIRECTORY = "/data/system/privacy";
+ 
++    
++    // The default cache size is somewhat arbitrary at the moment
++    // It may be valuable to run some analyses to check the average time between something being dropped from cache
++    // and being needed again. A recency-weighted LRU would be even better.
++    private static final int MINIMUM_CACHE_ENTRIES = 0;
++    private static final int DEFAULT_CACHE_ENTRIES = 10; 
++    //Because having privacy settings of 'null' has meaning
++    private static LruCache<String, PrivacySettingsStub> settingsCache = new LruCache<String, PrivacySettingsStub>(DEFAULT_CACHE_ENTRIES);
++
+     private static final String TABLE_SETTINGS = "settings";
+     private static final String TABLE_MAP = "map";
+     private static final String TABLE_ALLOWED_CONTACTS = "allowed_contacts";
+@@ -163,6 +183,50 @@ public final class PrivacyPersistenceAdapter {
+ 
+     private Context mContext;
+ 
++    
++    /**
++     * START DEBUG FUNCTIONS
++     */
++    void setUseCache(boolean value) {
++        this.useCache = value;
++        if (value) {
++            if (LOG_CACHE) Log.d(TAG, "PrivacyPersistenceAdapter:setCacheSize: Cache enabled");
++        } else {
++            if (LOG_CACHE) Log.d(TAG, "PrivacyPersistenceAdapter:setCacheSize: Cache disabled");
++        }
++    }
++    
++    boolean getUseCache() {
++        return this.useCache;
++    }
++    
++    void setOpenAndCloseDb(boolean value) {
++        this.openAndCloseDb = value;
++        if (value) {
++            if (LOG_OPEN_AND_CLOSE) Log.d(TAG, "PrivacyPersistenceAdapter:setOpenAndCloseDb: Open and close enabled");
++        } else {
++            if (LOG_OPEN_AND_CLOSE) Log.d(TAG, "PrivacyPersistenceAdapter:setOpenAndCloseDb: Open and close disabled");
++        }
++    }
++    
++    boolean getOpenAndCloseDb() {
++        return this.openAndCloseDb;
++    }
++    
++    void setCacheSize(int newSize) {
++        settingsCache.resize(newSize);
++        if (LOG_CACHE) Log.d(TAG, "PrivacyPersistenceAdapter:setCacheSize: Resized cache to " + Integer.toString(newSize));
++    }
++    
++    int getCacheSize() {
++        return settingsCache.size();
++    }
++    /**
++     * END DEBUG FUNCTIONS
++     */
++
++    
++    
+     public PrivacyPersistenceAdapter(Context context) {
+         this.mContext = context;
+ 
+@@ -213,6 +277,7 @@ public final class PrivacyPersistenceAdapter {
+                     synchronized (sDbAccessThreads) {
+                         sDbAccessThreads++;
+                     }
++                    if (LOG_OPEN_AND_CLOSE) Log.d(TAG, "PrivacyPersistenceAdapter:upgradeDatabase: Increment DB access threads: now " + Integer.toString(sDbAccessThreads));
+ 
+                     db = getDatabase();
+                     if (db != null && db.isOpen()) {
+@@ -319,6 +384,7 @@ public final class PrivacyPersistenceAdapter {
+             synchronized (sDbAccessThreads) {
+                 sDbAccessThreads++;
+             }
++            if (LOG_OPEN_AND_CLOSE) Log.d(TAG, "PrivacyPersistenceAdapter:getValue: Increment DB access threads: now " + Integer.toString(sDbAccessThreads));
+             db = getDatabase();
+             if (db == null || !db.isOpen()) {
+                 Log.e(TAG, "PrivacyPersistenceAdapter:getValue: Database not obtained while getting value for name: " + name);
+@@ -341,10 +407,9 @@ public final class PrivacyPersistenceAdapter {
+             } catch (Exception e) {
+                 Log.e(TAG, "PrivacyPersistenceAdapter:getValue: Exception occurred while getting value for name: " + name, e);
+             } finally {
+-                
+-                if (LOG_LOCKING) Log.d(TAG, "PrivacyPersistenceAdapter:getSettings: ReadLock: (pre)unlock");
++                if (LOG_LOCKING) Log.d(TAG, "PrivacyPersistenceAdapter:getValue: ReadLock: (pre)unlock");
+                 sDbLock.readLock().unlock();
+-                if (LOG_LOCKING) Log.d(TAG, "PrivacyPersistenceAdapter:getSettings: ReadLock: (post)unlock");
++                if (LOG_LOCKING) Log.d(TAG, "PrivacyPersistenceAdapter:getValue: ReadLock: (post)unlock");
+             }
+ 
+         } finally {
+@@ -367,6 +432,7 @@ public final class PrivacyPersistenceAdapter {
+             synchronized (sDbAccessThreads) {
+                 sDbAccessThreads++;
+             }
++            if (LOG_OPEN_AND_CLOSE) Log.d(TAG, "PrivacyPersistenceAdapter:setValue: Increment DB access threads: now " + Integer.toString(sDbAccessThreads));
+             db = getDatabase();
+             if (db == null || !db.isOpen()) {
+                 Log.e(TAG, "PrivacyPersistenceAdapter:setValue: Database not obtained while setting value for name: " + name);
+@@ -408,12 +474,28 @@ public final class PrivacyPersistenceAdapter {
+                     "PrivacyPersistenceAdapter:getSettings:insufficient application identifier - package name is required");
+         }
+ 
++        if (this.useCache) {
++            PrivacySettingsStub cacheResult = settingsCache.get(packageName);
++            if (cacheResult != null) {
++                if (LOG_CACHE) Log.d(TAG, "PrivacyPersistenceAdapter:getSettings: Cache hit for " + packageName);
++                //if the cached object is a stub, then it means that there is no privacy settings for that package, and null should be returned
++                if (cacheResult instanceof PrivacySettingsStub) {
++                    return null;
++                } else {
++                    return (PrivacySettings)cacheResult;
++                }
++            } else {
++                if (LOG_CACHE) Log.d(TAG, "PrivacyPersistenceAdapter:getSettings: Cache miss for " + packageName);
++            }
++        }
++        
+         SQLiteDatabase db;
+         try {
+             // indicate that the DB is being read to prevent closing by other threads
+             synchronized (sDbAccessThreads) {
+                 sDbAccessThreads++;
+             }
++            if (LOG_OPEN_AND_CLOSE) Log.d(TAG, "PrivacyPersistenceAdapter:getSettings: Increment DB access threads: now " + Integer.toString(sDbAccessThreads));
+             db = getDatabase();
+         } catch (SQLiteException e) {
+             Log.e(TAG, "getSettings - database could not be opened", e);
+@@ -431,7 +513,7 @@ public final class PrivacyPersistenceAdapter {
+                     new String[] { packageName }, null, null, null, null);
+ 
+             if (cursor != null) {
+-                if (cursor.getCount() != 1) {
++                if (cursor.getCount() > 1) {
+                     Log.w(TAG, "Multiple privacy settings found for package " + packageName);
+                 }
+                 if (cursor.moveToFirst()) {
+@@ -483,6 +565,17 @@ public final class PrivacyPersistenceAdapter {
+             closeIdleDatabase();
+         }
+ 
++        
++        if (this.useCache) {
++            if (privacySettings != null) {
++                settingsCache.put(packageName, privacySettings);
++                if (LOG_CACHE) Log.d(TAG, "PrivacyPersistenceAdapter:getSettings: Cache put for" + packageName);
++            } else {
++                settingsCache.put(packageName, new PrivacySettingsStub());
++                if (LOG_CACHE) Log.d(TAG, "PrivacyPersistenceAdapter:getSettings: Cache stub put for" + packageName);
++            }
++        }
++        
+         return privacySettings;
+     }
+ 
+@@ -569,6 +662,7 @@ public final class PrivacyPersistenceAdapter {
+             synchronized (sDbAccessThreads) {
+                 sDbAccessThreads++;
+             }
++            if (LOG_OPEN_AND_CLOSE) Log.d(TAG, "PrivacyPersistenceAdapter:saveSettings: Increment DB access threads: now " + Integer.toString(sDbAccessThreads));
+             db = getDatabase();
+ 
+             if (db != null && db.isOpen()) {
+@@ -677,6 +771,12 @@ public final class PrivacyPersistenceAdapter {
+ 
+                         // mark DB transaction successful (commit the changes)
+                         db.setTransactionSuccessful();
++                        
++                        if (this.useCache) {
++                            //TODO: determine where this should actually go (i.e. should we delete from cache even if we fail to save the settings?)
++                            settingsCache.remove(packageName);
++                            if (LOG_CACHE) Log.d(TAG, "PrivacyPersistenceAdapter:deleteSettings: Cache remove for" + packageName);
++                        }
+                     } finally {
+                         if (LOG_LOCKING) Log.d(TAG, "PrivacyPersistenceAdapter:saveSettings: Transaction: (pre)end");
+                         db.endTransaction(); // we want to transition from set transaction successful to end as fast as possible to avoid errors (see the Android docs)
+@@ -699,8 +799,8 @@ public final class PrivacyPersistenceAdapter {
+             closeIdleDatabase();
+         }
+ 
+-    return result;
+-}
++        return result;
++    }
+ 
+     /**
+      * This method creates external settings files for access from core libraries
+@@ -770,7 +870,7 @@ public final class PrivacyPersistenceAdapter {
+             synchronized (sDbAccessThreads) {
+                 sDbAccessThreads++;
+             }
+-
++            if (LOG_OPEN_AND_CLOSE) Log.d(TAG, "PrivacyPersistenceAdapter:deleteSettings: Increment DB access threads: now " + Integer.toString(sDbAccessThreads));
+             db = getDatabase();
+ 
+             if (LOG_LOCKING) Log.d(TAG, "PrivacyPersistenceAdapter:deleteSettings: WriteLock: (pre)lock");
+@@ -816,6 +916,12 @@ public final class PrivacyPersistenceAdapter {
+                         settingsPackageDir.delete();
+ 
+                     db.setTransactionSuccessful();
++
++                    if (this.useCache) {
++                        //TODO: determine where this should actually go (i.e. should we delete from cache even if we fail to delete the settings?)
++                        settingsCache.remove(packageName);
++                        if (LOG_CACHE) Log.d(TAG, "PrivacyPersistenceAdapter:deleteSettings: Cache remove for" + packageName);
++                    }
+                 } finally {
+                     if (LOG_LOCKING) Log.d(TAG, "PrivacyPersistenceAdapter:deleteSettings: Transaction: (pre)end");
+                     db.endTransaction();
+@@ -913,7 +1019,8 @@ public final class PrivacyPersistenceAdapter {
+             synchronized (sDbAccessThreads) {
+                 sDbAccessThreads++;
+             }
+-
++            if (LOG_OPEN_AND_CLOSE) Log.d(TAG, "PrivacyPersistenceAdapter:purgeSettings: Increment DB access threads: now " + Integer.toString(sDbAccessThreads));
++            
+             // delete obsolete entries from DB and update outdated entries
+             db = getDatabase();
+             if (db == null) {
+@@ -1015,6 +1122,7 @@ public final class PrivacyPersistenceAdapter {
+ 
+     private synchronized SQLiteDatabase getDatabase() {
+         if (mDb == null || !mDb.isOpen() || mDb.isReadOnly()) {
++            if (LOG_OPEN_AND_CLOSE) Log.d(TAG, "PrivacyPersistenceAdapter:closeIdleDatabase: Opening privacy database");
+             mDb = SQLiteDatabase.openDatabase(DATABASE_FILE, null, SQLiteDatabase.OPEN_READWRITE);
+         }   
+         return mDb;
+@@ -1027,9 +1135,15 @@ public final class PrivacyPersistenceAdapter {
+     private void closeIdleDatabase() {
+         synchronized (sDbAccessThreads) {
+             sDbAccessThreads--;
++            if (LOG_OPEN_AND_CLOSE) Log.d(TAG, "PrivacyPersistenceAdapter:closeIdleDatabase: Decrement DB access threads: now " + Integer.toString(sDbAccessThreads));
+             // only close DB if no other threads are reading
+             if (sDbAccessThreads == 0 && mDb != null && mDb.isOpen()) {
+-                mDb.close();
++                if (this.openAndCloseDb) { 
++                    if (LOG_OPEN_AND_CLOSE) Log.d(TAG, "PrivacyPersistenceAdapter:closeIdleDatabase: Closing the PDroid database");
++                    mDb.close();
++                } else {
++                    if (LOG_OPEN_AND_CLOSE) Log.d(TAG, "PrivacyPersistenceAdapter:closeIdleDatabase: Open and close DB disabled: not closing");
++                }
+             }
+         }
+     }
+diff --git a/privacy/java/android/privacy/PrivacySettings.java b/privacy/java/android/privacy/PrivacySettings.java
+index e218102..c374f62 100644
+--- a/privacy/java/android/privacy/PrivacySettings.java
++++ b/privacy/java/android/privacy/PrivacySettings.java
+@@ -25,7 +25,7 @@ import java.util.Random;
+  * @author Svyatoslav Hresyk 
+  * {@hide} 
+  */
+-public final class PrivacySettings implements Parcelable {
++public final class PrivacySettings extends PrivacySettingsStub implements Parcelable {
+     
+     /**
+      * Real value, provided by the unmodified Android framework.
+diff --git a/privacy/java/android/privacy/PrivacySettingsManager.java b/privacy/java/android/privacy/PrivacySettingsManager.java
+index d917690..f28b8f8 100644
+--- a/privacy/java/android/privacy/PrivacySettingsManager.java
++++ b/privacy/java/android/privacy/PrivacySettingsManager.java
+@@ -80,7 +80,7 @@ public final class PrivacySettingsManager {
+             if (service != null) {
+                 return service.deleteSettings(packageName);
+             } else {
+-                Log.e(TAG, "deleteSettings - PrivacySettingsManagerService is null");
++                Log.e(TAG, "PrivacySettingsManager:deleteSettings: PrivacySettingsManagerService is null");
+                 return false;
+             }
+         } catch (RemoteException e) {
+@@ -118,7 +118,7 @@ public final class PrivacySettingsManager {
+               if (service != null) {
+                   service.notification(packageName, accessMode, dataType, output);
+               } else {
+-                  Log.e(TAG, "deleteSettings - PrivacySettingsManagerService is null");
++                  Log.e(TAG, "PrivacySettingsManager:notification: PrivacySettingsManagerService is null");
+               }            
+           } catch (RemoteException e) {
+               Log.e(TAG, "RemoteException in notification: ", e);
+@@ -130,7 +130,7 @@ public final class PrivacySettingsManager {
+             if (service != null) {
+                 service.registerObservers();
+             } else {
+-                Log.e(TAG, "deleteSettings - PrivacySettingsManagerService is null");
++                Log.e(TAG, "PrivacySettingsManager:registerObservers: PrivacySettingsManagerService is null");
+             }
+         } catch (RemoteException e) {
+             Log.e(TAG, "RemoteException in registerObservers: ", e);
+@@ -142,7 +142,7 @@ public final class PrivacySettingsManager {
+             if (service != null) {
+                 service.addObserver(packageName);
+             } else {
+-                Log.e(TAG, "deleteSettings - PrivacySettingsManagerService is null");
++                Log.e(TAG, "PrivacySettingsManager:addObserver: PrivacySettingsManagerService is null");
+             }
+         } catch (RemoteException e) {
+             Log.e(TAG, "RemoteException in addObserver: ", e);
+@@ -154,7 +154,7 @@ public final class PrivacySettingsManager {
+             if (service != null) {
+                 return service.purgeSettings();
+             } else {
+-				Log.e(TAG, "purgeSettings - PrivacySettingsManagerService is null");
++                Log.e(TAG, "PrivacySettingsManager:purgeSettings: PrivacySettingsManagerService is null");
+             }
+         } catch (RemoteException e) {
+             Log.e(TAG, "RemoteException in purgeSettings: ", e);
+@@ -167,7 +167,7 @@ public final class PrivacySettingsManager {
+             if (service != null) {
+                 return service.getVersion();
+             } else {
+-                Log.e(TAG, "getVersion - PrivacySettingsManagerService is null");
++                Log.e(TAG, "PrivacySettingsManager:getVersion: PrivacySettingsManagerService is null");
+             }
+         } catch (RemoteException e) {
+             Log.e(TAG, "RemoteException in getVersion: ", e);
+@@ -180,7 +180,7 @@ public final class PrivacySettingsManager {
+             if (service != null) {
+                 return service.setEnabled(enable);
+             } else {
+-                Log.e(TAG, "setEnabled - PrivacySettingsManagerService is null");
++                Log.e(TAG, "PrivacySettingsManager:setEnabled: PrivacySettingsManagerService is null");
+             }
+         } catch (RemoteException e) {
+             Log.e(TAG, "RemoteException in setEnabled: ", e);
+@@ -193,7 +193,7 @@ public final class PrivacySettingsManager {
+             if (service != null) {
+                 return service.setNotificationsEnabled(enable);
+             } else {
+-                Log.e(TAG, "setNotificationsEnabled - PrivacySettingsManagerService is null");
++                Log.e(TAG, "PrivacySettingsManager:setNotificationsEnabled: PrivacySettingsManagerService is null");
+             }
+         } catch (RemoteException e) {
+             Log.e(TAG, "RemoteException in setNotificationsEnabled: ", e);
+@@ -206,10 +206,60 @@ public final class PrivacySettingsManager {
+             if (service != null) {
+                 service.setBootCompleted();
+             } else {
+-                Log.e(TAG, "setBootCompleted - PrivacySettingsManagerService is null");
++                Log.e(TAG, "PrivacySettingsManager:setBootCompleted: PrivacySettingsManagerService is null");
+             }
+         } catch (RemoteException e) {
+             Log.e(TAG, "RemoteException in setBootCompleted: ", e);
+         }
+     }
++    
++    public void setDebugFlagInt(String flagName, int value) {
++        try {
++            if (service != null) {
++                service.setDebugFlagInt(flagName, value);
++            } else {
++                Log.e(TAG, "PrivacySettingsManager:setDebugFlagInt:PrivacySettingsManagerService is null");
++            }
++        } catch (RemoteException e) {
++            Log.e(TAG, "RemoteException in setDebugFlagInt: ", e);
++        }
++    }
++    
++    public Integer getDebugFlagInt(String flagName) {
++        try {
++            if (service != null) {
++                return service.getDebugFlagInt(flagName);
++            } else {
++                Log.e(TAG, "PrivacySettingsManager:getDebugFlagInt:PrivacySettingsManagerService is null");
++            }
++        } catch (RemoteException e) {
++            Log.e(TAG, "RemoteException in getDebugFlagInt: ", e);
++        }
++        return null;
++    }
++    
++    public void setDebugFlagBool(String flagName, boolean value) {
++        try {
++            if (service != null) {
++                service.setDebugFlagBool(flagName, value);
++            } else {
++                Log.e(TAG, "PrivacySettingsManager:setDebugFlagBool:PrivacySettingsManagerService is null");
++            }
++        } catch (RemoteException e) {
++            Log.e(TAG, "RemoteException in setDebugFlagBool: ", e);
++        }
++    }
++    
++    public Boolean getDebugFlagBool(String flagName) {
++        try {
++            if (service != null) {
++                return service.getDebugFlagBool(flagName);
++            } else {
++                Log.e(TAG, "PrivacySettingsManager:getDebugFlagBool:PrivacySettingsManagerService is null");
++            }
++        } catch (RemoteException e) {
++            Log.e(TAG, "RemoteException in getDebugFlagBool: ", e);
++        }
++        return null;
++    }
+ }
+diff --git a/privacy/java/android/privacy/PrivacySettingsManagerService.java b/privacy/java/android/privacy/PrivacySettingsManagerService.java
+index 9b6c97b..4c78212 100644
+--- a/privacy/java/android/privacy/PrivacySettingsManagerService.java
++++ b/privacy/java/android/privacy/PrivacySettingsManagerService.java
+@@ -34,6 +34,7 @@ public final class PrivacySettingsManagerService extends IPrivacySettingsManager
+     private static final String WRITE_PRIVACY_SETTINGS = "android.privacy.WRITE_PRIVACY_SETTINGS";
+     private static final String READ_PRIVACY_SETTINGS = "android.privacy.READ_PRIVACY_SETTINGS";
+ 
++    private static boolean sendNotifications = true; 
+     private PrivacyPersistenceAdapter persistenceAdapter;
+     
+     private Context context;
+@@ -116,7 +117,7 @@ public final class PrivacySettingsManagerService extends IPrivacySettingsManager
+ 
+     public void notification(final String packageName, final byte accessMode,
+             final String dataType, final String output) {
+-        if (bootCompleted && notificationsEnabled) {
++        if (bootCompleted && notificationsEnabled && sendNotifications) {
+             Intent intent = new Intent();
+             intent.setAction(PrivacySettingsManager.ACTION_PRIVACY_NOTIFICATION);
+             intent.putExtra("packageName", packageName);
+@@ -233,4 +234,54 @@ public final class PrivacySettingsManagerService extends IPrivacySettingsManager
+ 			return false;
+ 		}
+ 	}
++	
++	
++	public static String DEBUG_FLAG_SEND_NOTIFICATIONS = "sendNotifications";
++	public static String DEBUG_FLAG_USE_CACHE = "useCache";
++	public static String DEBUG_FLAG_CACHE_SIZE = "cacheSize";
++	public static String DEBUG_FLAG_OPEN_AND_CLOSE_DB = "openAndCloseDb";
++	
++    public void setDebugFlagInt(String flagName, int value) throws RemoteException {
++        checkCallerCanWriteOrThrow();
++        if (flagName.equals(DEBUG_FLAG_CACHE_SIZE)) {
++            this.persistenceAdapter.setCacheSize(value);
++        } else {
++            throw new RemoteException();
++        }
++    }
++    
++    public int getDebugFlagInt(String flagName) throws RemoteException {
++        checkCallerCanWriteOrThrow();
++        if (flagName.equals(DEBUG_FLAG_CACHE_SIZE)) {
++            return this.persistenceAdapter.getCacheSize();
++        } else {
++            throw new RemoteException();
++        }
++    }
++    
++    public void setDebugFlagBool(String flagName, boolean value) throws RemoteException {
++        checkCallerCanWriteOrThrow();
++        if (flagName.equals(DEBUG_FLAG_USE_CACHE)) {
++            this.persistenceAdapter.setUseCache(value);
++        } else if (flagName.equals(DEBUG_FLAG_OPEN_AND_CLOSE_DB)) {
++            this.persistenceAdapter.setOpenAndCloseDb(value);
++        } else if (flagName.equals(DEBUG_FLAG_SEND_NOTIFICATIONS)) {
++            this.sendNotifications = value;
++        } else {
++            throw new RemoteException();
++        }
++    }
++    
++    public boolean getDebugFlagBool(String flagName) throws RemoteException {
++        checkCallerCanWriteOrThrow();
++        if (flagName.equals(DEBUG_FLAG_USE_CACHE)) {
++            return this.persistenceAdapter.getUseCache();
++        } else if (flagName.equals(DEBUG_FLAG_OPEN_AND_CLOSE_DB)) {
++            return this.persistenceAdapter.getOpenAndCloseDb();
++        } else if (flagName.equals(DEBUG_FLAG_SEND_NOTIFICATIONS)) {
++            return this.sendNotifications;
++        } else {
++            throw new RemoteException();
++        }
++	}
+ }
+diff --git a/privacy/java/android/privacy/PrivacySettingsStub.java b/privacy/java/android/privacy/PrivacySettingsStub.java
+new file mode 100644
+index 0000000..53aeb6d
+--- /dev/null
++++ b/privacy/java/android/privacy/PrivacySettingsStub.java
+@@ -0,0 +1,22 @@
++/**
++ * Copyright (C) 2012 Simeon J Morgan <smorgan@digitalfeed.net>
++ * This program is free software; you can redistribute it and/or modify it under
++ * the terms of the GNU General Public License as published by the Free Software
++ * Foundation; either version 3 of the License, or (at your option) any later version.
++ * This program is distributed in the hope that it will be useful, but WITHOUT ANY
++ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
++ * PARTICULAR PURPOSE. See the GNU General Public License for more details.
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, see <http://www.gnu.org/licenses>.
++ */
++
++package android.privacy;
++
++/**
++ * Acts as a placeholder where PrivacySettings are absent (for caching).
++ * DO NOT USE THIS ANYWHERE BUT CACHING! Because it is not final, it can be subclassed, and various other
++ * nasty tricks can be used to open security issues
++ * @author Simeon J Morgan 
++ * {@hide} 
++ */
++class PrivacySettingsStub {}

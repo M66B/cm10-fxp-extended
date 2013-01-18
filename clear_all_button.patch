@@ -1,0 +1,17 @@
+diff --git a/packages/SystemUI/res/layout-mdpi/status_bar_expanded_header.xml b/packages/SystemUI/res/layout-mdpi/status_bar_expanded_header.xml
+index 7080585..26c328b 100644
+--- a/packages/SystemUI/res/layout-mdpi/status_bar_expanded_header.xml
++++ b/packages/SystemUI/res/layout-mdpi/status_bar_expanded_header.xml
+@@ -63,6 +63,12 @@
+             />
+     </LinearLayout>
+ 
++    <Space
++        android:layout_width="0dp"
++        android:layout_height="0dp"
++        android:layout_weight="1"
++        />
++
+     <ImageView android:id="@+id/clear_all_button"
+         android:layout_width="32dp"
+         android:layout_height="32dp"

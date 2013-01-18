@@ -1,0 +1,18 @@
+diff --git a/prebuilt/hw_config.sh b/prebuilt/hw_config.sh
+index 5088dc5..f8e902e 100644
+--- a/prebuilt/hw_config.sh
++++ b/prebuilt/hw_config.sh
+@@ -51,11 +51,11 @@ echo $val_filter > $dev/filter  # RFilter. Valid range is 0 - 3.
+ dev=/sys/devices/i2c-0/0-0040/leds
+ echo 2,127,1,130,130,2,2 > $dev/button-backlight/als/curve  # ALS curve for group2
+ echo 2,127,1,130,130,2,2 > $dev/keyboard-backlight/als/curve  # ALS curve for group2
+-echo 1,1,1,0 > $dev/lcd-backlight/als/params  #[gain],[filter_up],[filter_down],[offset]
++echo 0,3,3,0 > $dev/lcd-backlight/als/params  #[gain],[filter_up],[filter_down],[offset]
+ echo 1 > $dev/lcd-backlight/als/enable  #Sensor on/off. 1 = on, reg 90h
+ echo 1 > $dev/button-backlight/als/enable  #Sensor on/off. 1 = on, reg 90h
+ echo 1 > $dev/keyboard-backlight/als/enable  #Sensor on/off. 1 = on, reg 90h
+-echo 4000 > $dev/button-backlight/max_current
++echo 1 > $dev/button-backlight/max_current
+ echo 38000 > $dev/keyboard-backlight/max_current
+ echo 10000 >$dev/tally-light/max_current
+ 

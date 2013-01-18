@@ -1,0 +1,58 @@
+From 3d603c6cee7034bad9592f8df765b3fb52d91597 Mon Sep 17 00:00:00 2001
+From: Michael Bestas <mikeioannina@gmail.com>
+Date: Wed, 12 Dec 2012 11:21:59 +0200
+Subject: [PATCH] Electron Beam Animation (3/3 Settings)
+
+Signed-off-by: Michael Bestas <mikeioannina@gmail.com>
+
+Change-Id: I9e345bb9c7471b899d8024902786257320dc0f76
+---
+ res/xml/display_settings.xml                  |    3 +--
+ src/com/android/settings/DisplaySettings.java |    3 +--
+ 2 files changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/res/xml/display_settings.xml b/res/xml/display_settings.xml
+index cd119fa..3e1f8fd 100644
+--- a/res/xml/display_settings.xml
++++ b/res/xml/display_settings.xml
+@@ -61,7 +61,6 @@
+             android:title="@string/battery_light_title"
+             android:fragment="com.android.settings.notificationlight.BatteryLightSettings" />
+ 
+-<!-- Remove until merged from CM9
+         <PreferenceCategory
+             android:key="category_animation_options"
+             android:title="@string/display_category_animation_options_title"/>
+@@ -75,7 +74,7 @@
+             android:key="electron_beam_animation_off"
+             android:title="@string/display_electron_beam_animation_off_title"
+             android:defaultValue="true" />
+--->
++
+         <PreferenceCategory
+             android:key="category_wakeup_options"
+             android:title="@string/display_category_wakeup_options_title"/>
+diff --git a/src/com/android/settings/DisplaySettings.java b/src/com/android/settings/DisplaySettings.java
+index 8d7ab38..508a3b2 100644
+--- a/src/com/android/settings/DisplaySettings.java
++++ b/src/com/android/settings/DisplaySettings.java
+@@ -163,7 +163,6 @@ public class DisplaySettings extends SettingsPreferenceFragment implements
+             }
+         }
+ 
+-/**
+         mElectronBeamAnimationOn = (CheckBoxPreference) findPreference(KEY_ELECTRON_BEAM_ANIMATION_ON);
+         mElectronBeamAnimationOff = (CheckBoxPreference) findPreference(KEY_ELECTRON_BEAM_ANIMATION_OFF);
+         mElectronBeamAnimationOn.setChecked(Settings.System.getInt(resolver,
+@@ -189,7 +188,7 @@ public class DisplaySettings extends SettingsPreferenceFragment implements
+               !getResources().getBoolean(com.android.internal.R.bool.config_screenOffAnimation)) {
+             getPreferenceScreen().removePreference((PreferenceCategory) findPreference(KEY_ELECTRON_BEAM_CATEGORY_ANIMATION));
+         }
+-*/
++
+         mVolumeWake = (CheckBoxPreference) findPreference(KEY_VOLUME_WAKE);
+         if (mVolumeWake != null) {
+             if (!getResources().getBoolean(R.bool.config_show_volumeRockerWake)) {
+-- 
+1.7.10.4
+

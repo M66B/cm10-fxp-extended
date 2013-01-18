@@ -1,0 +1,26 @@
+From fbbd69561968ddbf2b8632601a5511409192579b Mon Sep 17 00:00:00 2001
+From: Michael Bestas <mikeioannina@gmail.com>
+Date: Wed, 26 Dec 2012 01:28:43 +0200
+Subject: [PATCH] msm7x30: enable Expanded Desktop preference
+
+Change-Id: I34463eba3bf94434f16f8408c4b5479c6f908ca1
+Signed-off-by: Michael Bestas <mikeioannina@gmail.com>
+---
+ overlay/packages/apps/Settings/res/values/config.xml |    3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/overlay/packages/apps/Settings/res/values/config.xml b/overlay/packages/apps/Settings/res/values/config.xml
+index 4e016e2..571cdd9 100644
+--- a/overlay/packages/apps/Settings/res/values/config.xml
++++ b/overlay/packages/apps/Settings/res/values/config.xml
+@@ -20,4 +20,7 @@
+ 
+     <!-- Whether or not the dock settings are to be displayed for this device when docked -->
+     <!-- <bool name="has_dock_settings">true</bool> -->
++
++    <!-- Show Expanded Desktop preference -->
++    <bool name="config_show_expandedDesktop">true</bool>
+ </resources>
+-- 
+1.7.10.4
+

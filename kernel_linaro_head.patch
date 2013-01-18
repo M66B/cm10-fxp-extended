@@ -1,0 +1,13 @@
+diff --git a/arch/arm/kernel/head.S b/arch/arm/kernel/head.S
+index 9730b7a..42b471d 100644
+--- a/arch/arm/kernel/head.S
++++ b/arch/arm/kernel/head.S
+@@ -161,7 +161,7 @@ __secondary_data:
+  * registers.
+  */
+ __enable_mmu:
+-#ifdef CONFIG_ALIGNMENT_TRAP
++#if defined(CONFIG_ALIGNMENT_TRAP) && __LINUX_ARM_ARCH__ < 6
+ 	orr	r0, r0, #CR_A
+ #else
+ 	bic	r0, r0, #CR_A

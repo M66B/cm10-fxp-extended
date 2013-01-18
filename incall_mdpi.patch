@@ -1,0 +1,13 @@
+diff --git a/overlay/packages/apps/Phone/res/layout/incall_touch_ui.xml b/overlay/packages/apps/Phone/res/layout/incall_touch_ui.xml
+index 942c069..3447577 100644
+--- a/overlay/packages/apps/Phone/res/layout/incall_touch_ui.xml
++++ b/overlay/packages/apps/Phone/res/layout/incall_touch_ui.xml
+@@ -217,7 +217,7 @@
+         android:layout_height="wrap_content"
+         android:orientation="horizontal"
+         android:layout_marginTop="20dip"
+-        android:layout_marginBottom="-59dp"
++        android:layout_marginBottom="-57dp"
+         android:visibility="gone"
+         android:layout_gravity="center_horizontal"
+         android:gravity="top"

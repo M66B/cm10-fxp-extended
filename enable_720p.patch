@@ -1,0 +1,91 @@
+diff --git a/prebuilt/media_profiles.xml b/prebuilt/media_profiles.xml
+old mode 100644
+new mode 100755
+index 1bc47de..88ac793
+--- a/prebuilt/media_profiles.xml
++++ b/prebuilt/media_profiles.xml
+@@ -42,7 +42,7 @@
+ <!ATTLIST Audio sampleRate CDATA #REQUIRED>
+ <!ATTLIST Audio channels (1|2) #REQUIRED>
+ <!ELEMENT ImageEncoding EMPTY>
+-<!ATTLIST ImageEncoding quality (90|80|70|60|50|40) #REQUIRED>
++<!ATTLIST ImageEncoding quality (100|90|80|70|60|50|40) #REQUIRED>
+ <!ELEMENT ImageDecoding EMPTY>
+ <!ATTLIST ImageDecoding memCap CDATA #REQUIRED>
+ <!ELEMENT Camera EMPTY>
+@@ -96,17 +96,17 @@
+         <!--
+         Profiles for the back camera
+         -->
+-        <!--<EncoderProfile quality="720p" fileFormat="mp4" duration="60">
++        <EncoderProfile quality="720p" fileFormat="mp4" duration="60">
+             <Video codec="h264"
+                    bitRate="6000000"
+                    width="1280"
+                    height="720"
+                    frameRate="30" />
+             <Audio codec="aac"
+-                   bitRate="96000"
++                   bitRate="128000"
+                    sampleRate="48000"
+                    channels="2" />
+-        </EncoderProfile> -->
++        </EncoderProfile>
+ 
+         <EncoderProfile quality="480p" fileFormat="mp4" duration="60">
+             <Video codec="h264"
+@@ -144,18 +144,18 @@
+                    channels="1" />
+         </EncoderProfile>
+ 
+-        <!--<EncoderProfile quality="timelapse720p" fileFormat="mp4" duration="60">
++        <EncoderProfile quality="timelapse720p" fileFormat="mp4" duration="60">
+             <Video codec="h264"
+                    bitRate="6000000"
+                    width="1280"
+                    height="720"
+-                   frameRate="30" /> -->
++                   frameRate="30" />
+             <!-- audio setting is ignored -->
+-        <!--    <Audio codec="aac"
+-                   bitRate="96000"
++            <Audio codec="aac"
++                   bitRate="128000"
+                    sampleRate="48000"
+                    channels="2" />
+-        </EncoderProfile>-->
++        </EncoderProfile>
+ 
+         <EncoderProfile quality="timelapse480p" fileFormat="mp4" duration="60">
+             <Video codec="h264"
+@@ -197,9 +197,9 @@
+         </EncoderProfile>
+ 
+ 
++        <ImageEncoding quality="100" />
+         <ImageEncoding quality="90" />
+         <ImageEncoding quality="80" />
+-        <ImageEncoding quality="70" />
+         <ImageDecoding memCap="20000000" />
+ 
+         <Camera previewFrameRate="0" />
+@@ -285,9 +285,9 @@
+                    channels="1" />
+         </EncoderProfile>
+ 
++        <ImageEncoding quality="100" />
+         <ImageEncoding quality="90" />
+         <ImageEncoding quality="80" />
+-        <ImageEncoding quality="70" />
+         <ImageDecoding memCap="20000000" />
+ 
+         <Camera previewFrameRate="0" />
+@@ -327,7 +327,7 @@
+         minChannels="1" maxChannels="1" />
+ 
+     <AudioEncoderCap name="aac" enabled="true"
+-        minBitRate="5525" maxBitRate="96000"
++        minBitRate="5525" maxBitRate="256000"
+         minSampleRate="8000" maxSampleRate="48000"
+         minChannels="1" maxChannels="2" />
+

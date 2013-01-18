@@ -1,0 +1,379 @@
+From b0056df010c0af2e8cf72183d219de475b6d2d9e Mon Sep 17 00:00:00 2001
+From: Michael Bestas <mikeioannina@gmail.com>
+Date: Tue, 4 Dec 2012 11:39:07 +0200
+Subject: [PATCH] recovery: Add reboot menu
+
+Move reboot & reboot recovery to a new menu
+Add new reboot to bootloader & reboot to odin modes
+Add power off option in the menu
+Fixed some spelling errors
+
+Since not all devices can boot to odin or bootloader, each of these or both options can be triggered
+by setting BOARD_HAS_FASTBOOT := true and BOARD_HAS_ODIN := true in the device's BoardConfig.mk
+
+Patchset 2: Fib build & fix poweroff, reboot, reboot to bootloader
+
+Patchset 3: Remove WIP tag
+
+Change-Id: I0c4e9d554673b530fb505cf7b07e37a7e4e5a928
+---
+ Android.mk            |    2 +-
+ default_recovery_ui.c |    2 +-
+ extendedcommands.c    |  127 ++++++++++++++++++++++++++++++++++++++++++-------
+ recovery.c            |   30 +++++-------
+ recovery_ui.h         |    1 -
+ 5 files changed, 126 insertions(+), 36 deletions(-)
+
+diff --git a/Android.mk b/Android.mk
+index 72af2d4..f2b0caa 100644
+--- a/Android.mk
++++ b/Android.mk
+@@ -58,7 +58,7 @@ BOARD_RECOVERY_CHAR_HEIGHT := $(shell echo $(BOARD_USE_CUSTOM_RECOVERY_FONT) | c
+ 
+ LOCAL_CFLAGS += -DBOARD_RECOVERY_CHAR_WIDTH=$(BOARD_RECOVERY_CHAR_WIDTH) -DBOARD_RECOVERY_CHAR_HEIGHT=$(BOARD_RECOVERY_CHAR_HEIGHT)
+ 
+-BOARD_RECOVERY_DEFINES := BOARD_HAS_NO_SELECT_BUTTON BOARD_UMS_LUNFILE BOARD_RECOVERY_ALWAYS_WIPES BOARD_RECOVERY_HANDLES_MOUNT BOARD_TOUCH_RECOVERY RECOVERY_EXTEND_NANDROID_MENU
++BOARD_RECOVERY_DEFINES := BOARD_HAS_NO_SELECT_BUTTON BOARD_UMS_LUNFILE BOARD_RECOVERY_ALWAYS_WIPES BOARD_RECOVERY_HANDLES_MOUNT BOARD_TOUCH_RECOVERY RECOVERY_EXTEND_NANDROID_MENU BOARD_HAS_FASTBOOT BOARD_HAS_ODIN
+ 
+ $(foreach board_define,$(BOARD_RECOVERY_DEFINES), \
+   $(if $($(board_define)), \
+diff --git a/default_recovery_ui.c b/default_recovery_ui.c
+index 1f801f1..b922044 100644
+--- a/default_recovery_ui.c
++++ b/default_recovery_ui.c
+@@ -22,7 +22,7 @@
+ 
+ char* MENU_HEADERS[] = { NULL };
+ 
+-char* MENU_ITEMS[] = { "reboot system now",
++char* MENU_ITEMS[] = { "reboot",
+                        "install zip from sdcard",
+                        "install zip from sideload",
+                        "wipe data/factory reset",
+diff --git a/extendedcommands.c b/extendedcommands.c
+index 28cb6be..5463313 100644
+--- a/extendedcommands.c
++++ b/extendedcommands.c
+@@ -568,7 +568,7 @@ void show_mount_usb_storage_menu()
+         return;
+ 
+     static char* headers[] = {  "USB Mass Storage device",
+-                                "Leaving this menu unmount",
++                                "Leaving this menu unmounts",
+                                 "your SD card from your PC.",
+                                 "",
+                                 NULL
+@@ -969,9 +969,7 @@ void show_nandroid_advanced_restore_menu(const char* path)
+     }
+ 
+     static char* advancedheaders[] = {  "Choose an image to restore",
+-                                "",
+-                                "Choose an image to restore",
+-                                "first. The next menu will",
++                                "first. The next menu will give",
+                                 "you more options.",
+                                 "",
+                                 NULL
+@@ -1281,8 +1279,7 @@ void show_advanced_menu()
+                                 NULL
+     };
+ 
+-    static char* list[] = { "reboot recovery",
+-                            "wipe dalvik cache",
++    static char* list[] = { "wipe dalvik cache",
+                             "report error",
+                             "key test",
+                             "show log",
+@@ -1294,13 +1291,13 @@ void show_advanced_menu()
+     };
+ 
+     if (!can_partition("/sdcard")) {
+-        list[6] = NULL;
++        list[5] = NULL;
+     }
+     if (!can_partition("/external_sd")) {
+-        list[7] = NULL;
++        list[6] = NULL;
+     }
+     if (!can_partition("/emmc")) {
+-        list[8] = NULL;
++        list[7] = NULL;
+     }
+ 
+     for (;;)
+@@ -1311,9 +1308,6 @@ void show_advanced_menu()
+         switch (chosen_item)
+         {
+             case 0:
+-                android_reboot(ANDROID_RB_RESTART2, 0, "recovery");
+-                break;
+-            case 1:
+                 if (0 != ensure_path_mounted("/data"))
+                     break;
+                 ensure_path_mounted("/sd-ext");
+@@ -1326,10 +1320,10 @@ void show_advanced_menu()
+                 }
+                 ensure_path_unmounted("/data");
+                 break;
+-            case 2:
++            case 1:
+                 handle_failure(1);
+                 break;
+-            case 3:
++            case 2:
+             {
+                 ui_print("Outputting key codes.\n");
+                 ui_print("Go back to end debugging.\n");
+@@ -1344,29 +1338,130 @@ void show_advanced_menu()
+                 while (action != GO_BACK);
+                 break;
+             }
+-            case 4:
++            case 3:
+                 ui_printlogtail(12);
+                 break;
+-            case 5:
++            case 4:
+                 ensure_path_mounted("/system");
+                 ensure_path_mounted("/data");
+                 ui_print("Fixing permissions...\n");
+                 __system("fix_permissions");
+                 ui_print("Done!\n");
+                 break;
+-            case 6:
++            case 5:
+                 partition_sdcard("/sdcard");
+                 break;
+-            case 7:
++            case 6:
+                 partition_sdcard("/external_sd");
+                 break;
+-            case 8:
++            case 7:
+                 partition_sdcard("/emmc");
+                 break;
+         }
+     }
+ }
+ 
++void show_reboot_menu()
++{
++    static char* headers[] = {  "Reboot Menu",
++                                "",
++                                NULL
++    };
++
++    static char* list[] = { "reboot system",
++                            "reboot recovery",
++#if defined BOARD_HAS_FASTBOOT && !defined BOARD_HAS_ODIN
++                            "reboot to bootloader",
++                            "power off",
++#elif defined BOARD_HAS_ODIN && !defined BOARD_HAS_FASTBOOT
++                            "reboot to odin mode",
++                            "power off",
++#elif defined BOARD_HAS_FASTBOOT && defined BOARD_HAS_ODIN
++                            "reboot to bootloader",
++                            "reboot to odin mode",
++                            "power off",
++#else
++                            "power off",
++#endif
++                            NULL
++    };
++
++    for (;;)
++    {
++        int chosen_item = get_filtered_menu_selection(headers, list, 0, 0, sizeof(list) / sizeof(char*));
++        if (chosen_item == GO_BACK)
++            break;
++        switch (chosen_item)
++        {
++            case 0:
++            {
++                ui_print("Rebooting...\n");
++                android_reboot(ANDROID_RB_RESTART, 0, 0);
++                return;
++            }
++            case 1:
++            {
++                ui_print("Rebooting recovery...\n");
++                android_reboot(ANDROID_RB_RESTART2, 0, "recovery");
++                break;
++            }
++#if defined BOARD_HAS_FASTBOOT && !defined BOARD_HAS_ODIN
++            case 2:
++            {
++                ui_print("Rebooting to bootloader...\n");
++                android_reboot(ANDROID_RB_RESTART2, 0, "bootloader");
++                break;
++            }
++            case 3:
++            {
++                ui_print("Shutting down...\n");
++                android_reboot(ANDROID_RB_POWEROFF, 0, 0);
++                return;
++            }
++#elif defined BOARD_HAS_ODIN && !defined BOARD_HAS_FASTBOOT
++            case 2:
++            {
++                ui_print("Rebooting to odin mode...\n");
++                android_reboot(ANDROID_RB_RESTART2, 0, "download");
++                break;
++            }
++            case 3:
++            {
++                ui_print("Shutting down...\n");
++                android_reboot(ANDROID_RB_POWEROFF, 0, 0);
++                return;
++            }
++#elif defined BOARD_HAS_FASTBOOT && defined BOARD_HAS_ODIN
++            case 2:
++            {
++                ui_print("Rebooting to bootloader...\n");
++                android_reboot(ANDROID_RB_RESTART2, 0, "bootloader");
++                break;
++            }
++            case 3:
++            {
++                ui_print("Rebooting to odin mode...\n");
++                android_reboot(ANDROID_RB_RESTART2, 0, "download");
++                return;
++            }
++            case 4:
++            {
++                ui_print("Shutting down...\n");
++                android_reboot(ANDROID_RB_POWEROFF, 0, 0);
++                return;
++            }
++#else
++            case 2:
++            {
++                ui_print("Shutting down...\n");
++                android_reboot(ANDROID_RB_POWEROFF, 0, 0);
++                return;
++            }
++#endif
++        }
++    }
++}
++
+ void write_fstab_root(char *path, FILE *file)
+ {
+     Volume *vol = volume_for_path(path);
+diff --git a/recovery.c b/recovery.c
+index 9e5ee94..65d5d8d 100644
+--- a/recovery.c
++++ b/recovery.c
+@@ -643,17 +643,17 @@ wipe_data(int confirm) {
+             title_headers = prepend_title((const char**)headers);
+         }
+ 
+-        char* items[] = { " No",
+-                          " No",
+-                          " No",
+-                          " No",
+-                          " No",
+-                          " No",
+-                          " No",
+-                          " Yes -- delete all user data",   // [7]
+-                          " No",
+-                          " No",
+-                          " No",
++        char* items[] = { "No",
++                          "No",
++                          "No",
++                          "No",
++                          "No",
++                          "No",
++                          "No",
++                          "Yes -- delete all user data",   // [7]
++                          "No",
++                          "No",
++                          "No",
+                           NULL };
+ 
+         int chosen_item = get_menu_selection(title_headers, items, 1, 0);
+@@ -701,8 +701,8 @@ prompt_and_wait() {
+         int status;
+         switch (chosen_item) {
+             case ITEM_REBOOT:
+-                poweroff=0;
+-                return;
++                show_reboot_menu();
++                break;
+ 
+             case ITEM_WIPE_DATA:
+                 wipe_data(ui_text_visible());
+@@ -738,10 +738,6 @@ prompt_and_wait() {
+             case ITEM_ADVANCED:
+                 show_advanced_menu();
+                 break;
+-
+-            case ITEM_POWEROFF:
+-                poweroff = 1;
+-                return;
+         }
+     }
+ }
+diff --git a/recovery_ui.h b/recovery_ui.h
+index 101e6be..f9573fa 100644
+--- a/recovery_ui.h
++++ b/recovery_ui.h
+@@ -83,7 +83,6 @@ int device_wipe_data();
+ #define ITEM_NANDROID        5
+ #define ITEM_PARTITION       6
+ #define ITEM_ADVANCED        7
+-#define ITEM_POWEROFF        8
+ 
+ // Header text to display above the main menu.
+ extern char* MENU_HEADERS[];
+-- 
+1.7.10.4
+
+From 0fe69d6c77d365ae41741e60eaea0100377d44d2 Mon Sep 17 00:00:00 2001
+From: Michael Bestas <mikeioannina@gmail.com>
+Date: Tue, 4 Dec 2012 15:18:55 +0200
+Subject: [PATCH] recovery: Fix reboot recovery issue
+
+This fixes the option to reboot recovery to work correctly. Without this, if the device required
+TARGET_RECOVERY_PRE_COMMAND, when you reboot recovery from within recovery, the device reboots into
+android system instead.
+
+Requires http://review.cyanogenmod.org/#/c/27609/ to be accepted.
+
+Change-Id: I9772d0ca28378aa8aa8674a16becb55605e44e5d
+---
+ Android.mk         |    2 +-
+ extendedcommands.c |    3 +++
+ 2 files changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/Android.mk b/Android.mk
+index f2b0caa..325f28a 100644
+--- a/Android.mk
++++ b/Android.mk
+@@ -58,7 +58,7 @@ BOARD_RECOVERY_CHAR_HEIGHT := $(shell echo $(BOARD_USE_CUSTOM_RECOVERY_FONT) | c
+ 
+ LOCAL_CFLAGS += -DBOARD_RECOVERY_CHAR_WIDTH=$(BOARD_RECOVERY_CHAR_WIDTH) -DBOARD_RECOVERY_CHAR_HEIGHT=$(BOARD_RECOVERY_CHAR_HEIGHT)
+ 
+-BOARD_RECOVERY_DEFINES := BOARD_HAS_NO_SELECT_BUTTON BOARD_UMS_LUNFILE BOARD_RECOVERY_ALWAYS_WIPES BOARD_RECOVERY_HANDLES_MOUNT BOARD_TOUCH_RECOVERY RECOVERY_EXTEND_NANDROID_MENU BOARD_HAS_FASTBOOT BOARD_HAS_ODIN
++BOARD_RECOVERY_DEFINES := BOARD_HAS_NO_SELECT_BUTTON BOARD_UMS_LUNFILE BOARD_RECOVERY_ALWAYS_WIPES BOARD_RECOVERY_HANDLES_MOUNT BOARD_TOUCH_RECOVERY RECOVERY_EXTEND_NANDROID_MENU BOARD_HAS_FASTBOOT BOARD_HAS_ODIN TARGET_RECOVERY_PRE_COMMAND
+ 
+ $(foreach board_define,$(BOARD_RECOVERY_DEFINES), \
+   $(if $($(board_define)), \
+diff --git a/extendedcommands.c b/extendedcommands.c
+index 5463313..324099d 100644
+--- a/extendedcommands.c
++++ b/extendedcommands.c
+@@ -1402,6 +1402,9 @@ void show_reboot_menu()
+             case 1:
+             {
+                 ui_print("Rebooting recovery...\n");
++#ifdef TARGET_RECOVERY_PRE_COMMAND
++                __system(TARGET_RECOVERY_PRE_COMMAND);
++#endif
+                 android_reboot(ANDROID_RB_RESTART2, 0, "recovery");
+                 break;
+             }
+-- 
+1.7.10.4
+
