@@ -371,6 +371,8 @@ if [ "${kernel_mods}" = "Y" ]; then
 			do_patch kernel_sysfs.patch
 		fi
 
+		do_patch kernel_readahead.patch
+
 		for device in ${devices}
 		do
 			kconfig=${android}/kernel/semc/msm7x30/arch/arm/configs/cyanogen_${device}_defconfig
