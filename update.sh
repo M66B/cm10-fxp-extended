@@ -475,6 +475,7 @@ if [ "${pdroid}" != "" ]; then
 	cd ${android}/frameworks/base
 	if [ "${pdroid}" = "openpdroid151" ]; then
 		patch -p1 --forward -r- <${patches}/openpdroid-devel.patch
+		#git diff remotes/origin/cm-jellybean-openpdroid remotes/origin/cm-jellybean-openpdroid-devel
 	else
 		patch -p0 --forward -r- <${patches}/pdroid_video.patch
 	fi

@@ -31,7 +31,7 @@ index e67230e..e602f53 100644
 +    boolean getDebugFlagBool(String flagName);
  }
 diff --git a/privacy/java/android/privacy/PrivacyPersistenceAdapter.java b/privacy/java/android/privacy/PrivacyPersistenceAdapter.java
-index 621bc1f..4cff577 100644
+index 621bc1f..75418ea 100644
 --- a/privacy/java/android/privacy/PrivacyPersistenceAdapter.java
 +++ b/privacy/java/android/privacy/PrivacyPersistenceAdapter.java
 @@ -22,6 +22,7 @@ import android.database.sqlite.SQLiteDatabase;
@@ -172,7 +172,7 @@ index 621bc1f..4cff577 100644
              db = getDatabase();
              if (db == null || !db.isOpen()) {
                  Log.e(TAG, "PrivacyPersistenceAdapter:setValue: Database not obtained while setting value for name: " + name);
-@@ -408,12 +474,28 @@ public final class PrivacyPersistenceAdapter {
+@@ -408,17 +474,35 @@ public final class PrivacyPersistenceAdapter {
                      "PrivacyPersistenceAdapter:getSettings:insufficient application identifier - package name is required");
          }
  
@@ -181,9 +181,11 @@ index 621bc1f..4cff577 100644
 +            if (cacheResult != null) {
 +                if (LOG_CACHE) Log.d(TAG, "PrivacyPersistenceAdapter:getSettings: Cache hit for " + packageName);
 +                //if the cached object is a stub, then it means that there is no privacy settings for that package, and null should be returned
-+                if (cacheResult instanceof PrivacySettingsStub) {
++                if (cacheResult.isStub()) {
++                    if (LOG_CACHE) Log.d(TAG, "PrivacyPersistenceAdapter:Cached result is a stub, return null:" + packageName);
 +                    return null;
 +                } else {
++                    if (LOG_CACHE) Log.d(TAG, "PrivacyPersistenceAdapter:Cached result is not a stub:" + packageName);
 +                    return (PrivacySettings)cacheResult;
 +                }
 +            } else {
@@ -201,34 +203,125 @@ index 621bc1f..4cff577 100644
              db = getDatabase();
          } catch (SQLiteException e) {
              Log.e(TAG, "getSettings - database could not be opened", e);
-@@ -431,7 +513,7 @@ public final class PrivacyPersistenceAdapter {
+             closeIdleDatabase();
+-            return privacySettings;
++            throw e;
+         }
+ 
+         Cursor cursor = null;
+@@ -431,47 +515,64 @@ public final class PrivacyPersistenceAdapter {
                      new String[] { packageName }, null, null, null, null);
  
              if (cursor != null) {
 -                if (cursor.getCount() != 1) {
-+                if (cursor.getCount() > 1) {
-                     Log.w(TAG, "Multiple privacy settings found for package " + packageName);
+-                    Log.w(TAG, "Multiple privacy settings found for package " + packageName);
+-                }
+-                if (cursor.moveToFirst()) {
+-                    privacySettings = new PrivacySettings(cursor.getInt(0), cursor.getString(1),
+-                            cursor.getInt(2), (byte) cursor.getShort(3), cursor.getString(4),
+-                            (byte) cursor.getShort(5), cursor.getString(6),
+-                            (byte) cursor.getShort(7), cursor.getString(8), cursor.getString(9),
+-                            (byte) cursor.getShort(10), cursor.getString(11), cursor.getString(12),
+-                            (byte) cursor.getShort(13), (byte) cursor.getShort(14),
+-                            (byte) cursor.getShort(15), cursor.getString(16),
+-                            (byte) cursor.getShort(17), cursor.getString(18),
+-                            (byte) cursor.getShort(19), (byte) cursor.getShort(20),
+-                            (byte) cursor.getShort(21), (byte) cursor.getShort(22),
+-                            (byte) cursor.getShort(23), (byte) cursor.getShort(24),
+-                            (byte) cursor.getShort(25), (byte) cursor.getShort(26),
+-                            (byte) cursor.getShort(27), (byte) cursor.getShort(28),
+-                            (byte) cursor.getShort(29), (byte) cursor.getShort(30),
+-                            (byte) cursor.getShort(31), (byte) cursor.getShort(32),
+-                            (byte) cursor.getShort(33), (byte) cursor.getShort(34), null,
+-                            (byte) cursor.getShort(35), (byte) cursor.getShort(36),
+-                            (byte) cursor.getShort(37), (byte) cursor.getShort(38),
+-                            (byte) cursor.getShort(39), (byte) cursor.getShort(40),
+-                            cursor.getString(41), (byte) cursor.getShort(42),
+-                            (byte) cursor.getShort(43), (byte) cursor.getShort(44),
+-                            (byte) cursor.getShort(45), (byte) cursor.getShort(46));
+-
+-                    // get allowed contacts IDs if necessary
+-                    cursor = query(db, TABLE_ALLOWED_CONTACTS, new String[] { "contact_id" },
+-                            "settings_id=?",
+-                            new String[] { Integer.toString(privacySettings.get_id()) }, null,
+-                            null, null, null);
+-
+-                    if (cursor != null && cursor.getCount() > 0) {
+-                        int[] allowedContacts = new int[cursor.getCount()];
+-                        while (cursor.moveToNext())
+-                            allowedContacts[cursor.getPosition()] = cursor.getInt(0);
+-                        privacySettings.setAllowedContacts(allowedContacts);
++                if (cursor.getCount() == 0) {
++                    // No settings are present: log that and do nothing
++                    Log.d(TAG, "PrivacyPersistenceAdapter:getSettingsfound for package " + packageName);
++                } else {
++                    if (cursor.getCount() > 1) {
++                        Log.w(TAG, "Multiple privacy settings found for package " + packageName);
+                     }
++    
++                    if (cursor.moveToFirst()) {
++                        privacySettings = new PrivacySettings(cursor.getInt(0), cursor.getString(1),
++                                cursor.getInt(2), (byte) cursor.getShort(3), cursor.getString(4),
++                                (byte) cursor.getShort(5), cursor.getString(6),
++                                (byte) cursor.getShort(7), cursor.getString(8), cursor.getString(9),
++                                (byte) cursor.getShort(10), cursor.getString(11), cursor.getString(12),
++                                (byte) cursor.getShort(13), (byte) cursor.getShort(14),
++                                (byte) cursor.getShort(15), cursor.getString(16),
++                                (byte) cursor.getShort(17), cursor.getString(18),
++                                (byte) cursor.getShort(19), (byte) cursor.getShort(20),
++                                (byte) cursor.getShort(21), (byte) cursor.getShort(22),
++                                (byte) cursor.getShort(23), (byte) cursor.getShort(24),
++                                (byte) cursor.getShort(25), (byte) cursor.getShort(26),
++                                (byte) cursor.getShort(27), (byte) cursor.getShort(28),
++                                (byte) cursor.getShort(29), (byte) cursor.getShort(30),
++                                (byte) cursor.getShort(31), (byte) cursor.getShort(32),
++                                (byte) cursor.getShort(33), (byte) cursor.getShort(34), null,
++                                (byte) cursor.getShort(35), (byte) cursor.getShort(36),
++                                (byte) cursor.getShort(37), (byte) cursor.getShort(38),
++                                (byte) cursor.getShort(39), (byte) cursor.getShort(40),
++                                cursor.getString(41), (byte) cursor.getShort(42),
++                                (byte) cursor.getShort(43), (byte) cursor.getShort(44),
++                                (byte) cursor.getShort(45), (byte) cursor.getShort(46));
++    
++                        // get allowed contacts IDs if necessary
++                        cursor = query(db, TABLE_ALLOWED_CONTACTS, new String[] { "contact_id" },
++                                "settings_id=?",
++                                new String[] { Integer.toString(privacySettings.get_id()) }, null,
++                                null, null, null);
++    
++                        if (cursor != null && cursor.getCount() > 0) {
++                            int[] allowedContacts = new int[cursor.getCount()];
++                            while (cursor.moveToNext())
++                                allowedContacts[cursor.getPosition()] = cursor.getInt(0);
++                            privacySettings.setAllowedContacts(allowedContacts);
++                        }
++                    }
++                }
++            }
++            
++            if (this.useCache) {
++                if (privacySettings != null) {
++                    settingsCache.put(packageName, privacySettings);
++                    if (LOG_CACHE) Log.d(TAG, "PrivacyPersistenceAdapter:getSettings: Cache put for" + packageName);
++                } else {
++                    settingsCache.put(packageName, new PrivacySettingsStub());
++                    if (LOG_CACHE) Log.d(TAG, "PrivacyPersistenceAdapter:getSettings: Cache stub put for" + packageName);
                  }
-                 if (cursor.moveToFirst()) {
-@@ -483,6 +565,17 @@ public final class PrivacyPersistenceAdapter {
+             }
++            
+         } catch (Exception e) {
+             Log.e(TAG, "getSettings - failed to get settings for package: " + packageName, e);
+         } finally {
+@@ -482,7 +583,7 @@ public final class PrivacyPersistenceAdapter {
+             if (LOG_LOCKING) Log.d(TAG, "PrivacyPersistenceAdapter:getSettings: ReadLock: (post)unlock");
              closeIdleDatabase();
          }
- 
-+        
-+        if (this.useCache) {
-+            if (privacySettings != null) {
-+                settingsCache.put(packageName, privacySettings);
-+                if (LOG_CACHE) Log.d(TAG, "PrivacyPersistenceAdapter:getSettings: Cache put for" + packageName);
-+            } else {
-+                settingsCache.put(packageName, new PrivacySettingsStub());
-+                if (LOG_CACHE) Log.d(TAG, "PrivacyPersistenceAdapter:getSettings: Cache stub put for" + packageName);
-+            }
-+        }
+-
 +        
          return privacySettings;
      }
  
-@@ -569,6 +662,7 @@ public final class PrivacyPersistenceAdapter {
+@@ -569,6 +670,7 @@ public final class PrivacyPersistenceAdapter {
              synchronized (sDbAccessThreads) {
                  sDbAccessThreads++;
              }
@@ -236,7 +329,7 @@ index 621bc1f..4cff577 100644
              db = getDatabase();
  
              if (db != null && db.isOpen()) {
-@@ -677,6 +771,12 @@ public final class PrivacyPersistenceAdapter {
+@@ -677,6 +779,12 @@ public final class PrivacyPersistenceAdapter {
  
                          // mark DB transaction successful (commit the changes)
                          db.setTransactionSuccessful();
@@ -249,7 +342,7 @@ index 621bc1f..4cff577 100644
                      } finally {
                          if (LOG_LOCKING) Log.d(TAG, "PrivacyPersistenceAdapter:saveSettings: Transaction: (pre)end");
                          db.endTransaction(); // we want to transition from set transaction successful to end as fast as possible to avoid errors (see the Android docs)
-@@ -699,8 +799,8 @@ public final class PrivacyPersistenceAdapter {
+@@ -699,8 +807,8 @@ public final class PrivacyPersistenceAdapter {
              closeIdleDatabase();
          }
  
@@ -260,7 +353,7 @@ index 621bc1f..4cff577 100644
  
      /**
       * This method creates external settings files for access from core libraries
-@@ -770,7 +870,7 @@ public final class PrivacyPersistenceAdapter {
+@@ -770,7 +878,7 @@ public final class PrivacyPersistenceAdapter {
              synchronized (sDbAccessThreads) {
                  sDbAccessThreads++;
              }
@@ -269,7 +362,7 @@ index 621bc1f..4cff577 100644
              db = getDatabase();
  
              if (LOG_LOCKING) Log.d(TAG, "PrivacyPersistenceAdapter:deleteSettings: WriteLock: (pre)lock");
-@@ -816,6 +916,12 @@ public final class PrivacyPersistenceAdapter {
+@@ -816,6 +924,12 @@ public final class PrivacyPersistenceAdapter {
                          settingsPackageDir.delete();
  
                      db.setTransactionSuccessful();
@@ -282,7 +375,7 @@ index 621bc1f..4cff577 100644
                  } finally {
                      if (LOG_LOCKING) Log.d(TAG, "PrivacyPersistenceAdapter:deleteSettings: Transaction: (pre)end");
                      db.endTransaction();
-@@ -913,7 +1019,8 @@ public final class PrivacyPersistenceAdapter {
+@@ -913,7 +1027,8 @@ public final class PrivacyPersistenceAdapter {
              synchronized (sDbAccessThreads) {
                  sDbAccessThreads++;
              }
@@ -292,7 +385,7 @@ index 621bc1f..4cff577 100644
              // delete obsolete entries from DB and update outdated entries
              db = getDatabase();
              if (db == null) {
-@@ -1015,6 +1122,7 @@ public final class PrivacyPersistenceAdapter {
+@@ -1015,6 +1130,7 @@ public final class PrivacyPersistenceAdapter {
  
      private synchronized SQLiteDatabase getDatabase() {
          if (mDb == null || !mDb.isOpen() || mDb.isReadOnly()) {
@@ -300,7 +393,7 @@ index 621bc1f..4cff577 100644
              mDb = SQLiteDatabase.openDatabase(DATABASE_FILE, null, SQLiteDatabase.OPEN_READWRITE);
          }   
          return mDb;
-@@ -1027,9 +1135,15 @@ public final class PrivacyPersistenceAdapter {
+@@ -1027,9 +1143,15 @@ public final class PrivacyPersistenceAdapter {
      private void closeIdleDatabase() {
          synchronized (sDbAccessThreads) {
              sDbAccessThreads--;
@@ -318,15 +411,21 @@ index 621bc1f..4cff577 100644
          }
      }
 diff --git a/privacy/java/android/privacy/PrivacySettings.java b/privacy/java/android/privacy/PrivacySettings.java
-index e218102..c374f62 100644
+index e218102..7cd0bcf 100644
 --- a/privacy/java/android/privacy/PrivacySettings.java
 +++ b/privacy/java/android/privacy/PrivacySettings.java
-@@ -25,7 +25,7 @@ import java.util.Random;
+@@ -25,7 +25,13 @@ import java.util.Random;
   * @author Svyatoslav Hresyk 
   * {@hide} 
   */
 -public final class PrivacySettings implements Parcelable {
 +public final class PrivacySettings extends PrivacySettingsStub implements Parcelable {
++    
++    private final static boolean isStub = false;
++    
++    boolean isStub() {
++        return isStub;
++    }
      
      /**
       * Real value, provided by the unmodified Android framework.
@@ -546,10 +645,10 @@ index 9b6c97b..4c78212 100644
  }
 diff --git a/privacy/java/android/privacy/PrivacySettingsStub.java b/privacy/java/android/privacy/PrivacySettingsStub.java
 new file mode 100644
-index 0000000..53aeb6d
+index 0000000..c7c4434
 --- /dev/null
 +++ b/privacy/java/android/privacy/PrivacySettingsStub.java
-@@ -0,0 +1,22 @@
+@@ -0,0 +1,28 @@
 +/**
 + * Copyright (C) 2012 Simeon J Morgan <smorgan@digitalfeed.net>
 + * This program is free software; you can redistribute it and/or modify it under
@@ -571,4 +670,10 @@ index 0000000..53aeb6d
 + * @author Simeon J Morgan 
 + * {@hide} 
 + */
-+class PrivacySettingsStub {}
++class PrivacySettingsStub {
++    private final static boolean isStub = true;
++    
++    boolean isStub() {
++        return isStub;
++    }
++}
