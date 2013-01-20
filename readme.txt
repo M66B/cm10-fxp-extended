@@ -4,12 +4,19 @@ CM10/FXP extended ROM/kernel
 BUILDING
 
 0. Make sure you have at least 25 GB of free disk space
-1a. Setup the build environment as explained here: http://forum.xda-developers.com/showthread.php?t=1807505
+1a. Setup the build environment as explained here: http://forum.xda-developers.com/showthread.php?t=1807505,
 1b. Follow the instuctions until the second 'repo sync'
+1c. Delete the following folders:
+
+	~/android/system/bootable/recovery
+	~/android/system/system/su
+	~/android/system/.repo/projects/bootable/recovery.git
+	~/android/system/.repo/projects/system/su.git
+
 2. Download and unzip the latest update_yymmdd.zip from here: http://www.faircode.eu/freexperia/patches/archives/
 3. Change the configuration in update.sh when needed
 4. Run the command: sh /path/to/update.sh
-5. Start the build as explained in the setup guide from step #1
+6. Start the build as explained in the setup guide from step #1
 
 The script resets your build environment to pristine state and applies the provided patches for the extended ROM/kernel.
 
