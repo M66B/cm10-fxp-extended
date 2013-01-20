@@ -16,7 +16,7 @@ BUILDING
 2. Run the command: cd ~/Downloads && git clone https://github.com/M66B/cm10-fxp-extended.git
 3. Change the configuration in update.sh if needed
 4. Run the command: sh ~/Downloads/update.sh
-6. Start the build as explained in the setup guide from step #1
+5. Start the build as explained in the setup guide from step #1
 
 The script resets your build environment to pristine state and applies the provided patches for the extended ROM/kernel.
 
