@@ -1,0 +1,28 @@
+diff --git a/core/res/res/layout/keyguard_screen_tab_unlock.xml b/core/res/res/layout/keyguard_screen_tab_unlock.xml
+--- a/core/res/res/layout/keyguard_screen_tab_unlock.xml
++++ b/core/res/res/layout/keyguard_screen_tab_unlock.xml
+@@ -223,7 +223,7 @@
+ 
+     <RelativeLayout
+         android:layout_width="match_parent"
+-        android:layout_height="302dip">
++        android:layout_height="250dip">
+ 
+     <!-- CyanogenMod Calendar Panel -->
+     <LinearLayout
+@@ -292,12 +292,13 @@
+             android:orientation="horizontal"
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+-            android:layout_alignParentBottom="true"
++            android:layout_alignParentTop="true"
+             android:layout_centerHorizontal="true"
+             android:layout_centerVertical="true"
+             android:paddingLeft="8dip"
+             android:paddingRight="8dip"
+             android:focusable="true"
++            android:layout_marginTop="-70dip"
+ 
+             android:targetDrawables="@array/lockscreen_targets_with_camera"
+             android:targetDescriptions="@array/lockscreen_target_descriptions_with_camera"
+
