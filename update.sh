@@ -58,6 +58,8 @@ wifiautoconnect=Y
 eba=Y
 ssh=Y
 layout=Y
+mediacontrols=Y
+pinlayout=Y
 cbattery=Y
 mvolume=Y
 bluetooth_bugfix=Y
@@ -614,6 +616,20 @@ if [ "${layout}" = "Y" ]; then
 	cd ${android}/frameworks/base
 	do_patch clear_all_button.patch
 	echo "--- Thanks Hikari no Tenshi"
+fi
+
+#Lockscreen media controls layout
+if [ "${mediacontrols}" = "Y" ]; then
+	echo "*** Lockscreen media controls layout ***"
+	cd ${android}/frameworks/base
+	do_patch lockscreen_media_controls.patch
+fi
+
+#Lockscreen pin layout
+if [ "${pinlayout}" = "Y" ]; then
+	echo "*** Lockscreen pin layout ***"
+	cd ${android}/frameworks/base
+	do_patch lockscreen_password_block.patch
 fi
 
 #Critical battery
