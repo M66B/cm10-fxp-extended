@@ -291,6 +291,8 @@ if [ "${kernel_mods}" = "Y" ]; then
 				do_replace "CONFIG_MOGAMI_VIBRATOR_ON_VOLTAGE=2800" "CONFIG_MOGAMI_VIBRATOR_ON_VOLTAGE=2700" ${kconfig}
 			elif [ "${device}" = "mango" ]; then
 				do_replace "CONFIG_MOGAMI_VIBRATOR_ON_VOLTAGE=2700" "CONFIG_MOGAMI_VIBRATOR_ON_VOLTAGE=2600" ${kconfig}
+			elif [ "${device}" = "smultron" ]; then
+				do_replace "CONFIG_MOGAMI_VIBRATOR_ON_VOLTAGE=2900" "CONFIG_MOGAMI_VIBRATOR_ON_VOLTAGE=2800" ${kconfig}
 			fi
 		done
 	fi
@@ -579,13 +581,9 @@ if [ "${eba}" = "Y" ]; then
 	echo "*** Electron beam animation ***"
 	cd ${android}/frameworks/base
 	do_patch eba.patch
-
-	#cd ${android}/frameworks/base
-	#do_patch eba_frameworks_base.patch
-	#cd ${android}/frameworks/native
-	#do_patch eba_frameworks_native.patch
-	#cd ${android}/packages/apps/Settings
-	#do_patch eba_settings.patch
+	do_patch eba_frameworks.patch
+	cd ${android}/packages/apps/Settings
+	do_patch eba_settings.patch
 fi
 
 #ssh
