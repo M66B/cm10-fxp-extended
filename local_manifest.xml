@@ -25,4 +25,5 @@
 
   <remove-project name="CyanogenMod/android_system_su" />
   <project name="CyanogenMod/android_system_su" path="system/su" remote="github" revision="cm-10.1" />
+  <project name="CyanogenMod/android_packages_apps_Trebuchet" path="packages/apps/Trebuchet" remote="github" revision="cm-10.1" />
 </manifest>
