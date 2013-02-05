@@ -1,0 +1,179 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index f9271e4..394296d 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -22,7 +22,7 @@
+     package="com.cyanogenmod.trebuchet"
+     android:versionName="@string/application_version">
+ 
+-    <uses-sdk android:minSdkVersion="17" android:targetSdkVersion="17" />
++    <uses-sdk android:minSdkVersion="16" android:targetSdkVersion="17" />
+ 
+     <permission
+         android:name="com.android.launcher.permission.PRELOAD_WORKSPACE"
+@@ -67,8 +67,7 @@
+         android:label="@string/application_name"
+         android:icon="@drawable/ic_launcher_home"
+         android:hardwareAccelerated="true"
+-        android:largeHeap="@bool/config_largeHeap"
+-        android:supportsRtl="true">
++        android:largeHeap="@bool/config_largeHeap">
+         <activity
+             android:name="com.cyanogenmod.trebuchet.Launcher"
+             android:launchMode="singleTask"
+diff --git a/res/layout/apps_customize_pane.xml b/res/layout/apps_customize_pane.xml
+index bee51d7..0eef96d 100644
+--- a/res/layout/apps_customize_pane.xml
++++ b/res/layout/apps_customize_pane.xml
+@@ -22,8 +22,7 @@
+         android:orientation="vertical"
+         android:layout_width="match_parent"
+         android:layout_height="match_parent"
+-        android:visibility="gone"
+-        android:layoutDirection="ltr">
++        android:visibility="gone">
+         <!-- The layout_width of the tab bar gets overriden to align the content
+              with the text in the tabs in AppsCustomizeTabHost. -->
+         <FrameLayout
+diff --git a/res/layout/preference_header_item.xml b/res/layout/preference_header_item.xml
+index 75536af..ec86834 100644
+--- a/res/layout/preference_header_item.xml
++++ b/res/layout/preference_header_item.xml
+@@ -20,13 +20,10 @@
+     android:layout_height="wrap_content"
+     android:minHeight="48dp"
+     android:background="?android:attr/activatedBackgroundIndicator"
+-    android:gravity="center_vertical"
+-    android:paddingEnd="?android:attr/scrollbarSize">
++    android:gravity="center_vertical">
+ 
+     <LinearLayout
+         android:layout_width="wrap_content"
+-        android:layout_marginStart="6dip"
+-        android:layout_marginEnd="6dip"
+         android:layout_height="wrap_content">
+         <ImageView
+             android:id="@+id/icon"
+@@ -38,8 +35,6 @@
+     <RelativeLayout
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+-        android:layout_marginStart="2dip"
+-        android:layout_marginEnd="6dip"
+         android:layout_marginTop="6dip"
+         android:layout_marginBottom="6dip"
+         android:layout_weight="1">
+@@ -56,7 +51,6 @@
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:layout_below="@android:id/title"
+-            android:layout_alignStart="@android:id/title"
+             android:textAppearance="?android:attr/textAppearanceSmall"
+             android:ellipsize="end"
+             android:maxLines="2" />
+diff --git a/src/com/cyanogenmod/trebuchet/AppsCustomizePagedView.java b/src/com/cyanogenmod/trebuchet/AppsCustomizePagedView.java
+index 8d4e4d7..c13f4a3 100644
+--- a/src/com/cyanogenmod/trebuchet/AppsCustomizePagedView.java
++++ b/src/com/cyanogenmod/trebuchet/AppsCustomizePagedView.java
+@@ -735,7 +735,7 @@ public class AppsCustomizePagedView extends PagedViewWithDraggableItems implemen
+ 
+     Bundle getDefaultOptionsForWidget(PendingAddWidgetInfo info) {
+         Bundle options = null;
+-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
++       /* if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+             AppWidgetResizeFrame.getWidgetSizeRanges(mLauncher, info.spanX, info.spanY, mTmpRect);
+             Rect padding = AppWidgetHostView.getDefaultPaddingForWidget(mLauncher,
+                     info.componentName, null);
+@@ -753,7 +753,7 @@ public class AppsCustomizePagedView extends PagedViewWithDraggableItems implemen
+                     mTmpRect.right - xPaddingDips);
+             options.putInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT,
+                     mTmpRect.bottom - yPaddingDips);
+-        }
++        }*/
+         return options;
+     }
+ 
+@@ -773,7 +773,7 @@ public class AppsCustomizePagedView extends PagedViewWithDraggableItems implemen
+                 mWidgetLoadingId = mLauncher.getAppWidgetHost().allocateAppWidgetId();
+                 // Options will be null for platforms with JB or lower, so this serves as an
+                 // SDK level check.
+-                if (options == null) {
++                /*if (options == null) {
+                     if (AppWidgetManager.getInstance(mLauncher).bindAppWidgetIdIfAllowed(
+                             mWidgetLoadingId, info.componentName)) {
+                         mWidgetCleanupState = WIDGET_BOUND;
+@@ -783,7 +783,7 @@ public class AppsCustomizePagedView extends PagedViewWithDraggableItems implemen
+                             mWidgetLoadingId, info.componentName, options)) {
+                         mWidgetCleanupState = WIDGET_BOUND;
+                     }
+-                }
++                }*/
+             }
+         };
+         post(mBindWidgetRunnable);
+diff --git a/src/com/cyanogenmod/trebuchet/Launcher.java b/src/com/cyanogenmod/trebuchet/Launcher.java
+index bae9389..67f8ee3 100644
+--- a/src/com/cyanogenmod/trebuchet/Launcher.java
++++ b/src/com/cyanogenmod/trebuchet/Launcher.java
+@@ -1791,7 +1791,6 @@ public final class Launcher extends Activity
+         createShortcutIntent.setComponent(componentName);
+         processShortcut(createShortcutIntent);
+     }
+-
+     /**
+      * Process a widget drop.
+      *
+@@ -1827,30 +1826,19 @@ public final class Launcher extends Activity
+             // In this case, we either need to start an activity to get permission to bind
+             // the widget, or we need to start an activity to configure the widget, or both.
+             appWidgetId = getAppWidgetHost().allocateAppWidgetId();
+-            Bundle options = info.bindOptions;
+-
+-            boolean success;
+-            if (options != null) {
+-                success = mAppWidgetManager.bindAppWidgetIdIfAllowed(appWidgetId,
+-                        info.componentName, options);
+-            } else {
+-                success = mAppWidgetManager.bindAppWidgetIdIfAllowed(appWidgetId,
+-                        info.componentName);
+-            }
+-            if (success) {
++            if (mAppWidgetManager.bindAppWidgetIdIfAllowed(appWidgetId, info.componentName)) {
+                 addAppWidgetImpl(appWidgetId, info, null, info.info);
+             } else {
+                 mPendingAddWidgetInfo = info.info;
+                 Intent intent = new Intent(AppWidgetManager.ACTION_APPWIDGET_BIND);
+                 intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+                 intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_PROVIDER, info.componentName);
+-                // TODO: we need to make sure that this accounts for the options bundle.
+-                // intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_OPTIONS, options);
+                 startActivityForResult(intent, REQUEST_BIND_APPWIDGET);
+             }
+         }
+     }
+ 
++
+     void processShortcut(Intent intent) {
+         // Handle case where user selected "Applications"
+         String applicationName = getResources().getString(R.string.group_applications);
+diff --git a/src/com/cyanogenmod/trebuchet/UserInitializeReceiver.java b/src/com/cyanogenmod/trebuchet/UserInitializeReceiver.java
+index 9bd11a1..5c3a701 100644
+--- a/src/com/cyanogenmod/trebuchet/UserInitializeReceiver.java
++++ b/src/com/cyanogenmod/trebuchet/UserInitializeReceiver.java
+@@ -47,14 +47,14 @@ public class UserInitializeReceiver extends BroadcastReceiver {
+                 Context.WALLPAPER_SERVICE);
+         for (int i=1; i<list.size(); i++) {
+             int resid = list.get(i);
+-            if (!wpm.hasResourceWallpaper(resid)) {
++            /*if (!wpm.hasResourceWallpaper(resid)) {
+                 try {
+                     wpm.setResource(resid);
+                 } catch (IOException e) {
+                     // Ignore
+                 }
+                 return;
+-            }
++            }*/
+         }
+     }
+ 

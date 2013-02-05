@@ -63,6 +63,7 @@ pinlayout=Y
 cbattery=Y
 mvolume=Y
 bluetooth_bugfix=Y
+trebuchet_patch=Y
 
 #Say hello
 echo ""
@@ -649,6 +650,13 @@ if [ "${bluetooth_bugfix}" = "Y" ]; then
 	echo "*** Bluetooth bugfix ***"
 	cd ${android}/frameworks/base
 	do_patch frameworks_bluetooth.patch
+fi
+
+#Trebuchet Patch
+if [ "${trebuchet_patch}" = "Y" ]; then
+	echo "*** Trebuchet Patch ***"
+	cd ${android}/packages/apps/Trebuchet
+	do_patch trebuchet_port.patch
 fi
 
 #Say whats next
