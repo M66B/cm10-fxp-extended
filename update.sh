@@ -161,6 +161,9 @@ cp ${patches}/local_manifest.xml ${android}/.repo/local_manifest.xml
 if [ "${twrp}" != "Y" ]; then
 	sed -i "/bootable/d" ${android}/.repo/local_manifest.xml
 fi
+if [ "${trebuchet_patch}" != "Y" ]; then
+	sed -i "/Trebuchet/d" ${android}/.repo/local_manifest.xml
+fi
 
 echo "*** Repo sync ***"
 cd ${android}
@@ -654,7 +657,12 @@ fi
 
 #Trebuchet Patch
 if [ "${trebuchet_patch}" = "Y" ]; then
+	if [-f ${android}/vendor/cm/overlay/common/packages/apps/Trebuchet/res/values/config.xml ];
+	then
+   	 rm ${android}/vendor/cm/overlay/common/packages/apps/Trebuchet/res/values/config.xml
+	fi
 	echo "*** Trebuchet Patch ***"
+	echo "config.xml removed"
 	cd ${android}/packages/apps/Trebuchet
 	do_patch trebuchet_port.patch
 fi
