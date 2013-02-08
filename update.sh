@@ -64,6 +64,7 @@ cbattery=Y
 mvolume=Y
 bluetooth_bugfix=Y
 trebuchet_patch=Y
+trebuchet_fix=Y
 
 #Say hello
 echo ""
@@ -665,6 +666,13 @@ if [ "${trebuchet_patch}" = "Y" ]; then
 	echo "config.xml removed"
 	cd ${android}/packages/apps/Trebuchet
 	do_patch trebuchet_port.patch
+fi
+
+#Trebuchet fix build
+if [ "${trebuchet_fix}" = "Y" ]; then
+	echo "*** Trebuchet fix build ***"
+	cd ${android}/packages/apps/Trebuchet
+	do_patch trebuchet_fix_build.patch
 fi
 
 #Say whats next
