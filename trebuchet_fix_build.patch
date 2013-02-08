@@ -1,0 +1,11 @@
+diff --git a/res/values/config.xml b/res/values/config.xml
+--- a/res/values/config.xml
++++ b/res/values/config.xml
+@@ -2,6 +2,7 @@
+     <bool name="config_largeHeap">false</bool>
+     <bool name="is_large_screen">false</bool>
+     <bool name="allow_rotation">false</bool>
++    <bool name="config_cyanogenmod">true</bool>
+ 
+ <!-- DragController -->
+     <integer name="config_flingToDeleteMinVelocity">-1500</integer>
