@@ -658,7 +658,7 @@ fi
 
 #Trebuchet Patch
 if [ "${trebuchet_patch}" = "Y" ]; then
-	if [-f ${android}/vendor/cm/overlay/common/packages/apps/Trebuchet/res/values/config.xml ];
+	if [ -f ${android}/vendor/cm/overlay/common/packages/apps/Trebuchet/res/values/config.xml ];
 	then
    	 rm ${android}/vendor/cm/overlay/common/packages/apps/Trebuchet/res/values/config.xml
 	fi
