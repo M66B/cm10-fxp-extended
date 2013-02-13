@@ -158,12 +158,12 @@ done
 
 #Local manifest
 echo "*** Local manifest ***"
-cp ${patches}/local_manifest.xml ${android}/.repo/local_manifest.xml
+cp ${patches}/cmxtended.xml ${android}/.repo/local_manifests/cmxtended.xml
 if [ "${twrp}" != "Y" ]; then
-	sed -i "/bootable/d" ${android}/.repo/local_manifest.xml
+	sed -i "/bootable/d" ${android}/.repo/local_manifests/cmxtended.xml
 fi
 if [ "${trebuchet_patch}" != "Y" ]; then
-	sed -i "/Trebuchet/d" ${android}/.repo/local_manifest.xml
+	sed -i "/Trebuchet/d" ${android}/.repo/local_manifests/cmxtended.xml
 fi
 
 echo "*** Repo sync ***"
