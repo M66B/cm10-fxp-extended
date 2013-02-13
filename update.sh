@@ -13,6 +13,8 @@ linaro_name=arm-eabi-4.7-linaro
 linaro_file=android-toolchain-eabi-4.7-daily-linux-x86.tar.bz2
 linaro_url=https://android-build.linaro.org/jenkins/view/Toolchain/job/linaro-android_toolchain-4.7-bzr/lastSuccessfulBuild/artifact/build/out/${linaro_file}
 
+toolchain_32bit=Y
+
 #--- bootimage ---
 
 kernel_mods=Y
@@ -65,6 +67,7 @@ mvolume=Y
 bluetooth_bugfix=Y
 trebuchet_patch=Y
 trebuchet_fix=Y
+new_superuser=Y
 
 #Say hello
 echo ""
@@ -164,6 +167,12 @@ if [ "${twrp}" != "Y" ]; then
 fi
 if [ "${trebuchet_patch}" != "Y" ]; then
 	sed -i "/Trebuchet/d" ${android}/.repo/local_manifests/cmxtended.xml
+fi
+if [ "${new_superuser}" != "Y" ]; then
+	sed -i "/system_su/d" ${android}/.repo/local_manifests/cmxtended.xml
+fi
+if [ "${toolchain_32bit}" != "Y" ]; then
+	sed -i "/androideabi/d" ${android}/.repo/local_manifests/cmxtended.xml
 fi
 
 echo "*** Repo sync ***"

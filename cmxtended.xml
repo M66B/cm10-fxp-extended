@@ -24,7 +24,8 @@
   <project name="TeamWin/Team-Win-Recovery-Project" path="bootable/recovery" remote="github" revision="jb-wip" />
 
   <remove-project name="CyanogenMod/android_system_su" />
-  <remove-project name="CyanogenMod/android_packages_apps_Trebuchet" />
   <project name="CyanogenMod/android_system_su" path="system/su" remote="github" revision="cm-10.1" />
+
+  <remove-project name="CyanogenMod/android_packages_apps_Trebuchet" />
   <project name="CyanogenMod/android_packages_apps_Trebuchet" path="packages/apps/Trebuchet" remote="github" revision="cm-10.1" />
 </manifest>
