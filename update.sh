@@ -62,7 +62,6 @@ ssh=Y
 layout=Y
 mediacontrols=Y
 pinlayout=Y
-cbattery=Y
 mvolume=Y
 bluetooth_bugfix=Y
 trebuchet_patch=Y
@@ -642,13 +641,6 @@ if [ "${pinlayout}" = "Y" ]; then
 	echo "*** Lockscreen pin layout ***"
 	cd ${android}/frameworks/base
 	do_patch lockscreen_password_block.patch
-fi
-
-#Critical battery
-if [ "${cbattery}" = "Y" ]; then
-	echo "*** Critical battery ***"
-	cd ${android}/frameworks/base
-	do_patch critical_battery.patch
 fi
 
 #Music volume
