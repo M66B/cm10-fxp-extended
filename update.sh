@@ -272,6 +272,8 @@ if [ "${kernel_mods}" = "Y" ]; then
 			do_append "CONFIG_CPU_FREQ_GOV_LIONHEART=y" ${kconfig}
 			do_append "CONFIG_CPU_FREQ_GOV_ONDEMANDX=y" ${kconfig}
 			do_append "CONFIG_CPU_FREQ_GOV_INTELLIDEMAND2=y" ${kconfig}
+
+			do_append "CONFIG_CPU_FREQ_GOV_SMARTASSH3=y" ${kconfig}
 		done
 	fi
 
