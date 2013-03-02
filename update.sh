@@ -487,9 +487,12 @@ if [ "${openpdroid}" = "Y" ]; then
 	echo "*** OpenPDroid ***"
 
 	cd /tmp
-	git clone git://github.com/OpenPDroid/OpenPDroidPatches.git
+	if [ ! -f "/tmp/OpenPDroidPatches" ]; then
+		git clone git://github.com/OpenPDroid/OpenPDroidPatches.git
+	fi
 	cd OpenPDroidPatches
 	git checkout 4.1.2-cm
+	git pull git://github.com/OpenPDroid/OpenPDroidPatches.git
 
 	cd ${android}/build; patch -p1 --forward -r- </tmp/OpenPDroidPatches/openpdroid_4.1.2-cm_build.patch
 	cd ${android}/libcore; patch -p1 --forward -r- </tmp/OpenPDroidPatches/openpdroid_4.1.2-cm_libcore.patch
