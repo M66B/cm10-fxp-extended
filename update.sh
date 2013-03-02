@@ -48,7 +48,7 @@ recoverymenu=Y
 #--- ROM ---
 
 cellbroadcast=Y
-pdroid=openpdroid151
+openpdroid=Y
 oompriorities=N
 nano=Y
 terminfo=Y
@@ -160,6 +160,7 @@ done
 
 #Local manifest
 echo "*** Local manifest ***"
+mkdir -p ${android}/.repo/local_manifests
 cp ${patches}/cmxtended.xml ${android}/.repo/local_manifests/cmxtended.xml
 if [ "${twrp}" != "Y" ]; then
 	sed -i "/bootable/d" ${android}/.repo/local_manifests/cmxtended.xml
@@ -211,7 +212,7 @@ if [ "${linaro}" = "Y" ] || [ "${kernel_linaro}" = "Y" ]; then
 fi
 
 #Prebuilts
-if [ "${pdroid}" = "openpdroid151" ]; then
+if [ "${openpdroid}" = "Y" ]; then
 	do_append "curl -L -o ${android}/vendor/cm/proprietary/pdroidalternative.apk -O -L https://github.com/wsot/pdroid_manager_build/blob/master/PDroid_Manager_latest.apk?raw=true" ${android}/vendor/cm/get-prebuilts
 fi
 ${android}/vendor/cm/get-prebuilts
@@ -481,27 +482,24 @@ if [ "${cellbroadcast}" = "Y" ]; then
 	do_patch cb_settings.patch
 fi
 
-#PDroid
-if [ "${pdroid}" != "" ]; then
-	cd ${android}
-	echo "*** PDroid: ${pdroid} ***"
-	patch -p1 --forward -r- <${patches}/${pdroid}/JB_build.patch
-	patch -p1 --forward -r- <${patches}/${pdroid}/JB_libcore.patch
-	patch -p1 --forward -r- <${patches}/${pdroid}/JB_framework.patch
-	patch -p1 --forward -r- <${patches}/${pdroid}/JB_mms.patch
-	cd ${android}/frameworks/base
-	if [ "${pdroid}" = "openpdroid151" ]; then
-		patch -p1 --forward -r- <${patches}/openpdroid-devel.patch
-		#git diff remotes/origin/cm-jellybean-openpdroid remotes/origin/cm-jellybean-openpdroid-devel
-	else
-		patch -p0 --forward -r- <${patches}/pdroid_video.patch
-	fi
+#OpenPDroid
+if [ "${openpdroid}" = "Y" ]; then
+	echo "*** OpenPDroid ***"
+
+	cd /tmp
+	git clone git://github.com/OpenPDroid/OpenPDroidPatches.git
+	cd OpenPDroidPatches
+	git checkout 4.1.2-cm
+
+	cd ${android}/build; patch -p1 --forward -r- </tmp/OpenPDroidPatches/openpdroid_4.1.2-cm_build.patch
+	cd ${android}/libcore; patch -p1 --forward -r- </tmp/OpenPDroidPatches/openpdroid_4.1.2-cm_libcore.patch
+	cd ${android}/packages/apps/Mms; patch -p1 --forward -r- </tmp/OpenPDroidPatches/openpdroid_4.1.2-cm_packages_apps_Mms.patch
+	cd ${android}/frameworks/base; patch -p1 --forward -r- </tmp/OpenPDroidPatches/openpdroid_4.1.2-cm_frameworks_base.patch
+
 	mkdir -p ${android}/privacy
-	cp ${patches}/${pdroid}/PDroid.jpeg ${android}/privacy
+	cp /tmp/OpenPDroidPatches/PDroid.jpeg ${android}/privacy
 	do_append "PRODUCT_COPY_FILES += privacy/PDroid.jpeg:system/media/PDroid.jpeg" ${android}/vendor/cm/config/common.mk
-	if [ "${pdroid}" = "openpdroid151" ]; then
-		do_append "PRODUCT_COPY_FILES += vendor/cm/proprietary/pdroidalternative.apk:system/app/pdroidalternative.apk" ${android}/vendor/cm/config/common.mk
-	fi
+	do_append "PRODUCT_COPY_FILES += vendor/cm/proprietary/pdroidalternative.apk:system/app/pdroidalternative.apk" ${android}/vendor/cm/config/common.mk
 fi
 
 #OOM priorities
