@@ -487,7 +487,7 @@ if [ "${openpdroid}" = "Y" ]; then
 	echo "*** OpenPDroid ***"
 
 	cd /tmp
-	if [ ! -f "/tmp/OpenPDroidPatches" ]; then
+	if [ ! -d "/tmp/OpenPDroidPatches" ]; then
 		git clone git://github.com/OpenPDroid/OpenPDroidPatches.git
 	fi
 	cd OpenPDroidPatches
