@@ -42,8 +42,6 @@ bootlogo=Y
 bootlogoh=logo_H_extended.png
 bootlogom=logo_M_extended.png
 
-recoverymenu=Y
-
 #--- ROM ---
 
 cellbroadcast=Y
@@ -429,14 +427,6 @@ if [ "${bootlogo}" = "Y" ]; then
 	/tmp/to565 -rle </tmp/logo_H_new.raw >${android}/device/semc/msm7x30-common/prebuilt/logo_H.rle
 	convert -depth 8 ${patches}/bootlogo/${bootlogom} rgb:/tmp/logo_M_new.raw
 	/tmp/to565 -rle </tmp/logo_M_new.raw >${android}/device/semc/msm7x30-common/prebuilt/logo_M.rle
-fi
-
-#Recovery menu
-if [ "${recoverymenu}" = "Y" ]; then
-	echo "*** Recovery menu ***"
-	cd ${android}/bootable/recovery
-	do_patch recovery_menu.patch
-	#do_append "BOARD_HAS_FASTBOOT := true" ${android}/device/semc/msm7x30-common/BoardConfigCommon.mk
 fi
 
 #--- ROM ---
