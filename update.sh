@@ -42,7 +42,6 @@ bootlogo=Y
 bootlogoh=logo_H_extended.png
 bootlogom=logo_M_extended.png
 
-twrp=Y
 recoverymenu=Y
 
 #--- ROM ---
@@ -162,9 +161,6 @@ done
 echo "*** Local manifest ***"
 mkdir -p ${android}/.repo/local_manifests
 cp ${patches}/cmxtended.xml ${android}/.repo/local_manifests/cmxtended.xml
-if [ "${twrp}" != "Y" ]; then
-	sed -i "/bootable/d" ${android}/.repo/local_manifests/cmxtended.xml
-fi
 if [ "${trebuchet_patch}" != "Y" ]; then
 	sed -i "/Trebuchet/d" ${android}/.repo/local_manifests/cmxtended.xml
 fi
@@ -435,36 +431,8 @@ if [ "${bootlogo}" = "Y" ]; then
 	/tmp/to565 -rle </tmp/logo_M_new.raw >${android}/device/semc/msm7x30-common/prebuilt/logo_M.rle
 fi
 
-#twrp
-if [ "${twrp}" = "Y" ]; then
-	echo "*** Team Win Recovery Project ***"
-
-	cd ${android}/bootable/recovery
-	do_patch twrp.patch
-
-	for device in ${devices}
-	do
-		resolution="320x480"
-		if [ "${device}" = "anzu" ] || [ "${device}" = "hallon" ] || [ "${device}" = "haida" ] || [ "${device}" = "iyokan" ] || [ "${device}" = "urushi" ]; then
-			resolution="480x854"
-		fi
-		echo "${device}: ${resolution}"
-
-		cd ${android}/device/semc/${device}
-		sed -i "s|export PATH /sbin|export PATH /sbin\n    export LD_LIBRARY_PATH .:/sbin|g" ${android}/device/semc/${device}/recovery/init.rc
-
-		do_append "DEVICE_RESOLUTION := ${resolution}" ${android}/device/semc/${device}/BoardConfig.mk
-		do_append "RECOVERY_GRAPHICS_USE_LINELENGTH := true" ${android}/device/semc/${device}/BoardConfig.mk
-		do_append "TARGET_RECOVERY_PIXEL_FORMAT := \"RGB_565\"" ${android}/device/semc/${device}/BoardConfig.mk
-
-		do_append "TW_HAS_NO_RECOVERY_PARTITION := true" ${android}/device/semc/${device}/BoardConfig.mk
-		do_append "TW_NO_BATT_PERCENT := true" ${android}/device/semc/${device}/BoardConfig.mk
-		do_append "TW_INCLUDE_JB_CRYPTO := true" ${android}/device/semc/${device}/BoardConfig.mk
-	done
-fi
-
 #Recovery menu
-if [ "${recoverymenu}" = "Y" ] && [ "${twrp}" != "Y" ]; then
+if [ "${recoverymenu}" = "Y" ]; then
 	echo "*** Recovery menu ***"
 	cd ${android}/bootable/recovery
 	do_patch recovery_menu.patch

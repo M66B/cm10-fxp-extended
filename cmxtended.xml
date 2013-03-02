@@ -20,9 +20,6 @@
   <remove-project name="platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.6" />
   <project name="yath/android_prebuilts_gcc_linux-x86-32_arm_arm-linux-androideabi-4.6" path="prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.6" remote="github" revision="jellybean" />
 
-  <remove-project name="CyanogenMod/android_bootable_recovery" />
-  <project name="TeamWin/Team-Win-Recovery-Project" path="bootable/recovery" remote="github" revision="jb-wip" />
-
   <remove-project name="CyanogenMod/android_system_su" />
   <project name="CyanogenMod/android_system_su" path="system/su" remote="github" revision="cm-10.1" />
 
