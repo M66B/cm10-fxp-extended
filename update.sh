@@ -440,7 +440,6 @@ if [ "${twrp}" = "Y" ]; then
 	echo "*** Team Win Recovery Project ***"
 
 	cd ${android}/bootable/recovery
-	git checkout 6ff55cefd060b4c8f6c0fa97d5521516f9ee43f1
 	do_patch twrp.patch
 
 	for device in ${devices}
@@ -492,7 +491,7 @@ if [ "${openpdroid}" = "Y" ]; then
 	fi
 	cd OpenPDroidPatches
 	git checkout 4.1.2-cm
-	git pull git://github.com/OpenPDroid/OpenPDroidPatches.git
+	git pull
 
 	cd ${android}/build; patch -p1 --forward -r- </tmp/OpenPDroidPatches/openpdroid_4.1.2-cm_build.patch
 	cd ${android}/libcore; patch -p1 --forward -r- </tmp/OpenPDroidPatches/openpdroid_4.1.2-cm_libcore.patch
