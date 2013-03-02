@@ -51,7 +51,7 @@ nano=Y
 terminfo=Y
 emptydrawer=Y
 massstorage=Y
-enable720p=Y
+enable720p=N
 als=Y
 wifiautoconnect=Y
 eba=Y
@@ -368,8 +368,8 @@ if [ "${kernel_mods}" = "Y" ]; then
 		do_patch kernel_whisper.patch
 	fi
 
-	#echo "-- iyokan touch precision"
-	#do_patch kernel_iyokan_touch.patch
+	echo "-- iyokan touch precision"
+	do_patch kernel_iyokan_touch.patch
 
 	if [ "${kernel_misc}" = "Y" ]; then
 		echo "-- Misc"
