@@ -51,7 +51,7 @@ nano=Y
 terminfo=Y
 emptydrawer=Y
 massstorage=Y
-enable720p=Y
+enable720p=N
 als=Y
 wifiautoconnect=Y
 eba=Y
@@ -372,6 +372,11 @@ if [ "${kernel_mods}" = "Y" ]; then
 
 	echo "-- iyokan touch precision"
 	do_patch kernel_iyokan_touch.patch
+
+	if [ "${enable720p}" != "Y" ]; then
+		echo "-- 720p disabled: free memory"
+		do_patch kernel_disable_720p.patch
+	fi
 
 	if [ "${kernel_misc}" = "Y" ]; then
 		echo "-- Misc"
