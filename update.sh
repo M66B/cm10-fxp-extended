@@ -239,6 +239,7 @@ if [ "${kernel_mods}" = "Y" ]; then
 		cd ${android}/kernel/semc/msm7x30/
 		do_patch kernel_linaro_head.patch
 		do_patch kernel_linaro_boot.patch
+		do_patch kernel_optimize.patch
 	fi
 
 	cd ${android}/kernel/semc/msm7x30/
