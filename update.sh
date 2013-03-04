@@ -42,7 +42,7 @@ bootlogo=Y
 bootlogoh=logo_H_extended.png
 bootlogom=logo_M_extended.png
 
-twrp=Y
+twrp=N
 
 #--- ROM ---
 
@@ -446,9 +446,6 @@ fi
 if [ "${twrp}" = "Y" ]; then
 	echo "*** Team Win Recovery Project ***"
 
-	cd ${android}/bootable/recovery
-	do_patch twrp.patch
-
 	for device in ${devices}
 	do
 		resolution="320x480"
@@ -467,8 +464,8 @@ if [ "${twrp}" = "Y" ]; then
 		do_append "TW_HAS_NO_RECOVERY_PARTITION := true" ${android}/device/semc/${device}/BoardConfig.mk
 		do_append "TW_HAS_NO_BOOT_PARTITION := true" ${android}/device/semc/${device}/BoardConfig.mk
 		do_append "TW_NO_BATT_PERCENT := true" ${android}/device/semc/${device}/BoardConfig.mk
-		do_append "TW_INCLUDE_JB_CRYPTO := true" ${android}/device/semc/${device}/BoardConfig.mk
-		do_append "TW_NO_EXFAT_FUSE := true" ${android}/device/semc/${device}/BoardConfig.mk
+		#do_append "TW_INCLUDE_JB_CRYPTO := true" ${android}/device/semc/${device}/BoardConfig.mk
+		#do_append "TW_NO_EXFAT_FUSE := true" ${android}/device/semc/${device}/BoardConfig.mk
 	done
 fi
 
