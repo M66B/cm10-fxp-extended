@@ -544,6 +544,8 @@ if [ "${als}" = "Y" ]; then
 	do_patch ALS_iyokan.patch
 	cd ${android}/device/semc/smultron
 	do_patch ALS_smultron.patch
+	cd ${android}/device/semc/coconut
+	do_patch ALS_coconut.patch
 fi
 
 #Wi-Fi auto connect option
