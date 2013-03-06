@@ -36,7 +36,7 @@ kernel_optimize=N
 
 kernel_compress=Y
 
-#Fillers shoudn't necessary anymore
+#Fillers shoudn't be necessary anymore
 filler_small=N
 filler_large=N
 
