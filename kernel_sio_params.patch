@@ -1,0 +1,29 @@
+From 29e692a3ad4a5f91751e1a102b1a99595cb904c6 Mon Sep 17 00:00:00 2001
+From: garwedgess <garethwilliams21@gmail.com>
+Date: Tue, 5 Feb 2013 12:35:35 +0000
+Subject: [PATCH] block:Sio-iosched.c increase max times reads can starve a
+ write & lowered number ofequential requests treated as one
+ thanks @Paul678
+
+---
+ block/sio-iosched.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/block/sio-iosched.c b/block/sio-iosched.c
+index 0092b27..9d34a82 100644
+--- a/block/sio-iosched.c
++++ b/block/sio-iosched.c
+@@ -29,8 +29,8 @@
+ static const int async_read_expire  =  4 * HZ;	/* ditto for async, these limits are SOFT! */
+ static const int async_write_expire = 16 * HZ;	/* ditto for async, these limits are SOFT! */
+ 
+-static const int writes_starved = 2;		/* max times reads can starve a write */
+-static const int fifo_batch     = 8;		/* # of sequential requests treated as one
++static const int writes_starved = 4;		/* max times reads can starve a write */
++static const int fifo_batch     = 1;		/* # of sequential requests treated as one
+ 						   by the above parameters. For throughput. */
+ 
+ /* Elevator data */
+-- 
+1.7.10
+

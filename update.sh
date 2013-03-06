@@ -287,6 +287,7 @@ if [ "${kernel_mods}" = "Y" ]; then
 	if [ "${kernel_ioschedulers}" = "Y" ]; then
 		echo "--- I/O schedulers"
 		do_patch kernel_iosched.patch
+		#do_patch kernel_sio_params.patch
 		for device in ${devices}
 		do
 			kconfig=${android}/kernel/semc/msm7x30/arch/arm/configs/cyanogen_${device}_defconfig
