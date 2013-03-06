@@ -1,0 +1,28 @@
+diff --git a/prebuilt/Android.mk b/prebuilt/Android.mk
+index dec000f..76ca1c9 100644
+--- a/prebuilt/Android.mk
++++ b/prebuilt/Android.mk
+@@ -96,6 +96,15 @@ LOCAL_MODULE_PATH := $(TARGET_RECOVERY_ROOT_OUT)/sbin
+ LOCAL_SRC_FILES := $(LOCAL_MODULE)
+ include $(BUILD_PREBUILT)
+ 
++#rebootrecovery
++include $(CLEAR_VARS)
++LOCAL_MODULE := rebootrecovery.sh
++LOCAL_MODULE_TAGS := eng
++LOCAL_MODULE_CLASS := RECOVERY_EXECUTABLES
++LOCAL_MODULE_PATH := $(TARGET_RECOVERY_ROOT_OUT)/sbin
++LOCAL_SRC_FILES := $(LOCAL_MODULE)
++include $(BUILD_PREBUILT)
++
+ #mke2fs.conf
+ include $(CLEAR_VARS)
+ LOCAL_MODULE := mke2fs.conf
+diff --git a/prebuilt/rebootrecovery.sh b/prebuilt/rebootrecovery.sh
+new file mode 100644
+index 0000000..11810aa
+--- /dev/null
++++ b/prebuilt/rebootrecovery.sh
+@@ -0,0 +1,2 @@
++#/sbin/sh
++touch /cache/recovery/boot

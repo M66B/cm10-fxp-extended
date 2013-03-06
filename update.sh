@@ -456,6 +456,9 @@ fi
 if [ "${twrp}" = "Y" ]; then
 	echo "*** Team Win Recovery Project ***"
 
+	cd ${android}/bootable/recovery
+	do_patch twrp.patch
+
 	for device in ${devices}
 	do
 		resolution="320x480"
