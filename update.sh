@@ -13,7 +13,7 @@ linaro_name=arm-eabi-4.7-linaro
 linaro_file=android-toolchain-eabi-4.7-daily-linux-x86.tar.bz2
 linaro_url=https://android-build.linaro.org/jenkins/view/Toolchain/job/linaro-android_toolchain-4.7-bzr/lastSuccessfulBuild/artifact/build/out/${linaro_file}
 
-toolchain_32bit=Y
+toolchain_32bit=N
 
 #--- bootimage ---
 
@@ -43,7 +43,7 @@ bootlogo=Y
 bootlogoh=logo_H_extended.png
 bootlogom=logo_M_extended.png
 
-twrp=N
+twrp=Y
 
 #--- ROM ---
 
