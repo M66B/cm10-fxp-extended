@@ -35,9 +35,10 @@ kernel_misc=Y
 kernel_optimize=N
 
 kernel_compress=Y
+
+#Fillers shoudn't necessary anymore
 filler_small=N
 filler_large=N
-increase_pagesize=N
 
 bootlogo=Y
 bootlogoh=logo_H_extended.png
@@ -432,14 +433,6 @@ fi
 if [ "${filler_large}" = "Y" ]; then
 	echo "*** Large filler: 524,288 bytes ***"
 	do_append "PRODUCT_COPY_FILES += device/semc/msm7x30-common/prebuilt/filler:root/filler" ${android}/device/semc/msm7x30-common/msm7x30.mk
-fi
-
-#Increase page size
-if [ "${increase_pagesize}" = "Y" ]; then
-	cd ${android}/device/semc/msm7x30-common
-	do_patch increase_pagesize_device.patch
-	cd ${android}/system/core
-	do_patch increase_pagesize_core.patch
 fi
 
 #Boot logo
