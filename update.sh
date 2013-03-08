@@ -65,10 +65,7 @@ wifiautoconnect=Y
 eba=Y
 ssh=Y
 layout=Y
-mediacontrols=Y
-pinlayout=Y
 mvolume=Y
-bluetooth_bugfix=Y
 trebuchet_patch=Y
 trebuchet_fix=Y
 new_superuser=Y
@@ -621,33 +618,9 @@ if [ "${layout}" = "Y" ]; then
 	cd ${android}/device/semc/msm7x30-common
 	do_patch layout_desktop.patch
 
-	echo "*** In call layout ***"
-	for device in ${devices}
-	do
-		if [ "${device}" = "mango" ] ||  [ "${device}" = "smultron" ]; then
-			echo "--- ${device}"
-			cd ${android}/device/semc/${device}
-			do_patch incall_mdpi.patch
-		fi
-	done
-
 	echo "*** Clear all button layout ***"
 	cd ${android}/frameworks/base
 	do_patch clear_all_button.patch
-fi
-
-#Lockscreen media controls layout
-if [ "${mediacontrols}" = "Y" ]; then
-	echo "*** Lockscreen media controls layout ***"
-	cd ${android}/frameworks/base
-	do_patch lockscreen_media_controls.patch
-fi
-
-#Lockscreen pin layout
-if [ "${pinlayout}" = "Y" ]; then
-	echo "*** Lockscreen pin layout ***"
-	cd ${android}/frameworks/base
-	do_patch lockscreen_password_block.patch
 fi
 
 #Music volume
@@ -655,13 +628,6 @@ if [ "${mvolume}" = "Y" ]; then
 	echo "*** Finer music volume ***"
 	cd ${android}/frameworks/base
 	do_patch music_volume.patch
-fi
-
-#Bluetooth bugfix
-if [ "${bluetooth_bugfix}" = "Y" ]; then
-	echo "*** Bluetooth bugfix ***"
-	cd ${android}/frameworks/base
-	do_patch frameworks_bluetooth.patch
 fi
 
 #Trebuchet Patch
