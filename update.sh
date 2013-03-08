@@ -36,10 +36,6 @@ kernel_optimize=N
 
 kernel_compress=Y
 
-#Fillers shouldn't be necessary anymore
-filler_small=N
-filler_large=N
-
 bootlogo=Y
 bootlogoh=logo_H_extended.png
 bootlogom=logo_M_extended.png
@@ -424,16 +420,6 @@ fi
 if [ "${kernel_compress}" != "Y" ]; then
 	echo "*** No kernel compression ***"
 	do_append "BOARD_USES_UNCOMPRESSED_BOOT := true" ${android}/device/semc/msm7x30-common/BoardConfigCommon.mk
-fi
-
-#Fillers
-if [ "${filler_small}" = "Y" ]; then
-	echo "*** Small filler: 34,692 bytes ***"
-	do_append "PRODUCT_COPY_FILES += device/semc/msm7x30-common/prebuilt/fillers:root/fillers" ${android}/device/semc/msm7x30-common/msm7x30.mk
-fi
-if [ "${filler_large}" = "Y" ]; then
-	echo "*** Large filler: 524,288 bytes ***"
-	do_append "PRODUCT_COPY_FILES += device/semc/msm7x30-common/prebuilt/filler:root/filler" ${android}/device/semc/msm7x30-common/msm7x30.mk
 fi
 
 #Boot logo
