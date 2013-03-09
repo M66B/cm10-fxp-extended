@@ -15,6 +15,7 @@ linaro_url=https://android-build.linaro.org/jenkins/view/Toolchain/job/linaro-an
 
 #Building TWRP with 32 bits toolchain fails
 toolchain_32bit=N
+onecorebuild=N
 
 #--- bootimage ---
 
@@ -218,6 +219,13 @@ fi
 ${android}/vendor/cm/get-prebuilts
 if [ $? -ne 0 ]; then
 	exit
+fi
+
+#One core build
+if [ "${onecorebuild}" = "Y" ]; then
+	echo "*** One core build"
+	cd ${android}/build
+	do_patch onecore.patch
 fi
 
 #--- kernel ---

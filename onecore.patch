@@ -1,0 +1,13 @@
+diff --git a/envsetup.sh b/envsetup.sh
+index efc4e93..d9ed159 100644
+--- a/envsetup.sh
++++ b/envsetup.sh
+@@ -1663,7 +1663,7 @@ function mka() {
+             make -j `sysctl hw.ncpu|cut -d" " -f2` "$@"
+             ;;
+         *)
+-            schedtool -B -n 1 -e ionice -n 1 make -j `cat /proc/cpuinfo | grep "^processor" | wc -l` "$@"
++            schedtool -B -n 1 -e ionice -n 1 make -j 1 "$@"
+             ;;
+     esac
+ }
