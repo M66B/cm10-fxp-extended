@@ -13,6 +13,7 @@ linaro_name=arm-eabi-4.7-linaro
 linaro_file=android-toolchain-eabi-4.7-daily-linux-x86.tar.bz2
 linaro_url=https://android-build.linaro.org/jenkins/view/Toolchain/job/linaro-android_toolchain-4.7-bzr/lastSuccessfulBuild/artifact/build/out/${linaro_file}
 
+#Building TWRP with 32 bits toolchain fails
 toolchain_32bit=N
 
 #--- bootimage ---
@@ -62,9 +63,8 @@ eba=Y
 ssh=Y
 layout=Y
 mvolume=Y
-trebuchet_patch=Y
-trebuchet_fix=Y
-new_superuser=Y
+trebuchet_cm10_1=Y
+superuser_cm10_1=Y
 
 #Say hello
 echo ""
@@ -148,8 +148,6 @@ do
 	fi
 
 	#recovery
-	#do_deldir ${android}/bootable/recovery
-	#do_deldir ${android}/.repo/projects/bootable/recovery.git
 	do_deldir ${android}/out/target/product/${device}/obj/EXECUTABLES/recovery_intermediates
 	do_deldir ${android}/out/target/product/${device}/obj/RECOVERY_EXECUTABLES
 	do_deldir ${android}/out/target/product/${device}/obj/STATIC_LIBRARIES/libcrecovery_intermediates
@@ -163,14 +161,18 @@ cp ${patches}/cmxtended.xml ${android}/.repo/local_manifests/cmxtended.xml
 if [ "${twrp}" != "Y" ]; then
 	sed -i "/bootable/d" ${android}/.repo/local_manifests/cmxtended.xml
 fi
-if [ "${trebuchet_patch}" != "Y" ]; then
+if [ "${trebuchet_cm10_1}" != "Y" ]; then
 	sed -i "/Trebuchet/d" ${android}/.repo/local_manifests/cmxtended.xml
 fi
-if [ "${new_superuser}" != "Y" ]; then
+if [ "${superuser_cm10_1}" != "Y" ]; then
 	sed -i "/system_su/d" ${android}/.repo/local_manifests/cmxtended.xml
+else
+	echo "--- Superuser CM10.1"
 fi
 if [ "${toolchain_32bit}" != "Y" ]; then
 	sed -i "/androideabi/d" ${android}/.repo/local_manifests/cmxtended.xml
+else
+	echo "--- 32 bit toolchain"
 fi
 
 echo "*** Repo sync ***"
@@ -285,7 +287,7 @@ if [ "${kernel_mods}" = "Y" ]; then
 	if [ "${kernel_ioschedulers}" = "Y" ]; then
 		echo "--- I/O schedulers"
 		do_patch kernel_iosched.patch
-		#do_patch kernel_sio_params.patch
+		do_patch kernel_sio_params.patch
 		for device in ${devices}
 		do
 			kconfig=${android}/kernel/semc/msm7x30/arch/arm/configs/cyanogen_${device}_defconfig
@@ -476,7 +478,7 @@ fi
 if [ "${openpdroid}" = "Y" ]; then
 	echo "*** OpenPDroid ***"
 
-	cd /tmp
+	cd ~/Downloads
 	if [ ! -d "/tmp/OpenPDroidPatches" ]; then
 		git clone git://github.com/OpenPDroid/OpenPDroidPatches.git
 	fi
@@ -616,22 +618,16 @@ if [ "${mvolume}" = "Y" ]; then
 	do_patch music_volume.patch
 fi
 
-#Trebuchet Patch
-if [ "${trebuchet_patch}" = "Y" ]; then
+#Trebuchet CM10.1
+if [ "${trebuchet_cm10_1}" = "Y" ]; then
+	echo "*** Trebuchet CM10.1 ***"
 	if [ -f ${android}/vendor/cm/overlay/common/packages/apps/Trebuchet/res/values/config.xml ];
 	then
-   	 rm ${android}/vendor/cm/overlay/common/packages/apps/Trebuchet/res/values/config.xml
-	fi
-	echo "*** Trebuchet Patch ***"
+		rm ${android}/vendor/cm/overlay/common/packages/apps/Trebuchet/res/values/config.xml
 	echo "config.xml removed"
+	fi
 	cd ${android}/packages/apps/Trebuchet
 	do_patch trebuchet_port.patch
-fi
-
-#Trebuchet fix build
-if [ "${trebuchet_fix}" = "Y" ]; then
-	echo "*** Trebuchet fix build ***"
-	cd ${android}/packages/apps/Trebuchet
 	do_patch trebuchet_fix_build.patch
 fi
 
