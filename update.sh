@@ -65,8 +65,8 @@ ssh=Y
 layout=Y
 mvolume=Y
 trebuchet_cm10_1=Y
-superuser_cm10_1=N
-superuser_koush=Y
+superuser_cm10_1=Y
+superuser_koush=N
 
 #Say hello
 echo ""
