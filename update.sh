@@ -65,7 +65,8 @@ ssh=Y
 layout=Y
 mvolume=Y
 trebuchet_cm10_1=Y
-superuser_cm10_1=Y
+superuser_cm10_1=N
+superuser_koush=Y
 
 #Say hello
 echo ""
@@ -159,17 +160,32 @@ done
 echo "*** Local manifest ***"
 mkdir -p ${android}/.repo/local_manifests
 cp ${patches}/cmxtended.xml ${android}/.repo/local_manifests/cmxtended.xml
+
 if [ "${twrp}" != "Y" ]; then
 	sed -i "/bootable/d" ${android}/.repo/local_manifests/cmxtended.xml
 fi
+
 if [ "${trebuchet_cm10_1}" != "Y" ]; then
-	sed -i "/Trebuchet/d" ${android}/.repo/local_manifests/cmxtended.xml
-fi
-if [ "${superuser_cm10_1}" != "Y" ]; then
-	sed -i "/system_su/d" ${android}/.repo/local_manifests/cmxtended.xml
+	sed -i "/android_packages_apps_Trebuchet/d" ${android}/.repo/local_manifests/cmxtended.xml
 else
+	echo "--- Trebuchet CM10.1"
+fi
+
+if [ "${superuser_cm10_1}" != "Y" ]; then
+	sed -i "/android_system_su/d" ${android}/.repo/local_manifests/cmxtended.xml
+	sed -i "/android_packages_apps_Superuser/d" ${android}/.repo/local_manifests/cmxtended.xml
+fi
+if [ "${superuser_koush}" != "Y" ]; then
+	sed -i "/koush/d" ${android}/.repo/local_manifests/cmxtended.xml
+fi
+if [ "${superuser_cm10_1}" = "Y" ]; then
 	echo "--- Superuser CM10.1"
 fi
+if [ "${superuser_koush}" = "Y" ]; then
+	echo "--- Superuser koush"
+	do_append "SUPERUSER_PACKAGE := com.m66b.superuser" ${android}/device/semc/msm7x30-common/BoardConfigCommon.mk
+fi
+
 if [ "${toolchain_32bit}" != "Y" ]; then
 	sed -i "/androideabi/d" ${android}/.repo/local_manifests/cmxtended.xml
 else
