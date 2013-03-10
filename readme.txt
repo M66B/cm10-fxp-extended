@@ -16,7 +16,7 @@ BUILDING
 	~/android/system/.repo/projects/packages/apps/Trebuchet.git
 
 2. Run the command: cd ~/Downloads && git clone https://github.com/M66B/cm10-fxp-extended.git
-3. Run the command: sh ~/Downloads/update.sh
+3. Run the command: sh ~/Downloads/cm10-fxp-extended/update.sh
 4. Start the build as explained in the setup guide from step #1
 
 The script resets your build environment to pristine state and applies the provided patches for the extended ROM/kernel.
