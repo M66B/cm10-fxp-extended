@@ -8,15 +8,16 @@ BUILDING
 1b. Follow the instuctions until the second 'repo sync'
 1c. Delete the following folders:
 
-	~/android/system/bootable/recovery
 	~/android/system/system/su
-	~/android/system/.repo/projects/bootable/recovery.git
+	~/android/system/packages/apps/Superuser
+	~/android/system/packages/apps/Trebuchet
 	~/android/system/.repo/projects/system/su.git
+	~/android/system/.repo/projects/packages/apps/Superuser.git
+	~/android/system/.repo/projects/packages/apps/Trebuchet.git
 
 2. Run the command: cd ~/Downloads && git clone https://github.com/M66B/cm10-fxp-extended.git
-3. Change the configuration in update.sh if needed
-4. Run the command: sh ~/Downloads/update.sh
-5. Start the build as explained in the setup guide from step #1
+3. Run the command: sh ~/Downloads/update.sh
+4. Start the build as explained in the setup guide from step #1
 
 The script resets your build environment to pristine state and applies the provided patches for the extended ROM/kernel.
 
