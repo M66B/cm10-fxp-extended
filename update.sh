@@ -487,20 +487,20 @@ if [ "${openpdroid}" = "Y" ]; then
 	echo "*** OpenPDroid ***"
 
 	cd ~/Downloads
-	if [ ! -d "/tmp/OpenPDroidPatches" ]; then
+	if [ ! -d "OpenPDroidPatches" ]; then
 		git clone git://github.com/OpenPDroid/OpenPDroidPatches.git
 	fi
 	cd OpenPDroidPatches
 	git checkout 4.1.2-cm
 	git pull
 
-	cd ${android}/build; patch -p1 --forward -r- </tmp/OpenPDroidPatches/openpdroid_4.1.2-cm_build.patch
-	cd ${android}/libcore; patch -p1 --forward -r- </tmp/OpenPDroidPatches/openpdroid_4.1.2-cm_libcore.patch
-	cd ${android}/packages/apps/Mms; patch -p1 --forward -r- </tmp/OpenPDroidPatches/openpdroid_4.1.2-cm_packages_apps_Mms.patch
-	cd ${android}/frameworks/base; patch -p1 --forward -r- </tmp/OpenPDroidPatches/openpdroid_4.1.2-cm_frameworks_base.patch
+	cd ${android}/build; patch -p1 --forward -r- <~/Downloads/OpenPDroidPatches/openpdroid_4.1.2-cm_build.patch
+	cd ${android}/libcore; patch -p1 --forward -r- <~/Downloads/OpenPDroidPatches/openpdroid_4.1.2-cm_libcore.patch
+	cd ${android}/packages/apps/Mms; patch -p1 --forward -r- <~/Downloads/OpenPDroidPatches/openpdroid_4.1.2-cm_packages_apps_Mms.patch
+	cd ${android}/frameworks/base; patch -p1 --forward -r- <~/Downloads/OpenPDroidPatches/openpdroid_4.1.2-cm_frameworks_base.patch
 
 	mkdir -p ${android}/privacy
-	cp /tmp/OpenPDroidPatches/PDroid.jpeg ${android}/privacy
+	cp ~/Downloads/OpenPDroidPatches/PDroid.jpeg ${android}/privacy
 	do_append "PRODUCT_COPY_FILES += privacy/PDroid.jpeg:system/media/PDroid.jpeg" ${android}/vendor/cm/config/common.mk
 	do_append "PRODUCT_COPY_FILES += vendor/cm/proprietary/pdroidalternative.apk:system/app/pdroidalternative.apk" ${android}/vendor/cm/config/common.mk
 fi
