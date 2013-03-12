@@ -58,4 +58,7 @@
 
   <remove-project name="CyanogenMod/android_external_chromium-trace" />
   <project name="CyanogenMod/android_external_chromium-trace" path="external/chromium-trace" remote="github" revision="cm-10.1" />
+
+  <remove-project name="CyanogenMod/android_external_v8" />
+  <project name="CyanogenMod/android_external_v8" path="external/v8" remote="github" revision="cm-10.1" />
 </manifest>

@@ -184,6 +184,7 @@ if [ "${cleanall}" = "Y" ]; then
 	do_deldir ${android}/external/icu4c
 	do_deldir ${android}/external/chromium
 	do_deldir ${android}/external/chromium-trace
+	do_deldir ${android}/external/v8
 
 	do_deldir ${android}/.repo/projects/bootable/recovery.git
 	do_deldir ${android}/.repo/projects/system/su.git
@@ -197,6 +198,7 @@ if [ "${cleanall}" = "Y" ]; then
 	do_deldir ${android}/.repo/projects/external/icu4c.git
 	do_deldir ${android}/.repo/projects/external/chromium.git
 	do_deldir ${android}/.repo/projects/external/chromium-trace.git
+	do_deldir ${android}/.repo/projects/external/v8.git
 fi
 
 #Local manifest
@@ -247,6 +249,7 @@ else
 	sed -i "/android_external_webrtc/d" ${android}/.repo/local_manifests/cmxtended.xml
 	sed -i "/android_external_icu4c/d" ${android}/.repo/local_manifests/cmxtended.xml
 	sed -i "/android_external_chromium/d" ${android}/.repo/local_manifests/cmxtended.xml
+	sed -i "/android_external_v8/d" ${android}/.repo/local_manifests/cmxtended.xml
 fi
 
 #Toolchain
