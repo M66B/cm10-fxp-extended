@@ -197,41 +197,45 @@ mkdir -p ${android}/.repo/local_manifests
 cp ${patches}/cmxtended.xml ${android}/.repo/local_manifests/cmxtended.xml
 
 #twrp
-if [ "${twrp}" != "Y" ]; then
+if [ "${twrp}" = "Y" ]; then
+	echo "--- TWRP"
+else
 	sed -i "/bootable/d" ${android}/.repo/local_manifests/cmxtended.xml
 fi
 
 #su
-if [ "${superuser_cm10_1}" != "Y" ]; then
-	sed -i "/android_system_su/d" ${android}/.repo/local_manifests/cmxtended.xml
-	sed -i "/android_packages_apps_Superuser/d" ${android}/.repo/local_manifests/cmxtended.xml
-fi
-if [ "${superuser_koush}" != "Y" ]; then
-	sed -i "/koush/d" ${android}/.repo/local_manifests/cmxtended.xml
-fi
 if [ "${superuser_cm10_1}" = "Y" ]; then
 	echo "--- Superuser CM10.1"
+else
+	if [ "${superuser_koush}" != "Y" ]; then
+		sed -i "/android_system_su/d" ${android}/.repo/local_manifests/cmxtended.xml
+		sed -i "/android_packages_apps_Superuser/d" ${android}/.repo/local_manifests/cmxtended.xml
+	fi
 fi
 if [ "${superuser_koush}" = "Y" ]; then
 	echo "--- Superuser koush"
+	sed -i "/system\/su/d" ${android}/.repo/local_manifests/cmxtended.xml
+	sed -i "/packages\/apps\/Superuser/d" ${android}/.repo/local_manifests/cmxtended.xml
 	do_append "SUPERUSER_PACKAGE := com.m66b.superuser" ${android}/device/semc/msm7x30-common/BoardConfigCommon.mk
+else
+	sed -i "/koush/d" ${android}/.repo/local_manifests/cmxtended.xml
 fi
 
 #Trebuchet
-if [ "${trebuchet_cm10_1}" != "Y" ]; then
-	sed -i "/android_packages_apps_Trebuchet/d" ${android}/.repo/local_manifests/cmxtended.xml
-else
+if [ "${trebuchet_cm10_1}" = "Y" ]; then
 	echo "--- Trebuchet CM10.1"
+else
+	sed -i "/android_packages_apps_Trebuchet/d" ${android}/.repo/local_manifests/cmxtended.xml
 fi
 
 #Browser
-if [ "${browser_cm10_1}" != "Y" ]; then
+if [ "${browser_cm10_1}" = "Y" ]; then
+	echo "--- Browser/webkit CM10.1"
+else
 	sed -i "/android_packages_apps_Browser/d" ${android}/.repo/local_manifests/cmxtended.xml
 	sed -i "/android_external_webkit/d" ${android}/.repo/local_manifests/cmxtended.xml
 	sed -i "/android_external_skia/d" ${android}/.repo/local_manifests/cmxtended.xml
 	sed -i "/android_external_webp/d" ${android}/.repo/local_manifests/cmxtended.xml
-else
-	echo "--- Browser/webkit CM10.1"
 fi
 
 #Toolchain
