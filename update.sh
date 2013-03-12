@@ -74,7 +74,7 @@ mvolume=Y
 trebuchet_cm10_1=Y
 superuser_cm10_1=Y
 superuser_koush=N	#unfinished
-browser_cm10_1=Y
+browser_cm10_1=N	#unfinished
 
 #Say hello
 echo ""
