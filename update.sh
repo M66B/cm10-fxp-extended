@@ -709,6 +709,8 @@ if [ "${browser_cm10_1}" = "Y" ]; then
 	echo "*** Browser CM10.1 ***"
 	cd ${android}/external/webkit
 	do_patch webkit.patch
+	cd ${android}/frameworks/base
+	do_patch framework_base_webkit.patch
 fi
 
 #Say whats next
