@@ -46,4 +46,16 @@
 
   <remove-project name="CyanogenMod/android_external_webp" />
   <project name="CyanogenMod/android_external_webp" path="external/webp" remote="github" revision="cm-10.1" />
+
+  <remove-project name="CyanogenMod/android_external_webrtc" />
+  <project name="CyanogenMod/android_external_webrtc" path="external/webrtc" remote="github" revision="cm-10.1" />
+
+  <remove-project name="CyanogenMod/android_external_icu4c" />
+  <project name="CyanogenMod/android_external_icu4c" path="external/icu4c" remote="github" revision="cm-10.1" />
+
+  <remove-project name="CyanogenMod/android_external_chromium" />
+  <project name="CyanogenMod/android_external_chromium" path="external/chromium" remote="github" revision="cm-10.1" />
+
+  <remove-project name="CyanogenMod/android_external_chromium-trace" />
+  <project name="CyanogenMod/android_external_chromium-trace" path="external/chromium-trace" remote="github" revision="cm-10.1" />
 </manifest>
