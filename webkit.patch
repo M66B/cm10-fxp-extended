@@ -1,0 +1,47 @@
+diff --git a/Source/WebKit/android/WebCoreSupport/PlatformBridge.cpp b/Source/WebKit/android/WebCoreSupport/PlatformBridge.cpp
+index 6e39c33..864b27d 100644
+--- a/Source/WebKit/android/WebCoreSupport/PlatformBridge.cpp
++++ b/Source/WebKit/android/WebCoreSupport/PlatformBridge.cpp
+@@ -43,7 +43,6 @@
+ #include "WebViewCore.h"
+ #include "npruntime.h"
+ 
+-#include <gui/ISurfaceComposer.h>
+ #include <gui/SurfaceComposerClient.h>
+ #include <ui/DisplayInfo.h>
+ #include <ui/PixelFormat.h>
+@@ -125,21 +124,15 @@ String PlatformBridge::resolveFilePathForContentUri(const String& contentUri)
+ 
+ int PlatformBridge::PlatformBridge::screenDepth()
+ {
+-    android::sp<android::IBinder> display(
+-            android::SurfaceComposerClient::getBuiltInDisplay(
+-            android::ISurfaceComposer::eDisplayIdMain));
+     android::DisplayInfo info;
+-    android::SurfaceComposerClient::getDisplayInfo(display, &info);
++    android::SurfaceComposerClient::getDisplayInfo(android::DisplayID(0), &info);
+     return info.pixelFormatInfo.bitsPerPixel;
+ }
+ 
+ FloatRect PlatformBridge::screenRect()
+ {
+-    android::sp<android::IBinder> display(
+-            android::SurfaceComposerClient::getBuiltInDisplay(
+-            android::ISurfaceComposer::eDisplayIdMain));
+     android::DisplayInfo info;
+-    android::SurfaceComposerClient::getDisplayInfo(display, &info);
++    android::SurfaceComposerClient::getDisplayInfo(android::DisplayID(0), &info);
+     return FloatRect(0.0, 0.0, info.w, info.h);
+ }
+ 
+diff --git a/Tools/android/webkitmerge/Android.mk b/Tools/android/webkitmerge/Android.mk
+index 19f1cde..9bdd899 100644
+--- a/Tools/android/webkitmerge/Android.mk
++++ b/Tools/android/webkitmerge/Android.mk
+@@ -19,4 +19,6 @@ LOCAL_SRC_FILES := webkitmerge.cpp
+ 
+ LOCAL_MODULE := webkitmerge
+ 
++LOCAL_MODULE_TAGS := optional
++
+ include $(BUILD_HOST_EXECUTABLE)

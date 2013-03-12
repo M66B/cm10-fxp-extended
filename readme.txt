@@ -4,20 +4,9 @@ CM10/FXP extended ROM/kernel
 BUILDING
 
 0. Make sure you have at least 25 GB of free disk space
-1a. Setup the build environment as explained here: http://forum.xda-developers.com/showthread.php?t=1807505,
-1b. Follow the instuctions until the second 'repo sync'
-1c. Delete the following folders:
-
-	~/android/system/system/su
-	~/android/system/packages/apps/Superuser
-	~/android/system/packages/apps/Trebuchet
-	~/android/system/.repo/projects/system/su.git
-	~/android/system/.repo/projects/packages/apps/Superuser.git
-	~/android/system/.repo/projects/packages/apps/Trebuchet.git
-
+1. Setup the build environment as explained here: http://forum.xda-developers.com/showthread.php?t=1807505
 2. Run the command: cd ~/Downloads && git clone https://github.com/M66B/cm10-fxp-extended.git
-3. Run the command: sh ~/Downloads/cm10-fxp-extended/update.sh
-4. Start the build as explained in the setup guide from step #1
+3. Run the command: sh ~/Downloads/cm10-fxp-extended/update.sh clean
 
 The script resets your build environment to pristine state and applies the provided patches for the extended ROM/kernel.
 

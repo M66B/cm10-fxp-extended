@@ -8,6 +8,10 @@ android=~/android/system
 device=mango
 devices="anzu coconut haida hallon iyokan mango satsuma smultron urushi"
 debug=N
+cleanall=N
+if [ "$1" = "clean" ]; then
+	cleanall=Y
+fi
 
 linaro_name=arm-eabi-4.7-linaro
 linaro_file=android-toolchain-eabi-4.7-daily-linux-x86.tar.bz2
@@ -16,6 +20,9 @@ linaro_url=https://android-build.linaro.org/jenkins/view/Toolchain/job/linaro-an
 #Building TWRP with 32 bits toolchain fails
 toolchain_32bit=N
 onecorebuild=N
+if [ "`hostname`" = "ALGEIBA" ]; then
+	onecorebuild=Y
+fi
 
 #--- bootimage ---
 
@@ -66,7 +73,8 @@ layout=Y
 mvolume=Y
 trebuchet_cm10_1=Y
 superuser_cm10_1=Y
-superuser_koush=N
+superuser_koush=N	#unfinished
+browser_cm10_1=Y
 
 #Say hello
 echo ""
@@ -79,11 +87,12 @@ echo ""
 echo "Patches: ${patches}"
 echo "Android: ${android}"
 echo "Devices: ${devices}"
+echo "Clean: ${cleanall}"
 echo ""
 read -p "Press [ENTER] to continue" dummy
 echo ""
 
-#Define functions
+#Define helper functions
 do_replace() {
 	sed -i "s/$1/$2/g" $3
 	grep -q "$2" $3
@@ -118,21 +127,27 @@ do_append() {
 
 do_deldir() {
 	if [ -d "$1" ]; then
+		chmod -R 777 $1
 		rm -R $1
+	else
+		if [ "${debug}" = "Y" ]; then
+			echo "--- $1 does not exist"
+		fi
 	fi
 }
 
 #Cleanup
 echo "*** Cleanup ***"
 if [ -d "${android}/out/target/common/obj/JAVA_LIBRARIES/framework_intermediates" ]; then
-	rm -R ${android}/out/target/common/obj/JAVA_LIBRARIES/framework_intermediates
+	do_deldir ${android}/out/target/common/obj/JAVA_LIBRARIES/framework_intermediates
 fi
 if [ -d "${android}/out/target/common/obj/JAVA_LIBRARIES/framework2_intermediates" ]; then
-	rm -R ${android}/out/target/common/obj/JAVA_LIBRARIES/framework2_intermediates
+	do_deldir ${android}/out/target/common/obj/JAVA_LIBRARIES/framework2_intermediates
 fi
 if [ -d "${android}/out/target/common/obj/APPS/TelephonyProvider_intermediates" ]; then
-	rm -R ${android}/out/target/common/obj/APPS/TelephonyProvider_intermediates
+	do_deldir ${android}/out/target/common/obj/APPS/TelephonyProvider_intermediates
 fi
+
 for device in ${devices}
 do
 	#ROM
@@ -156,21 +171,37 @@ do
 	do_deldir ${android}/out/target/product/${device}/recovery/root
 done
 
+if [ "${cleanall}" = "Y" ]; then
+	do_deldir ${android}/bootable/recovery
+	do_deldir ${android}/system/su
+	do_deldir ${android}/packages/apps/Superuser
+	do_deldir ${android}/packages/apps/Trebuchet
+	do_deldir ${android}/packages/apps/Browser
+	do_deldir ${android}/external/webkit
+	do_deldir ${android}/external/skia
+	do_deldir ${android}/external/webp
+
+	do_deldir ${android}/.repo/projects/bootable/recovery.git
+	do_deldir ${android}/.repo/projects/system/su.git
+	do_deldir ${android}/.repo/projects/packages/apps/Superuser.git
+	do_deldir ${android}/.repo/projects/packages/apps/Trebuchet.git
+	do_deldir ${android}/.repo/projects/packages/apps/Browser.git
+	do_deldir ${android}/.repo/projects/external/webkit.git
+	do_deldir ${android}/.repo/projects/external/skia.git
+	do_deldir ${android}/.repo/projects/external/webp.git
+fi
+
 #Local manifest
 echo "*** Local manifest ***"
 mkdir -p ${android}/.repo/local_manifests
 cp ${patches}/cmxtended.xml ${android}/.repo/local_manifests/cmxtended.xml
 
+#twrp
 if [ "${twrp}" != "Y" ]; then
 	sed -i "/bootable/d" ${android}/.repo/local_manifests/cmxtended.xml
 fi
 
-if [ "${trebuchet_cm10_1}" != "Y" ]; then
-	sed -i "/android_packages_apps_Trebuchet/d" ${android}/.repo/local_manifests/cmxtended.xml
-else
-	echo "--- Trebuchet CM10.1"
-fi
-
+#su
 if [ "${superuser_cm10_1}" != "Y" ]; then
 	sed -i "/android_system_su/d" ${android}/.repo/local_manifests/cmxtended.xml
 	sed -i "/android_packages_apps_Superuser/d" ${android}/.repo/local_manifests/cmxtended.xml
@@ -186,6 +217,24 @@ if [ "${superuser_koush}" = "Y" ]; then
 	do_append "SUPERUSER_PACKAGE := com.m66b.superuser" ${android}/device/semc/msm7x30-common/BoardConfigCommon.mk
 fi
 
+#Trebuchet
+if [ "${trebuchet_cm10_1}" != "Y" ]; then
+	sed -i "/android_packages_apps_Trebuchet/d" ${android}/.repo/local_manifests/cmxtended.xml
+else
+	echo "--- Trebuchet CM10.1"
+fi
+
+#Browser
+if [ "${browser_cm10_1}" != "Y" ]; then
+	sed -i "/android_packages_apps_Browser/d" ${android}/.repo/local_manifests/cmxtended.xml
+	sed -i "/android_external_webkit/d" ${android}/.repo/local_manifests/cmxtended.xml
+	sed -i "/android_external_skia/d" ${android}/.repo/local_manifests/cmxtended.xml
+	sed -i "/android_external_webp/d" ${android}/.repo/local_manifests/cmxtended.xml
+else
+	echo "--- Browser/webkit CM10.1"
+fi
+
+#Toolchain
 if [ "${toolchain_32bit}" != "Y" ]; then
 	sed -i "/androideabi/d" ${android}/.repo/local_manifests/cmxtended.xml
 else
@@ -269,7 +318,7 @@ if [ "${kernel_mods}" = "Y" ]; then
 		cd ${android}/kernel/semc/msm7x30/
 		do_patch kernel_linaro_head.patch
 		do_patch kernel_linaro_boot.patch
-		do_patch kernel_optimize.patch
+		#do_patch kernel_optimize.patch
 	fi
 
 	cd ${android}/kernel/semc/msm7x30/
@@ -653,6 +702,13 @@ if [ "${trebuchet_cm10_1}" = "Y" ]; then
 	cd ${android}/packages/apps/Trebuchet
 	do_patch trebuchet_port.patch
 	do_patch trebuchet_fix_build.patch
+fi
+
+#Browser CM10.1
+if [ "${browser_cm10_1}" = "Y" ]; then
+	echo "*** Browser CM10.1 ***"
+	cd ${android}/external/webkit
+	do_patch webkit.patch
 fi
 
 #Say whats next
