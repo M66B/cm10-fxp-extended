@@ -1,0 +1,33 @@
+From fbf4820baed98621185134ca8984aedaf8de45ba Mon Sep 17 00:00:00 2001
+From: Ladislav Kunc <ladislavkunc@gmail.com>
+Date: Tue, 12 Mar 2013 20:04:03 +0100
+Subject: [PATCH] Some network carriers will detach data connection after a
+ timeout period, isDataAllowed() will not allow a data
+ connection because mAutoAttachOnCreation is false and
+ gprsState is not STATE_IN_SERVICE. This bug was fixed in
+ Android 4.2.2. This ports the fix (Change-Id:
+ If41c2514ebdb9cd2fba88eef692f2c7160c04b0f) to Android 4.1.2
+
+Bug: http://code.google.com/p/freexperia/issues/detail?id=1390
+Change-Id: Ibc31718df512356ff3313fa4a35ce74174c34789
+---
+ .../android/internal/telephony/gsm/GsmDataConnectionTracker.java    |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/telephony/java/com/android/internal/telephony/gsm/GsmDataConnectionTracker.java b/telephony/java/com/android/internal/telephony/gsm/GsmDataConnectionTracker.java
+index 6d47d03..fc8319b 100644
+--- a/telephony/java/com/android/internal/telephony/gsm/GsmDataConnectionTracker.java
++++ b/telephony/java/com/android/internal/telephony/gsm/GsmDataConnectionTracker.java
+@@ -625,7 +625,8 @@ public final class GsmDataConnectionTracker extends DataConnectionTracker {
+             // update APN availability so that APN can be enabled.
+             notifyOffApnsOfAvailability(Phone.REASON_DATA_ATTACHED);
+         }
+-
++       
++        mAutoAttachOnCreation = true;
+         setupDataOnReadyApns(Phone.REASON_DATA_ATTACHED);
+     }
+ 
+-- 
+1.7.10.4
+

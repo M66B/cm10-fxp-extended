@@ -58,6 +58,7 @@ twrp=N
 #--- ROM ---
 
 cellbroadcast=Y
+datallowed=Y
 openpdroid=Y
 oompriorities=N
 nano=Y
@@ -519,9 +520,19 @@ fi
 if [ "${bootlogo}" = "Y" ]; then
 	echo "*** Boot logo ***"
 	gcc -O2 -Wall -Wno-unused-parameter -Wno-unused-result -o /tmp/to565 ${android}/build/tools/rgb2565/to565.c
+
 	convert -depth 8 ${patches}/bootlogo/${bootlogoh} rgb:/tmp/logo_H_new.raw
+	if [ $? -ne 0 ]; then
+		echo "imagemagick not installed?"
+		exit
+	fi
 	/tmp/to565 -rle </tmp/logo_H_new.raw >${android}/device/semc/msm7x30-common/prebuilt/logo_H.rle
+
 	convert -depth 8 ${patches}/bootlogo/${bootlogom} rgb:/tmp/logo_M_new.raw
+	if [ $? -ne 0 ]; then
+		echo "imagemagick not installed?"
+		exit
+	fi
 	/tmp/to565 -rle </tmp/logo_M_new.raw >${android}/device/semc/msm7x30-common/prebuilt/logo_M.rle
 fi
 
@@ -563,6 +574,13 @@ if [ "${cellbroadcast}" = "Y" ]; then
 	do_append "PRODUCT_PACKAGES += CellBroadcastReceiver" ${android}/build/target/product/core.mk
 	cd ${android}/device/semc/mogami-common
 	do_patch cb_settings.patch
+fi
+
+#Data allowed
+if [ "${datallowed}" = "Y" ]; then
+	echo "*** Data allowed ***";
+	cd ${android}/frameworks/base
+	do_patch data_allowed.patch
 fi
 
 #OpenPDroid
