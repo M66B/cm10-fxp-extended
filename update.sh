@@ -764,7 +764,8 @@ if [ "${browser_cm10_1}" = "Y" ]; then
 	cd ${android}/external/webkit
 	do_patch webkit.patch
 	cd ${android}/frameworks/base
-	do_patch framework_base_webkit.patch
+	do_patch framework_base_webkit_jni.patch
+	do_patch framework_base_webkit_update.patch
 fi
 
 #Say whats next
