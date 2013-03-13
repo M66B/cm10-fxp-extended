@@ -1,0 +1,33 @@
+From 4774d571f17198301eab410ec04010c397119c68 Mon Sep 17 00:00:00 2001
+From: "Sravan Kumar D.V.N" <sravank1@codeaurora.org>
+Date: Wed, 4 Jul 2012 23:20:17 +0530
+Subject: [PATCH] libgralloc : Correct the usage of pmem ioctl
+
+Return error only if the ioctl PMEM_ALLOCATE_ALIGNED
+returns negative value.
+
+CRs-Fixed: 375513
+
+(cherry picked from commit b1caf041824cedc268ced33e47a166070ec84f29)
+
+Change-Id: Ie5e926648ff845dc04ce06e5c57e27dd214d1b45
+---
+ libgralloc/pmemalloc.cpp |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/libgralloc/pmemalloc.cpp b/libgralloc/pmemalloc.cpp
+index a246594..4ebaa34 100644
+--- a/libgralloc/pmemalloc.cpp
++++ b/libgralloc/pmemalloc.cpp
+@@ -87,7 +87,7 @@ static int alignPmem(int fd, size_t size, int align) {
+     struct pmem_allocation allocation;
+     allocation.size = size;
+     allocation.align = align;
+-    if (ioctl(fd, PMEM_ALLOCATE_ALIGNED, &allocation))
++    if (ioctl(fd, PMEM_ALLOCATE_ALIGNED, &allocation) < 0)
+         return -errno;
+     return 0;
+ }
+-- 
+1.7.10.4
+

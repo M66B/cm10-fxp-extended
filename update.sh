@@ -72,6 +72,7 @@ eba=Y
 ssh=Y
 layout=Y
 mvolume=Y
+qcomdispl=Y
 trebuchet_cm10_1=Y
 superuser_cm10_1=Y
 superuser_koush=N	#unfinished
@@ -725,6 +726,15 @@ if [ "${mvolume}" = "Y" ]; then
 	echo "*** Finer music volume ***"
 	cd ${android}/frameworks/base
 	do_patch music_volume.patch
+fi
+
+#qcom display
+if [ "${qcomdispl}" = "Y" ]; then
+	echo "*** qcom display ***"
+	cd ${android}/hardware/qcom/display
+	do_patch qcom_display_glfinish.patch
+	do_patch qcom_display_heap.patch
+	do_patch qcom_display_ioctl.patch
 fi
 
 #Trebuchet CM10.1
