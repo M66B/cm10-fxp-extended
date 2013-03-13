@@ -73,6 +73,7 @@ ssh=Y
 layout=Y
 mvolume=Y
 qcomdispl=Y
+noliblights=Y
 trebuchet_cm10_1=Y
 superuser_cm10_1=Y
 superuser_koush=N	#unfinished
@@ -735,6 +736,13 @@ if [ "${qcomdispl}" = "Y" ]; then
 	do_patch qcom_display_glfinish.patch
 	do_patch qcom_display_heap.patch
 	do_patch qcom_display_ioctl.patch
+fi
+
+#No liblights update
+if [ "${noliblights}" = "Y" ]; then
+	echo "*** No liblights update ***"
+	cd ${android}/device/semc/msm7x30-common
+	patch -p1 --reverse -r- --no-backup-if-mismatch <${patches}/liblights_update.patch
 fi
 
 #Trebuchet CM10.1
