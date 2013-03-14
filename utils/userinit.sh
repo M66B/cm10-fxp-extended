@@ -1,12 +1,13 @@
 #!/system/xbin/ash
-#/data/local/userinit.sh
+
+#chmod 755 /data/local/userinit.sh
+#chown root:root /data/local/userinit.sh
 
 mount -o remount,rw -t yaffs2 /dev/block/mtdblock0 /system
 
 sed -i '/ro.ril.power.collapse/d' /system/build.prop
 sed -i '/ro.ril.disable.power.collapse/d' /system/build.prop
-
-echo "ro.ril.disable.power.collapse=1" >>/system/build.prop
+echo "ro.ril.disable.power.collapse=0" >>/system/build.prop
 
 sed -i '/ro.ril.def.agps.mode/d' /system/build.prop
 sed -i '/ro.ril.def.agps.feature/d' /system/build.prop
@@ -30,6 +31,5 @@ echo '192000 800' >/sys/devices/system/cpu/cpu0/cpufreq/vdd_levels
 echo '249600 800' >/sys/devices/system/cpu/cpu0/cpufreq/vdd_levels
 log -p i -t userinit.sh "Undervolting"
 
-#sshd
 /system/bin/sshd
 log -p i -t userinit.sh "Started sshd"
