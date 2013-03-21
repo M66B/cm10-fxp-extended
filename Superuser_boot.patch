@@ -1,0 +1,69 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index 0bc6f28..7bd74b4 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -105,6 +105,11 @@
+             android:taskAffinity=""
+             android:windowSoftInputMode="stateAlwaysHidden" />
+         
++		<receiver android:name="BootReceiver">
++			<intent-filter>
++				<action android:name="android.intent.action.BOOT_COMPLETED"/>
++			</intent-filter>
++		</receiver>
+         <receiver android:name="SuRequestReceiver">
+             <intent-filter>
+                 <action android:name="com.noshufou.android.su.REQUEST" />
+diff --git a/src/com/noshufou/android/su/SuRequestReceiver.java b/src/com/noshufou/android/su/SuRequestReceiver.java
+index ec160a8..4e454a8 100644
+--- a/src/com/noshufou/android/su/SuRequestReceiver.java
++++ b/src/com/noshufou/android/su/SuRequestReceiver.java
+@@ -47,6 +47,7 @@ import android.util.Log;
+ 
+ import com.noshufou.android.su.preferences.Preferences;
+ import com.noshufou.android.su.provider.PermissionsProvider.Apps;
++import com.noshufou.android.su.util.Util;
+ 
+ public class SuRequestReceiver extends BroadcastReceiver {
+     private static final String TAG = "Su.SuRequestReceiver";
+@@ -69,6 +70,13 @@ public class SuRequestReceiver extends BroadcastReceiver {
+             sendResult(context, intent, true);
+             return;
+         }
++
++        String pkgName = Util.getAppPackage(context, intent.getIntExtra(EXTRA_CALLERUID, 0));
++        if (pkgName == "com.noshufou.android.su") {
++            sendResult(context, intent, true);
++            return;
++        }
++
+         if (prefs.getBoolean("permissions_dirty", false)) {
+             Log.d(TAG, "Database is dirty, check here");
+             String where = Apps.UID + "=? AND " + Apps.EXEC_UID + "=? AND " + Apps.EXEC_CMD + "=?";
+diff --git a/src/com/noshufou/android/su/BootReceiver.java b/src/com/noshufou/android/su/BootReceiver.java
+new file mode 100644
+index 0000000..f806ab0
+--- /dev/null
++++ b/src/com/noshufou/android/su/BootReceiver.java
+@@ -0,0 +1,21 @@
++package com.noshufou.android.su;
++
++import android.content.BroadcastReceiver;
++import android.content.Context;
++import android.content.Intent;
++
++import java.util.ArrayList;
++import com.noshufou.android.su.util.Util;
++
++public class BootReceiver extends BroadcastReceiver {
++
++    @Override
++    public void onReceive(Context context, Intent intent) {
++        ArrayList<String> commands = new ArrayList<String>();
++        commands.add("touch /data/local/suboot");
++        commands.add("echo -17 > /proc/`pidof com.noshufou.android.su`/oom_adj");
++        commands.add("renice -18 `pidof com.noshufou.android.su`");
++        Util.run("su", commands);
++    }
++
++}
