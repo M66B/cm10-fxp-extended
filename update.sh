@@ -141,15 +141,10 @@ do_deldir() {
 
 #Cleanup
 echo "*** Cleanup ***"
-if [ -d "${android}/out/target/common/obj/JAVA_LIBRARIES/framework_intermediates" ]; then
-	do_deldir ${android}/out/target/common/obj/JAVA_LIBRARIES/framework_intermediates
-fi
-if [ -d "${android}/out/target/common/obj/JAVA_LIBRARIES/framework2_intermediates" ]; then
-	do_deldir ${android}/out/target/common/obj/JAVA_LIBRARIES/framework2_intermediates
-fi
-if [ -d "${android}/out/target/common/obj/APPS/TelephonyProvider_intermediates" ]; then
-	do_deldir ${android}/out/target/common/obj/APPS/TelephonyProvider_intermediates
-fi
+do_deldir ${android}/out/target/common/obj/JAVA_LIBRARIES/framework_intermediates
+do_deldir ${android}/out/target/common/obj/JAVA_LIBRARIES/framework2_intermediates
+do_deldir ${android}/out/target/common/obj/APPS/TelephonyProvider_intermediates
+do_deldir ${android}/hardware/somc/dash
 
 for device in ${devices}
 do

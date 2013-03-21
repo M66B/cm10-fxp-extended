@@ -15,7 +15,7 @@
   <project name="CyanogenMod/semc-kernel-msm7x30" path="kernel/semc/msm7x30" remote="github" revision="jellybean" />
   <project name="TheMuppets/proprietary_vendor_semc" path="vendor/semc" remote="github" revision="jellybean" />
   <project name="CyanogenMod/android_hardware_ti_fmradio" path="hardware/ti/fmradio" remote="github" revision="jellybean" />
-  <project name="CyanogenMod/android_hardware_sony_DASH" path="hardware/somc/dash" remote="github" revision="jellybean" />
+  <project name="CyanogenMod/android_hardware_sony_DASH" path="hardware/sony/DASH" remote="github" revision="jellybean" />
 
   <remove-project name="platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.6" />
   <project name="yath/android_prebuilts_gcc_linux-x86-32_arm_arm-linux-androideabi-4.6" path="prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.6" remote="github" revision="jellybean" />
