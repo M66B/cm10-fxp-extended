@@ -1,5 +1,5 @@
 diff --git a/power/power.c b/power/power.c
-index f3e73c9..a257d5c 100644
+index f3e73c9..9dd92ca 100644
 --- a/power/power.c
 +++ b/power/power.c
 @@ -29,6 +29,7 @@
@@ -19,11 +19,12 @@ index f3e73c9..a257d5c 100644
  
              if (cm->boostpulse_fd < 0 && !cm->boostpulse_warned) {
                  strerror_r(errno, buf, sizeof(buf));
-@@ -176,15 +179,21 @@ static void cm_power_hint(struct power_module *module, power_hint_t hint,
+@@ -176,15 +179,22 @@ static void cm_power_hint(struct power_module *module, power_hint_t hint,
      }
  }
  
 +static int cm_is_ondemand() {
++    char governor[80];
 +    return (get_scaling_governor(governor, sizeof(governor)) >= 0 && strncmp(governor, "ondemand", 8) == 0);
 +}
 +
