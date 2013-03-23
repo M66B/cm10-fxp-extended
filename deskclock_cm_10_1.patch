@@ -12,7 +12,7 @@ index a0d1b19..1d6117f 100644
  LOCAL_PROGUARD_FLAG_FILES := proguard.flags
  
 diff --git a/AndroidManifest.xml b/AndroidManifest.xml
-index 60b1331..15803d4 100644
+index 60b1331..12a56a1 100644
 --- a/AndroidManifest.xml
 +++ b/AndroidManifest.xml
 @@ -103,7 +103,6 @@
@@ -23,7 +23,22 @@ index 60b1331..15803d4 100644
                  android:screenOrientation="nosensor"
                  android:configChanges="orientation|screenSize|keyboardHidden|keyboard|navigation"/>
  
-@@ -212,7 +211,6 @@
+@@ -164,14 +163,6 @@
+             <meta-data android:name="android.appwidget.provider" android:resource="@xml/analog_appwidget" />
+         </receiver>
+ 
+-        <receiver android:name="com.android.alarmclock.DigitalAppWidgetProvider" android:label="@string/digital_gadget"
+-           android:icon="@mipmap/ic_launcher_alarmclock">
+-            <intent-filter>
+-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+-                </intent-filter>
+-            <meta-data android:name="android.appwidget.provider" android:resource="@xml/digital_appwidget" />
+-        </receiver>
+-
+         <service android:name="com.android.alarmclock.DigitalAppWidgetService"
+              android:permission="android.permission.BIND_REMOTEVIEWS"
+              android:exported="false" />
+@@ -212,7 +203,6 @@
                  android:excludeFromRecents="true"
                  android:theme="@style/AlarmAlertFullScreenTheme"
                  android:launchMode="singleInstance"
