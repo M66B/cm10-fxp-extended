@@ -799,7 +799,7 @@ fi
 if [ "${kernel_smartass2_boost}" = "Y" ]; then
 	echo "*** Enable SmartassV2 boost pulse ***"
 	cd ${android}/device/semc/msm7x30-common
-	do_patch power.patch
+	do_patch power_boost_smartass2.patch
 fi
 
 #Say whats next
