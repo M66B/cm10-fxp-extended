@@ -31,7 +31,7 @@ kernel_60=N
 kernel_linaro=Y
 kernel_cpugovernors=Y
 kernel_smartass2_134=Y
-kernel_smartass2_boost=N
+kernel_smartass2_boost=Y
 kernel_ioschedulers=Y
 kernel_voltage=Y
 kernel_autogroup=Y
@@ -386,6 +386,7 @@ if [ "${kernel_mods}" = "Y" ]; then
 		if [ "${kernel_smartass2_boost}" = "Y" ]; then
 			echo "--- * smartass2 boost pulse"
 			do_patch kernel_smartass2_boost.patch
+			do_patch kernel_smartass2_count.patch
 		fi
 	fi
 
