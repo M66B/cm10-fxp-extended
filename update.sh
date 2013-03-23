@@ -30,6 +30,8 @@ kernel_mods=Y
 kernel_60=N
 kernel_linaro=Y
 kernel_cpugovernors=Y
+kernel_smartass2_134=Y
+kernel_smartass2_boost=Y
 kernel_ioschedulers=Y
 kernel_voltage=Y
 kernel_autogroup=Y
@@ -183,6 +185,7 @@ if [ "${cleanall}" = "Y" ]; then
 	do_deldir ${android}/external/chromium
 	do_deldir ${android}/external/chromium-trace
 	do_deldir ${android}/external/v8
+	do_deldir ${android}/external/koush
 
 	do_deldir ${android}/.repo/projects/bootable/recovery.git
 	do_deldir ${android}/.repo/projects/system/su.git
@@ -371,6 +374,14 @@ if [ "${kernel_mods}" = "Y" ]; then
 
 			do_append "CONFIG_CPU_FREQ_GOV_SMARTASSH3=y" ${kconfig}
 		done
+		if [ "${kernel_smartass2_134}" = "Y" ]; then
+			echo "--- * smartass2 134 Mhz"
+			do_patch kernel_smartass2_134.patch
+		fi
+		if [ "${kernel_smartass2_boost}" = "Y" ]; then
+			echo "--- * smartass2 boost pulse"
+			do_patch kernel_smartass2_boost.patch
+		fi
 	fi
 
 	if [ "${kernel_ioschedulers}" = "Y" ]; then
@@ -760,6 +771,13 @@ if [ "${browser_cm10_1}" = "Y" ]; then
 	do_patch webkit.patch
 	cd ${android}/frameworks/base
 	do_patch framework_base_webkit_jni.patch
+fi
+
+#Smartass2 boost
+if [ "${kernel_smartass2_boost}" = "Y" ]; then
+	echo "*** Enable smartass2 boost pulse ***"
+	cd ${android}/device/semc/msm7x30-common
+	do_patch power.patch
 fi
 
 #Say whats next

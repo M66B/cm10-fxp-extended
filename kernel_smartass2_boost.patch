@@ -1,0 +1,134 @@
+diff --git a/drivers/cpufreq/cpufreq_smartass2.c b/drivers/cpufreq/cpufreq_smartass2.c
+index 2eab720..6dbb8ad 100644
+--- a/drivers/cpufreq/cpufreq_smartass2.c
++++ b/drivers/cpufreq/cpufreq_smartass2.c
+@@ -110,9 +110,21 @@ static unsigned int sleep_wakeup_freq;
+ #define DEFAULT_SAMPLE_RATE_JIFFIES 2
+ static unsigned int sample_rate_jiffies;
+ 
++/*
++ * Boost enabled
++ */
++#define DEFAULT_BOOST_ENABLED 0
++static unsigned int boost_enabled;
+ 
+-/*************** End of tunables ***************/
++/*
++ * Boost pulse
++ */
++#define DEFAULT_BOOST_PULSE 500000
++#define MAX_BOOST_PULSE 5000000
++static unsigned long boost_pulse;
++static u64 boost_pulse_time;
+ 
++/*************** End of tunables ***************/
+ 
+ static void (*pm_idle_old)(void);
+ static atomic_t active_count = ATOMIC_INIT(0);
+@@ -380,6 +392,8 @@ static void cpufreq_smartass_freq_change_time_work(struct work_struct *work)
+ 	struct smartass_info_s *this_smartass;
+ 	struct cpufreq_policy *policy;
+ 	unsigned int relation = CPUFREQ_RELATION_L;
++	unsigned int boost_do = 0;
++
+ 	for_each_possible_cpu(cpu) {
+ 		this_smartass = &per_cpu(smartass_info, cpu);
+ 		if (!work_cpumask_test_and_clear(cpu))
+@@ -391,12 +405,26 @@ static void cpufreq_smartass_freq_change_time_work(struct work_struct *work)
+ 		old_freq = this_smartass->old_freq;
+ 		policy = this_smartass->cur_policy;
+ 
++		if (boost_enabled > 0 && boost_pulse > 0) {
++			u64 now = ktime_to_us(ktime_get());
++			if (now <= boost_pulse_time + boost_pulse)
++				boost_do = 1;
++			else
++				boost_pulse = 0;
++		}
++
+ 		if (old_freq != policy->cur) {
+ 			// frequency was changed by someone else?
+ 			printk(KERN_WARNING "Smartass: frequency changed by 3rd party: %d to %d\n",
+ 			       old_freq,policy->cur);
+ 			new_freq = old_freq;
+ 		}
++		else if (boost_do > 0) {
++			new_freq = policy->max;
++			relation = CPUFREQ_RELATION_H;
++			dprintk(SMARTASS_DEBUG_ALG,"smartassQ @ %d boost=%d\n",
++				old_freq,new_freq);
++		}
+ 		else if (ramp_dir > 0 && nr_running() > 1) {
+ 			// ramp up logic:
+ 			if (old_freq < this_smartass->ideal_speed)
+@@ -626,6 +654,43 @@ static ssize_t store_min_cpu_load(struct kobject *kobj, struct attribute *attr,
+ 	return res;
+ }
+ 
++static ssize_t show_boost_enabled(struct kobject *kobj, struct attribute *attr, char *buf)
++{
++	return sprintf(buf, "%u\n", boost_enabled);
++}
++
++static ssize_t store_boost_enabled(struct kobject *kobj, struct attribute *attr, const char *buf, size_t count)
++{
++	ssize_t res;
++	unsigned long input;
++	res = strict_strtoul(buf, 0, &input);
++	if (res >= 0)
++		boost_enabled = (input == 0 ? 0 : 1);
++	return res;
++}
++
++static ssize_t show_boost_pulse(struct kobject *kobj, struct attribute *attr, char *buf)
++{
++	return sprintf(buf, "%lu\n", boost_pulse);
++}
++
++static ssize_t store_boost_pulse(struct kobject *kobj, struct attribute *attr, const char *buf, size_t count)
++{
++	ssize_t res;
++	unsigned long input;
++	res = strict_strtoul(buf, 0, &input);
++	if (res >= 0) {
++		boost_pulse_time = ktime_to_us(ktime_get());
++		if (input > MAX_BOOST_PULSE)
++			input = MAX_BOOST_PULSE;
++		if (input < 1)
++			input = DEFAULT_BOOST_PULSE;
++		boost_pulse = input;
++		dprintk(SMARTASS_DEBUG_ALG,"boost input=%lu pulse=%lu\n", input, boost_pulse);
++	}
++	return res;
++}
++
+ #define define_global_rw_attr(_name)		\
+ static struct global_attr _name##_attr =	\
+ 	__ATTR(_name, 0644, show_##_name, store_##_name)
+@@ -641,6 +706,8 @@ define_global_rw_attr(ramp_up_step);
+ define_global_rw_attr(ramp_down_step);
+ define_global_rw_attr(max_cpu_load);
+ define_global_rw_attr(min_cpu_load);
++define_global_rw_attr(boost_enabled);
++define_global_rw_attr(boost_pulse);
+ 
+ static struct attribute * smartass_attributes[] = {
+ 	&debug_mask_attr.attr,
+@@ -654,6 +721,8 @@ static struct attribute * smartass_attributes[] = {
+ 	&ramp_down_step_attr.attr,
+ 	&max_cpu_load_attr.attr,
+ 	&min_cpu_load_attr.attr,
++	&boost_enabled_attr.attr,
++	&boost_pulse_attr.attr,
+ 	NULL,
+ };
+ 
+@@ -812,6 +881,8 @@ static int __init cpufreq_smartass_init(void)
+ 	ramp_down_step = DEFAULT_RAMP_DOWN_STEP;
+ 	max_cpu_load = DEFAULT_MAX_CPU_LOAD;
+ 	min_cpu_load = DEFAULT_MIN_CPU_LOAD;
++	boost_enabled = DEFAULT_BOOST_ENABLED;
++	boost_pulse = 0;
+ 
+ 	spin_lock_init(&cpumask_lock);
+ 
