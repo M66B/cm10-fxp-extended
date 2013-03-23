@@ -77,6 +77,7 @@ mvolume=Y
 qcomdispl=Y
 noliblights=Y
 trebuchet_cm10_1=Y
+deskclock_cm10_1=Y
 superuser_cm10_1=Y
 superuser_koush=N	#unfinished
 browser_cm10_1=N	#unfinished
@@ -181,6 +182,7 @@ if [ "${cleanall}" = "Y" ]; then
 	do_deldir ${android}/system/su
 	do_deldir ${android}/packages/apps/Superuser
 	do_deldir ${android}/packages/apps/Trebuchet
+	do_deldir ${android}/packages/apps/DeskClock
 	do_deldir ${android}/packages/apps/Browser
 	do_deldir ${android}/external/webkit
 	do_deldir ${android}/external/skia
@@ -196,6 +198,7 @@ if [ "${cleanall}" = "Y" ]; then
 	do_deldir ${android}/.repo/projects/system/su.git
 	do_deldir ${android}/.repo/projects/packages/apps/Superuser.git
 	do_deldir ${android}/.repo/projects/packages/apps/Trebuchet.git
+	do_deldir ${android}/.repo/projects/packages/apps/DeskClock.git
 	do_deldir ${android}/.repo/projects/packages/apps/Browser.git
 	do_deldir ${android}/.repo/projects/external/webkit.git
 	do_deldir ${android}/.repo/projects/external/skia.git
@@ -242,6 +245,13 @@ if [ "${trebuchet_cm10_1}" = "Y" ]; then
 	echo "--- Trebuchet CM10.1"
 else
 	sed -i "/android_packages_apps_Trebuchet/d" ${android}/.repo/local_manifests/cmxtended.xml
+fi
+
+#DeskClock
+if [ "${deskclock_cm10_1}" = "Y" ]; then
+	echo "--- DeskClock CM10.1"
+else
+	sed -i "/android_packages_apps_DeskClock/d" ${android}/.repo/local_manifests/cmxtended.xml
 fi
 
 #Browser
@@ -768,6 +778,13 @@ if [ "${trebuchet_cm10_1}" = "Y" ]; then
 	cd ${android}/packages/apps/Trebuchet
 	do_patch trebuchet_port.patch
 	do_patch trebuchet_fix_build.patch
+fi
+
+#DeskClock CM10.1
+if [ "${deskclock_cm10_1}" = "Y" ]; then
+	echo "*** DeskClock CM10.1 ***"
+	cd ${android}/packages/apps/DeskClock
+	do_patch deskclock_cm_10_1.patch
 fi
 
 #Browser CM10.1

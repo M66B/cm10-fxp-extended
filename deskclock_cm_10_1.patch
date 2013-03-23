@@ -1,0 +1,383 @@
+diff --git a/Android.mk b/Android.mk
+index a0d1b19..1d6117f 100644
+--- a/Android.mk
++++ b/Android.mk
+@@ -12,7 +12,7 @@ LOCAL_PACKAGE_NAME := DeskClock
+ 
+ LOCAL_OVERRIDES_PACKAGES := AlarmClock
+ 
+-LOCAL_SDK_VERSION := 17
++LOCAL_SDK_VERSION := 16
+ 
+ LOCAL_PROGUARD_FLAG_FILES := proguard.flags
+ 
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index 60b1331..15803d4 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -103,7 +103,6 @@
+                 android:theme="@style/AlarmAlertFullScreenTheme"
+                 android:launchMode="singleInstance"
+                 android:taskAffinity=""
+-                android:showOnLockScreen="true"
+                 android:screenOrientation="nosensor"
+                 android:configChanges="orientation|screenSize|keyboardHidden|keyboard|navigation"/>
+ 
+@@ -212,7 +211,6 @@
+                 android:excludeFromRecents="true"
+                 android:theme="@style/AlarmAlertFullScreenTheme"
+                 android:launchMode="singleInstance"
+-                android:showOnLockScreen="true"
+                 android:taskAffinity=""
+                 android:configChanges="orientation|screenSize|keyboardHidden|keyboard|navigation"/>
+ 
+diff --git a/res/layout/digital_widget_time.xml b/res/layout/digital_widget_time.xml
+index 070dde3..44481e6 100644
+--- a/res/layout/digital_widget_time.xml
++++ b/res/layout/digital_widget_time.xml
+@@ -32,8 +32,6 @@
+ 
+         <TextClock
+             android:id="@+id/the_clock1"
+-            android:format12Hour="@string/widget_12_hours_format_h"
+-            android:format24Hour="@string/widget_24_hours_format_h"
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             style="@style/widget_big_bold"
+@@ -42,8 +40,6 @@
+              />
+         <TextClock
+             android:id="@+id/the_clock2"
+-            android:format12Hour="@string/widget_12_hours_format_no_ampm_m"
+-            android:format24Hour="@string/widget_24_hours_format_m"
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             style="@style/widget_big_thin"
+@@ -59,8 +55,6 @@
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:textColor="@color/clock_white"
+-            android:format12Hour="@string/abbrev_wday_month_day_no_year"
+-            android:format24Hour="@string/abbrev_wday_month_day_no_year"
+             style="@style/label"
+             android:gravity="center"
+             />
+diff --git a/res/layout/stopwatch_notif_collapsed.xml b/res/layout/stopwatch_notif_collapsed.xml
+index 864a091..ade818e 100644
+--- a/res/layout/stopwatch_notif_collapsed.xml
++++ b/res/layout/stopwatch_notif_collapsed.xml
+@@ -35,19 +35,16 @@
+         android:layout_width="match_parent"
+         android:layout_height="wrap_content"
+         android:layout_gravity="fill_vertical"
+-        android:layout_marginStart="@dimen/notification_large_icon_width"
+         android:gravity="center"
+         android:minHeight="@dimen/notification_large_icon_height"
+         android:orientation="vertical"
+         android:paddingBottom="2dp"
+-        android:paddingEnd="8dp"
+         android:paddingTop="2dp" >
+ 
+         <LinearLayout
+             android:id="@+id/line1"
+             android:layout_width="match_parent"
+             android:layout_height="wrap_content"
+-            android:layout_marginStart="8dp"
+             android:orientation="horizontal" >
+ 
+             <Chronometer
+@@ -63,7 +60,6 @@
+             android:id="@+id/swn_collapsed_laps"
+             android:layout_width="match_parent"
+             android:layout_height="wrap_content"
+-            android:layout_marginStart="8dp"
+             android:ellipsize="marquee"
+             android:fadingEdge="horizontal"
+             android:visibility="gone"
+@@ -71,4 +67,4 @@
+             android:textAppearance="@style/TextAppearance.StatusBar.EventContent" />
+     </LinearLayout>
+ 
+-</FrameLayout>
+\ No newline at end of file
++</FrameLayout>
+diff --git a/res/layout/stopwatch_notif_expanded.xml b/res/layout/stopwatch_notif_expanded.xml
+index 0a0121e..754003f 100644
+--- a/res/layout/stopwatch_notif_expanded.xml
++++ b/res/layout/stopwatch_notif_expanded.xml
+@@ -42,19 +42,16 @@
+             android:layout_width="match_parent"
+             android:layout_height="wrap_content"
+             android:layout_gravity="fill_vertical"
+-            android:layout_marginStart="@dimen/notification_large_icon_width"
+             android:gravity="center"
+             android:minHeight="@dimen/notification_large_icon_height"
+             android:orientation="vertical"
+             android:paddingBottom="2dp"
+-            android:paddingEnd="8dp"
+             android:paddingTop="2dp" >
+ 
+             <LinearLayout
+                 android:id="@+id/line1"
+                 android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+-                android:layout_marginStart="8dp"
+                 android:orientation="horizontal" >
+ 
+                 <Chronometer
+@@ -70,7 +67,6 @@
+                 android:id="@+id/swn_expanded_laps"
+                 android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+-                android:layout_marginStart="8dp"
+                 android:ellipsize="marquee"
+                 android:fadingEdge="horizontal"
+                 android:singleLine="true"
+@@ -92,7 +88,6 @@
+         <LinearLayout
+             android:layout_width="match_parent"
+             android:layout_height="wrap_content"
+-            android:layout_marginStart="@dimen/notification_large_icon_width"
+             android:divider="?android:attr/listDivider"
+             android:dividerPadding="12dp"
+             android:orientation="horizontal"
+@@ -107,7 +102,6 @@
+                 android:drawablePadding="8dp"
+                 android:ellipsize="end"
+                 android:gravity="start|center_vertical"
+-                android:paddingStart="8dp"
+                 android:singleLine="true"
+                 android:textColor="#ccc"
+                 android:textSize="14dp" />
+@@ -121,11 +115,10 @@
+                 android:drawablePadding="8dp"
+                 android:ellipsize="end"
+                 android:gravity="start|center_vertical"
+-                android:paddingStart="8dp"
+                 android:singleLine="true"
+                 android:textColor="#ccc"
+                 android:textSize="14dp" />
+         </LinearLayout>
+     </FrameLayout>
+ 
+-</LinearLayout>
+\ No newline at end of file
++</LinearLayout>
+diff --git a/res/layout/world_clock_remote_list_item.xml b/res/layout/world_clock_remote_list_item.xml
+index 41ba52c..6d3ee22 100644
+--- a/res/layout/world_clock_remote_list_item.xml
++++ b/res/layout/world_clock_remote_list_item.xml
+@@ -33,8 +33,6 @@
+ 
+             <TextClock
+                 android:id="@+id/leftClock1"
+-                android:format12Hour="@string/widget_12_hours_format_h"
+-                android:format24Hour="@string/widget_24_hours_format_h"
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 style="@style/widget_medium_bold"
+@@ -43,8 +41,6 @@
+                 android:gravity="center" />
+             <TextClock
+                 android:id="@+id/leftClock2"
+-                android:format12Hour="@string/widget_12_hours_format_m"
+-                android:format24Hour="@string/widget_24_hours_format_m"
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 style="@style/widget_medium_light"
+@@ -93,8 +89,6 @@
+ 
+             <TextClock
+                 android:id="@+id/rightClock1"
+-                android:format12Hour="@string/widget_12_hours_format_h"
+-                android:format24Hour="@string/widget_24_hours_format_h"
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 style="@style/widget_medium_bold"
+@@ -103,8 +97,6 @@
+                 android:gravity="center" />
+             <TextClock
+                 android:id="@+id/rightClock2"
+-                android:format12Hour="@string/widget_12_hours_format_m"
+-                android:format24Hour="@string/widget_24_hours_format_m"
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 style="@style/widget_medium_light"
+@@ -140,4 +132,4 @@
+         </LinearLayout>
+     </LinearLayout>
+ 
+-</LinearLayout>
+\ No newline at end of file
++</LinearLayout>
+diff --git a/res/xml/digital_appwidget.xml b/res/xml/digital_appwidget.xml
+index c13df26..4e8f890 100644
+--- a/res/xml/digital_appwidget.xml
++++ b/res/xml/digital_appwidget.xml
+@@ -23,6 +23,5 @@
+     android:resizeMode="vertical|horizontal"
+     android:minResizeWidth="@dimen/min_digital_widget_resize_width"
+     android:minResizeHeight="@dimen/min_digital_widget_resize_height"
+-    android:widgetCategory="keyguard|home_screen"
+     >
+ </appwidget-provider>
+diff --git a/src/com/android/deskclock/Screensaver.java b/src/com/android/deskclock/Screensaver.java
+deleted file mode 100644
+index cf24d50..0000000
+--- a/src/com/android/deskclock/Screensaver.java
++++ /dev/null
+@@ -1,113 +0,0 @@
+-/*
+- * Copyright (C) 2011 The Android Open Source Project
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- *      http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-
+-package com.android.deskclock;
+-
+-import android.animation.Animator;
+-import android.animation.AnimatorSet;
+-import android.animation.ObjectAnimator;
+-import android.animation.TimeInterpolator;
+-import android.content.SharedPreferences;
+-import android.content.res.Configuration;
+-import android.graphics.Color;
+-import android.graphics.Paint;
+-import android.graphics.PorterDuff;
+-import android.graphics.PorterDuffColorFilter;
+-import android.os.Handler;
+-import android.preference.PreferenceManager;
+-import android.service.dreams.DreamService;
+-import android.util.Log;
+-import android.view.View;
+-import android.view.animation.AccelerateInterpolator;
+-import android.view.animation.DecelerateInterpolator;
+-
+-import com.android.deskclock.Utils.ScreensaverMoveSaverRunnable;
+-
+-public class Screensaver extends DreamService {
+-    static final boolean DEBUG = false;
+-    static final String TAG = "DeskClock/Screensaver";
+-
+-    private View mContentView, mSaverView;
+-    private View mAnalogClock, mDigitalClock;
+-
+-    private final Handler mHandler = new Handler();
+-
+-    private final ScreensaverMoveSaverRunnable mMoveSaverRunnable;
+-
+-    public Screensaver() {
+-        if (DEBUG) Log.d(TAG, "Screensaver allocated");
+-        mMoveSaverRunnable = new ScreensaverMoveSaverRunnable(mHandler);
+-    }
+-
+-    @Override
+-    public void onCreate() {
+-        if (DEBUG) Log.d(TAG, "Screensaver created");
+-        super.onCreate();
+-    }
+-
+-    @Override
+-    public void onConfigurationChanged(Configuration newConfig) {
+-        if (DEBUG) Log.d(TAG, "Screensaver configuration changed");
+-        super.onConfigurationChanged(newConfig);
+-        mHandler.removeCallbacks(mMoveSaverRunnable);
+-        layoutClockSaver();
+-        mHandler.post(mMoveSaverRunnable);
+-    }
+-
+-    @Override
+-    public void onAttachedToWindow() {
+-        if (DEBUG) Log.d(TAG, "Screensaver attached to window");
+-        super.onAttachedToWindow();
+-
+-        // We want the screen saver to exit upon user interaction.
+-        setInteractive(false);
+-
+-        setFullscreen(true);
+-
+-        layoutClockSaver();
+-
+-        mHandler.post(mMoveSaverRunnable);
+-    }
+-
+-    @Override
+-    public void onDetachedFromWindow() {
+-        if (DEBUG) Log.d(TAG, "Screensaver detached from window");
+-        super.onDetachedFromWindow();
+-
+-        mHandler.removeCallbacks(mMoveSaverRunnable);
+-    }
+-
+-    private void setClockStyle() {
+-        Utils.setClockStyle(this, mDigitalClock, mAnalogClock,
+-                ScreensaverSettingsActivity.KEY_CLOCK_STYLE);
+-        mSaverView = findViewById(R.id.main_clock);
+-        boolean dimNightMode = PreferenceManager.getDefaultSharedPreferences(this)
+-                .getBoolean(ScreensaverSettingsActivity.KEY_NIGHT_MODE, false);
+-        Utils.dimClockView(dimNightMode, mSaverView);
+-        setScreenBright(!dimNightMode);
+-    }
+-
+-    private void layoutClockSaver() {
+-        setContentView(R.layout.desk_clock_saver);
+-        mDigitalClock = findViewById(R.id.digital_clock);
+-        mAnalogClock =findViewById(R.id.analog_clock);
+-        setClockStyle();
+-        mContentView = (View) mSaverView.getParent();
+-        mSaverView.setAlpha(0);
+-
+-        mMoveSaverRunnable.registerViews(mContentView, mSaverView);
+-    }
+-}
+diff --git a/src/com/android/deskclock/ScreensaverActivity.java b/src/com/android/deskclock/ScreensaverActivity.java
+index c75e1fc..2894e91 100644
+--- a/src/com/android/deskclock/ScreensaverActivity.java
++++ b/src/com/android/deskclock/ScreensaverActivity.java
+@@ -107,8 +107,7 @@ public class ScreensaverActivity extends Activity {
+                 registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+         int plugged = chargingIntent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+         mPluggedIn = plugged == BatteryManager.BATTERY_PLUGGED_AC
+-                || plugged == BatteryManager.BATTERY_PLUGGED_USB
+-                || plugged == BatteryManager.BATTERY_PLUGGED_WIRELESS;
++                || plugged == BatteryManager.BATTERY_PLUGGED_USB;
+ 
+         mDateFormat = getString(R.string.abbrev_wday_month_day_no_year);
+         mDateFormatForAccessibility = getString(R.string.full_wday_month_day_no_year);
+diff --git a/src/com/android/deskclock/timer/TimerReceiver.java b/src/com/android/deskclock/timer/TimerReceiver.java
+index b0c6a6d..fc3c557 100644
+--- a/src/com/android/deskclock/timer/TimerReceiver.java
++++ b/src/com/android/deskclock/timer/TimerReceiver.java
+@@ -280,7 +280,6 @@ public class TimerReceiver extends BroadcastReceiver {
+         .setDeleteIntent(pendingIntent)
+         .setOngoing(true)
+         .setPriority(priority)
+-        .setShowWhen(false)
+         .setSmallIcon(R.drawable.stat_notify_timer);
+         if (showTicker) {
+             builder.setTicker(text);
+diff --git a/src/com/android/deskclock/widget/multiwaveview/GlowPadView.java b/src/com/android/deskclock/widget/multiwaveview/GlowPadView.java
+index 30c77ba..6ef7b03 100644
+--- a/src/com/android/deskclock/widget/multiwaveview/GlowPadView.java
++++ b/src/com/android/deskclock/widget/multiwaveview/GlowPadView.java
+@@ -987,8 +987,8 @@ public class GlowPadView extends View {
+     }
+ 
+     private void computeInsets(int dx, int dy) {
+-        final int layoutDirection = getLayoutDirection();
+-        final int absoluteGravity = Gravity.getAbsoluteGravity(mGravity, layoutDirection);
++        final int layoutDirection = 0;
++        final int absoluteGravity = 0;
+ 
+         switch (absoluteGravity & Gravity.HORIZONTAL_GRAVITY_MASK) {
+             case Gravity.LEFT:
