@@ -811,7 +811,7 @@ fi
 if [ "${superuser_koush}" = "Y" ]; then
 	echo "*** Superuser Koush"
 	cd ${android}/external/koush/Superuser
-        do_patch superuser_koush_superuser.patch
+	do_patch superuser_koush_superuser.patch
 	cd ${android}/external/koush/Widgets
 	do_patch superuser_koush_widgets.patch
 fi
