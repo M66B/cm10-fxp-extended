@@ -1,0 +1,14 @@
+diff --git a/services/sensorservice/SensorDevice.cpp b/services/sensorservice/SensorDevice.cpp
+index b83a4ea..61fc372 100644
+--- a/services/sensorservice/SensorDevice.cpp
++++ b/services/sensorservice/SensorDevice.cpp
+@@ -220,9 +220,6 @@ status_t SensorDevice::activate(void* ident, int handle, int enabled)
+         fd = open(SYSFS_LIGHT_SENSOR, O_RDWR);
+         if(fd < 0)
+             return -ENODEV;
+-
+-        nwr = sprintf(value, "%s\n", enabled ? "1" : "0");
+-        write(fd, value, nwr);
+         close(fd);
+         return 0;
+     }

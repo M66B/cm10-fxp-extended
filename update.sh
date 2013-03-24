@@ -714,6 +714,8 @@ if [ "${als}" = "Y" ]; then
 	do_patch ALS_smultron.patch
 	cd ${android}/device/semc/coconut
 	do_patch ALS_coconut.patch
+	cd ${android}/frameworks/base
+	do_patch dummy_light_sensor.patch
 fi
 
 #Wi-Fi auto connect option
