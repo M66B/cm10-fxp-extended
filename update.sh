@@ -310,7 +310,6 @@ fi
 #Linaro toolchain
 if [ "${linaro}" = "Y" ] || [ "${kernel_linaro}" = "Y" ]; then
 	echo "*** Linaro toolchain: ${linaro_name} ***"
-
 	linaro_dir=${android}/prebuilt/linux-x86/toolchain/${linaro_name}/
 	if [ ! -d "${linaro_dir}" ]; then
 		linaro_dl=~/Downloads/${linaro_file}
@@ -411,11 +410,11 @@ if [ "${kernel_mods}" = "Y" ]; then
 			do_append "CONFIG_CPU_FREQ_GOV_SMARTASSH3=y" ${kconfig}
 		done
 		if [ "${kernel_smartass2_134}" = "Y" ]; then
-			echo "--- * SmartassV2 134 Mhz"
+			echo "--- SmartassV2 134 Mhz"
 			do_patch kernel_smartass2_134.patch
 		fi
 		if [ "${kernel_smartass2_boost}" = "Y" ]; then
-			echo "--- * SmartassV2 boost pulse"
+			echo "--- SmartassV2 boost pulse"
 			do_patch kernel_smartass2_boost.patch
 		fi
 	fi
@@ -583,7 +582,6 @@ fi
 #twrp
 if [ "${twrp}" = "Y" ]; then
 	echo "*** Team Win Recovery Project ***"
-
 	cd ${android}/bootable/recovery
 	do_patch twrp.patch
 
@@ -630,7 +628,6 @@ fi
 #OpenPDroid
 if [ "${openpdroid}" = "Y" ]; then
 	echo "*** OpenPDroid ***"
-
 	cd ~/Downloads
 	if [ ! -d "OpenPDroidPatches" ]; then
 		git clone git://github.com/OpenPDroid/OpenPDroidPatches.git
@@ -803,6 +800,7 @@ fi
 
 #goo.im
 if [ "`hostname`" = "ALGEIBA" ]; then
+	echo "*** goo.im ***"
 	do_append "PRODUCT_PROPERTY_OVERRIDES += \\" ${android}/device/semc/msm7x30-common/msm7x30.mk
 	do_append "    ro.goo.developerid=M66B \\" ${android}/device/semc/msm7x30-common/msm7x30.mk
 	do_append "    ro.goo.rom=Xtended \\" ${android}/device/semc/msm7x30-common/msm7x30.mk
@@ -812,7 +810,6 @@ fi
 #iw
 if [ "${iw}" = "Y" ]; then
 	echo "*** iw ***"
-
 	cd ~/Downloads
 	if [ ! -d "iw" ]; then
 		git clone http://git.sipsolutions.net/iw.git
