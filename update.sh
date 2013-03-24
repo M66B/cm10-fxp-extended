@@ -78,8 +78,8 @@ qcomdispl=Y
 noliblights=Y
 trebuchet_cm10_1=Y
 deskclock_cm10_1=Y
-superuser_cm10_1=Y
-superuser_koush=N	#unfinished
+superuser_cm10_1=N
+superuser_koush=Y
 browser_cm10_1=N	#unfinished
 busybox_cm10_1=Y
 
@@ -805,6 +805,15 @@ if [ "${browser_cm10_1}" = "Y" ]; then
 	do_patch webkit.patch
 	cd ${android}/frameworks/base
 	do_patch framework_base_webkit_jni.patch
+fi
+
+#Superuser Koush
+if [ "${superuser_koush}" = "Y" ]; then
+	echo "*** Superuser Koush"
+	cd ${android}/external/koush/Superuser
+        do_patch superuser_koush_superuser.patch
+	cd ${android}/external/koush/Widgets
+	do_patch superuser_koush_widgets.patch
 fi
 
 #SmartassV2 boost pulse
