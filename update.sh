@@ -81,6 +81,7 @@ deskclock_cm10_1=Y
 superuser_cm10_1=Y
 superuser_koush=N	#unfinished
 browser_cm10_1=N	#unfinished
+busybox_cm10_1=Y
 
 #Say hello
 echo ""
@@ -193,6 +194,7 @@ if [ "${cleanall}" = "Y" ]; then
 	do_deldir ${android}/external/chromium-trace
 	do_deldir ${android}/external/v8
 	do_deldir ${android}/external/koush
+	do_deldir ${android}/external/busybox
 
 	do_deldir ${android}/.repo/projects/bootable/recovery.git
 	do_deldir ${android}/.repo/projects/system/su.git
@@ -208,6 +210,7 @@ if [ "${cleanall}" = "Y" ]; then
 	do_deldir ${android}/.repo/projects/external/chromium.git
 	do_deldir ${android}/.repo/projects/external/chromium-trace.git
 	do_deldir ${android}/.repo/projects/external/v8.git
+	do_deldir ${android}/.repo/projects/external/busybox.git
 fi
 
 #Local manifest
@@ -266,6 +269,13 @@ else
 	sed -i "/android_external_icu4c/d" ${android}/.repo/local_manifests/cmxtended.xml
 	sed -i "/android_external_chromium/d" ${android}/.repo/local_manifests/cmxtended.xml
 	sed -i "/android_external_v8/d" ${android}/.repo/local_manifests/cmxtended.xml
+fi
+
+#busybox
+if [ "${busybox_cm10_1}" = "Y" ]; then
+	echo "--- busybox CM10.1"
+else
+	sed -i "/android_external_busybox/d" ${android}/.repo/local_manifests/cmxtended.xml
 fi
 
 #Toolchain
@@ -806,7 +816,7 @@ fi
 if [ "`hostname`" = "ALGEIBA" ]; then
 	do_append "PRODUCT_PROPERTY_OVERRIDES += \\" ${android}/device/semc/msm7x30-common/msm7x30.mk
 	do_append "    ro.goo.developerid=M66B \\" ${android}/device/semc/msm7x30-common/msm7x30.mk
-	do_append "    ro.goo.rom=M66BExtended \\" ${android}/device/semc/msm7x30-common/msm7x30.mk
+	do_append "    ro.goo.rom=Xtended \\" ${android}/device/semc/msm7x30-common/msm7x30.mk
 	do_append "    ro.goo.version=$(shell date +%s)" ${android}/device/semc/msm7x30-common/msm7x30.mk
 fi
 
