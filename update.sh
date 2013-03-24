@@ -272,7 +272,11 @@ else
 fi
 
 #busybox
+<<<<<<< HEAD
 if [ "${busybox_cm10_1}" = "Y" ]; then
+=======
+if [ "${busybox}" = "Y" ]; then
+>>>>>>> 63285bca058a388eb74f546619ce53f071f52e6b
 	echo "--- busybox CM10.1"
 else
 	sed -i "/android_external_busybox/d" ${android}/.repo/local_manifests/cmxtended.xml
