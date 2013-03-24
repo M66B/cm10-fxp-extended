@@ -1,0 +1,22 @@
+diff --git a/privacy/java/android/privacy/surrogate/PrivacyLocationManager.java b/privacy/java/android/privacy/surrogate/PrivacyLocationManager.java
+index 166f7ce..2f156d5 100644
+--- a/privacy/java/android/privacy/surrogate/PrivacyLocationManager.java
++++ b/privacy/java/android/privacy/surrogate/PrivacyLocationManager.java
+@@ -78,7 +78,7 @@ public final class PrivacyLocationManager extends LocationManager {
+         
+         String packageName = context.getPackageName();
+         int uid = Binder.getCallingUid();
+-        PrivacySettings pSet = pSetMan.getSettings(packageName, uid);
++        PrivacySettings pSet = pSetMan.getSettings(packageName);
+         Location output = null;
+         
+         if (pSet != null) {
+@@ -160,7 +160,7 @@ public final class PrivacyLocationManager extends LocationManager {
+     public LocationProvider getProvider(String name) {
+         if (name == null) return super.getProvider(name);
+         
+-        PrivacySettings pSet = pSetMan.getSettings(context.getPackageName(), Binder.getCallingUid());
++        PrivacySettings pSet = pSetMan.getSettings(context.getPackageName());
+         LocationProvider output = null;
+         
+         if (pSet != null) {

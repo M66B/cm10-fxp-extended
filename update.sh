@@ -628,10 +628,15 @@ if [ "${openpdroid}" = "Y" ]; then
 	git checkout 4.1.2-cm
 	git pull
 
-	cd ${android}/build; patch -p1 --forward -r- <~/Downloads/OpenPDroidPatches/openpdroid_4.1.2-cm_build.patch
-	cd ${android}/libcore; patch -p1 --forward -r- <~/Downloads/OpenPDroidPatches/openpdroid_4.1.2-cm_libcore.patch
-	cd ${android}/packages/apps/Mms; patch -p1 --forward -r- <~/Downloads/OpenPDroidPatches/openpdroid_4.1.2-cm_packages_apps_Mms.patch
-	cd ${android}/frameworks/base; patch -p1 --forward -r- <~/Downloads/OpenPDroidPatches/openpdroid_4.1.2-cm_frameworks_base.patch
+	cd ${android}/build
+	patch -p1 --forward -r- <~/Downloads/OpenPDroidPatches/openpdroid_4.1.2-cm_build.patch
+	cd ${android}/libcore
+	patch -p1 --forward -r- <~/Downloads/OpenPDroidPatches/openpdroid_4.1.2-cm_libcore.patch
+	cd ${android}/packages/apps/Mms
+	patch -p1 --forward -r- <~/Downloads/OpenPDroidPatches/openpdroid_4.1.2-cm_packages_apps_Mms.patch
+	cd ${android}/frameworks/base
+	patch -p1 --forward -r- <~/Downloads/OpenPDroidPatches/openpdroid_4.1.2-cm_frameworks_base.patch
+	do_patch openpdroid_network_location.patch
 
 	mkdir -p ${android}/privacy
 	cp ~/Downloads/OpenPDroidPatches/PDroid.jpeg ${android}/privacy
