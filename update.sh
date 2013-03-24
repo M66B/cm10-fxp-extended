@@ -83,6 +83,7 @@ superuser_cm10_1=N
 superuser_koush=Y
 browser_cm10_1=N	#unfinished
 busybox_cm10_1=Y
+supplicant_cm10_1=N	#untested
 
 #Say hello
 echo ""
@@ -196,6 +197,7 @@ if [ "${cleanall}" = "Y" ]; then
 	do_deldir ${android}/external/v8
 	do_deldir ${android}/external/koush
 	do_deldir ${android}/external/busybox
+	do_deldir ${android}/external/wpa_supplicant_8
 
 	do_deldir ${android}/.repo/projects/bootable/recovery.git
 	do_deldir ${android}/.repo/projects/system/su.git
@@ -212,6 +214,7 @@ if [ "${cleanall}" = "Y" ]; then
 	do_deldir ${android}/.repo/projects/external/chromium-trace.git
 	do_deldir ${android}/.repo/projects/external/v8.git
 	do_deldir ${android}/.repo/projects/external/busybox.git
+	do_deldir ${android}/.repo/projects/external/wpa_supplicant_8.git
 fi
 
 #Local manifest
@@ -277,6 +280,13 @@ if [ "${busybox_cm10_1}" = "Y" ]; then
 	echo "--- busybox CM10.1"
 else
 	sed -i "/android_external_busybox/d" ${android}/.repo/local_manifests/cmxtended.xml
+fi
+
+#wpa supplicant 8
+if [ "${supplicant_cm10_1}" = "Y" ]; then
+	echo "*** WPA supplicant 8 CM10.1 ***"
+else
+	sed -i "/android_external_wpa_supplicant_8/d" ${android}/.repo/local_manifests/cmxtended.xml
 fi
 
 #Toolchain
@@ -784,6 +794,21 @@ if [ "${noliblights}" = "Y" ]; then
 	patch -p1 --reverse -r- --no-backup-if-mismatch <${patches}/liblights_update.patch
 fi
 
+#SmartassV2 boost pulse
+if [ "${kernel_smartass2_boost}" = "Y" ]; then
+	echo "*** Enable SmartassV2 boost pulse ***"
+	cd ${android}/device/semc/msm7x30-common
+	do_patch power_boost_smartass2.patch
+fi
+
+#goo.im
+if [ "`hostname`" = "ALGEIBA" ]; then
+	do_append "PRODUCT_PROPERTY_OVERRIDES += \\" ${android}/device/semc/msm7x30-common/msm7x30.mk
+	do_append "    ro.goo.developerid=M66B \\" ${android}/device/semc/msm7x30-common/msm7x30.mk
+	do_append "    ro.goo.rom=Xtended \\" ${android}/device/semc/msm7x30-common/msm7x30.mk
+	do_append "    ro.goo.version=\$(shell date +%s)" ${android}/device/semc/msm7x30-common/msm7x30.mk
+fi
+
 #iw
 if [ "${iw}" = "Y" ]; then
 	echo "*** iw ***"
@@ -840,21 +865,6 @@ if [ "${superuser_koush}" = "Y" ]; then
 	do_patch superuser_koush_superuser.patch
 	cd ${android}/external/koush/Widgets
 	do_patch superuser_koush_widgets.patch
-fi
-
-#SmartassV2 boost pulse
-if [ "${kernel_smartass2_boost}" = "Y" ]; then
-	echo "*** Enable SmartassV2 boost pulse ***"
-	cd ${android}/device/semc/msm7x30-common
-	do_patch power_boost_smartass2.patch
-fi
-
-#goo.im
-if [ "`hostname`" = "ALGEIBA" ]; then
-	do_append "PRODUCT_PROPERTY_OVERRIDES += \\" ${android}/device/semc/msm7x30-common/msm7x30.mk
-	do_append "    ro.goo.developerid=M66B \\" ${android}/device/semc/msm7x30-common/msm7x30.mk
-	do_append "    ro.goo.rom=Xtended \\" ${android}/device/semc/msm7x30-common/msm7x30.mk
-	do_append "    ro.goo.version=\$(shell date +%s)" ${android}/device/semc/msm7x30-common/msm7x30.mk
 fi
 
 #Say whats next

@@ -67,4 +67,7 @@
 
   <remove-project name="CyanogenMod/android_external_busybox" />
   <project name="CyanogenMod/android_external_busybox" path="external/busybox" remote="github" revision="cm-10.1" />
+
+  <remove-project name="CyanogenMod/android_external_wpa_supplicant_8" />
+  <project name="CyanogenMod/android_external_wpa_supplicant_8" path="external/wpa_supplicant_8" remote="github" revision="cm-10.1" />
 </manifest>
