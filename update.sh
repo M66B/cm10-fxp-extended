@@ -802,6 +802,14 @@ if [ "${kernel_smartass2_boost}" = "Y" ]; then
 	do_patch power_boost_smartass2.patch
 fi
 
+#go.im
+if [ "`hostname`" = "ALGEIBA" ]; then
+	do_append "PRODUCT_PROPERTY_OVERRIDES += \\" ${android}/device/semc/msm7x30-common/msm7x30.mk
+	do_append "    ro.goo.developerid=M66B \\" ${android}/device/semc/msm7x30-common/msm7x30.mk
+	do_append "    ro.goo.rom=M66BExtended \\" ${android}/device/semc/msm7x30-common/msm7x30.mk
+	do_append "    ro.goo.version=$(shell date +%s)" ${android}/device/semc/msm7x30-common/msm7x30.mk
+fi
+
 #Say whats next
 echo "*** Done ***"
 echo ""
