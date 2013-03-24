@@ -1,0 +1,10 @@
+diff --git a/mogami-common/mogami-vendor-blobs.mk b/mogami-common/mogami-vendor-blobs.mk
+index 9ba4bc9..89f3729 100644
+--- a/mogami-common/mogami-vendor-blobs.mk
++++ b/mogami-common/mogami-vendor-blobs.mk
+@@ -13,5 +13,4 @@
+ # limitations under the License.
+ 
+ PRODUCT_COPY_FILES += \
+-    vendor/semc/mogami-common/proprietary/bin/iw:system/bin/iw \
+     vendor/semc/mogami-common/proprietary/lib/libnl.so:system/lib/libnl.so \

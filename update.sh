@@ -76,6 +76,7 @@ layout=Y
 mvolume=Y
 qcomdispl=Y
 noliblights=Y
+iw=N				#untested
 trebuchet_cm10_1=Y
 deskclock_cm10_1=Y
 superuser_cm10_1=N
@@ -783,6 +784,26 @@ if [ "${noliblights}" = "Y" ]; then
 	patch -p1 --reverse -r- --no-backup-if-mismatch <${patches}/liblights_update.patch
 fi
 
+#iw
+if [ "${iw}" = "Y" ]; then
+	echo "*** iw ***"
+
+	cd ~/Downloads
+	if [ ! -d "iw" ]; then
+		git clone http://git.sipsolutions.net/iw.git
+		do_patch iw.patch
+	fi
+	cd iw
+	git checkout master
+	git pull
+	sh version.sh version.c
+
+	cd ${android}/system/core
+	do_patch system_core_iw.patch
+	cd ${android}/vendor/semc
+	do_patch vendor_semc_iw.patch
+fi
+
 #Trebuchet CM10.1
 if [ "${trebuchet_cm10_1}" = "Y" ]; then
 	echo "*** Trebuchet CM10.1 ***"
@@ -828,7 +849,7 @@ if [ "${kernel_smartass2_boost}" = "Y" ]; then
 	do_patch power_boost_smartass2.patch
 fi
 
-#go.im
+#goo.im
 if [ "`hostname`" = "ALGEIBA" ]; then
 	do_append "PRODUCT_PROPERTY_OVERRIDES += \\" ${android}/device/semc/msm7x30-common/msm7x30.mk
 	do_append "    ro.goo.developerid=M66B \\" ${android}/device/semc/msm7x30-common/msm7x30.mk
