@@ -1,5 +1,5 @@
 diff --git a/drivers/cpufreq/cpufreq_smartass2.c b/drivers/cpufreq/cpufreq_smartass2.c
-index 2eab720..729c495 100644
+index 2eab720..8bddf79 100644
 --- a/drivers/cpufreq/cpufreq_smartass2.c
 +++ b/drivers/cpufreq/cpufreq_smartass2.c
 @@ -110,9 +110,21 @@ static unsigned int sleep_wakeup_freq;
@@ -29,47 +29,127 @@ index 2eab720..729c495 100644
  	struct smartass_info_s *this_smartass;
  	struct cpufreq_policy *policy;
  	unsigned int relation = CPUFREQ_RELATION_L;
-+	unsigned int boost = 0;
++	unsigned int boosted;
 +
  	for_each_possible_cpu(cpu) {
  		this_smartass = &per_cpu(smartass_info, cpu);
  		if (!work_cpumask_test_and_clear(cpu))
-@@ -391,12 +405,35 @@ static void cpufreq_smartass_freq_change_time_work(struct work_struct *work)
+@@ -391,52 +405,75 @@ static void cpufreq_smartass_freq_change_time_work(struct work_struct *work)
  		old_freq = this_smartass->old_freq;
  		policy = this_smartass->cur_policy;
  
+-		if (old_freq != policy->cur) {
+-			// frequency was changed by someone else?
+-			printk(KERN_WARNING "Smartass: frequency changed by 3rd party: %d to %d\n",
+-			       old_freq,policy->cur);
+-			new_freq = old_freq;
+-		}
+-		else if (ramp_dir > 0 && nr_running() > 1) {
+-			// ramp up logic:
+-			if (old_freq < this_smartass->ideal_speed)
+-				new_freq = this_smartass->ideal_speed;
+-			else if (ramp_up_step) {
+-				new_freq = old_freq + ramp_up_step;
+-				relation = CPUFREQ_RELATION_H;
 +		// boost pulse:
++		boosted = 0;
 +		if (boost_enabled > 0 && boost_pulse > 0) {
 +			u64 now = ktime_to_us(ktime_get());
-+			if (now <= boost_pulse_time + boost_pulse)
-+				boost = 1;
-+			else {
++			if (now <= boost_pulse_time + boost_pulse) {
++				// boost logic:
++				if (old_freq < this_smartass->ideal_speed) {
++					new_freq = this_smartass->ideal_speed;
++					relation = CPUFREQ_RELATION_H;
++					boosted = 1;
++				}
++				dprintk(SMARTASS_DEBUG_ALG,"smartassQ @ %d boost %d\n",
++					old_freq,new_freq);
+ 			}
+ 			else {
+-				new_freq = policy->max;
+-				relation = CPUFREQ_RELATION_H;
 +				boost_pulse = 0;
 +				dprintk(SMARTASS_DEBUG_ALG,"smartassQ @ %d boost end\n",
 +					old_freq);
-+			}
-+		}
-+
- 		if (old_freq != policy->cur) {
- 			// frequency was changed by someone else?
- 			printk(KERN_WARNING "Smartass: frequency changed by 3rd party: %d to %d\n",
- 			       old_freq,policy->cur);
- 			new_freq = old_freq;
+ 			}
+-			dprintk(SMARTASS_DEBUG_ALG,"smartassQ @ %d ramp up: ramp_dir=%d ideal=%d\n",
+-				old_freq,ramp_dir,this_smartass->ideal_speed);
  		}
-+		else if (boost > 0) {
-+			// boost logic:
-+			if (old_freq < this_smartass->ideal_speed) {
-+				new_freq = this_smartass->ideal_speed;
-+				relation = CPUFREQ_RELATION_H;
-+			}
-+			else
+-		else if (ramp_dir < 0) {
+-			// ramp down logic:
+-			if (old_freq > this_smartass->ideal_speed) {
+-				new_freq = this_smartass->ideal_speed;
+-				relation = CPUFREQ_RELATION_H;
++
++		if (boosted = 0) {
++			if (old_freq != policy->cur) {
++				// frequency was changed by someone else?
++				printk(KERN_WARNING "Smartass: frequency changed by 3rd party: %d to %d\n",
++						old_freq,policy->cur);
 +				new_freq = old_freq;
-+			dprintk(SMARTASS_DEBUG_ALG,"smartassQ @ %d boost %d\n",
-+				old_freq,new_freq);
-+		}
- 		else if (ramp_dir > 0 && nr_running() > 1) {
- 			// ramp up logic:
- 			if (old_freq < this_smartass->ideal_speed)
+ 			}
+-			else if (ramp_down_step)
+-				new_freq = old_freq - ramp_down_step;
+-			else {
+-				// Load heuristics: Adjust new_freq such that, assuming a linear
+-				// scaling of load vs. frequency, the load in the new frequency
+-				// will be max_cpu_load:
+-				new_freq = old_freq * this_smartass->cur_cpu_load / max_cpu_load;
+-				if (new_freq > old_freq) // min_cpu_load > max_cpu_load ?!
+-					new_freq = old_freq -1;
++			else if (ramp_dir > 0 && nr_running() > 1) {
++				// ramp up logic:
++				if (old_freq < this_smartass->ideal_speed)
++					new_freq = this_smartass->ideal_speed;
++				else if (ramp_up_step) {
++					new_freq = old_freq + ramp_up_step;
++					relation = CPUFREQ_RELATION_H;
++				}
++				else {
++					new_freq = policy->max;
++					relation = CPUFREQ_RELATION_H;
++				}
++				dprintk(SMARTASS_DEBUG_ALG,"smartassQ @ %d ramp up: ramp_dir=%d ideal=%d\n",
++					old_freq,ramp_dir,this_smartass->ideal_speed);
++			}
++			else if (ramp_dir < 0) {
++				// ramp down logic:
++				if (old_freq > this_smartass->ideal_speed) {
++					new_freq = this_smartass->ideal_speed;
++					relation = CPUFREQ_RELATION_H;
++				}
++				else if (ramp_down_step)
++					new_freq = old_freq - ramp_down_step;
++				else {
++					// Load heuristics: Adjust new_freq such that, assuming a linear
++					// scaling of load vs. frequency, the load in the new frequency
++					// will be max_cpu_load:
++					new_freq = old_freq * this_smartass->cur_cpu_load / max_cpu_load;
++					if (new_freq > old_freq) // min_cpu_load > max_cpu_load ?!
++						new_freq = old_freq -1;
++				}
++				dprintk(SMARTASS_DEBUG_ALG,"smartassQ @ %d ramp down: ramp_dir=%d ideal=%d\n",
++					old_freq,ramp_dir,this_smartass->ideal_speed);
++			}
++			else { // ramp_dir==0 ?! Could the timer change its mind about a queued ramp up/down
++				// before the work task gets to run?
++				// This may also happen if we refused to ramp up because the nr_running()==1
++				new_freq = old_freq;
++				dprintk(SMARTASS_DEBUG_ALG,"smartassQ @ %d nothing: ramp_dir=%d nr_running=%lu\n",
++					old_freq,ramp_dir,nr_running());
+ 			}
+-			dprintk(SMARTASS_DEBUG_ALG,"smartassQ @ %d ramp down: ramp_dir=%d ideal=%d\n",
+-				old_freq,ramp_dir,this_smartass->ideal_speed);
+-		}
+-		else { // ramp_dir==0 ?! Could the timer change its mind about a queued ramp up/down
+-		       // before the work task gets to run?
+-		       // This may also happen if we refused to ramp up because the nr_running()==1
+-			new_freq = old_freq;
+-			dprintk(SMARTASS_DEBUG_ALG,"smartassQ @ %d nothing: ramp_dir=%d nr_running=%lu\n",
+-				old_freq,ramp_dir,nr_running());
+ 		}
+ 
+ 		// do actual ramp up (returns 0, if frequency change failed):
 @@ -465,9 +502,10 @@ static ssize_t store_debug_mask(struct kobject *kobj, struct attribute *attr, co
  	ssize_t res;
  	unsigned long input;
