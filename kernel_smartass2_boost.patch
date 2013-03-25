@@ -81,7 +81,7 @@ index 2eab720..8bddf79 100644
 -				new_freq = this_smartass->ideal_speed;
 -				relation = CPUFREQ_RELATION_H;
 +
-+		if (boosted = 0) {
++		if (boosted == 0) {
 +			if (old_freq != policy->cur) {
 +				// frequency was changed by someone else?
 +				printk(KERN_WARNING "Smartass: frequency changed by 3rd party: %d to %d\n",
