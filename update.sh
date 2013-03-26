@@ -51,10 +51,7 @@ bootlogo=Y
 bootlogoh=logo_H_extended.png
 bootlogom=logo_M_extended.png
 
-#TWRP known issues:
-#  backup/restore .android_secure
-#  reboot to recovery
-#  execute command
+#TWRP known issues: http://forum.xda-developers.com/showpost.php?p=38834687&postcount=4
 twrp=N
 
 #--- ROM ---
@@ -76,14 +73,14 @@ layout=Y
 mvolume=Y
 qcomdispl=Y
 noliblights=Y
-iw=N				#untested
+iw=N				#does not work
 trebuchet_cm10_1=Y
 deskclock_cm10_1=Y
 superuser_cm10_1=N
 superuser_koush=Y
 browser_cm10_1=N	#unfinished
 busybox_cm10_1=Y
-supplicant_cm10_1=N	#untested
+supplicant_cm10_1=N	#does not compile
 
 #Say hello
 echo ""
@@ -149,6 +146,9 @@ do_deldir() {
 		fi
 	fi
 }
+
+#Headless
+mkdir -p ~/Downloads
 
 #Cleanup
 echo "*** Cleanup ***"
