@@ -18,7 +18,6 @@ echo "ro.ril.def.agps.feature=1" >>/system/build.prop
 
 setprop wifi.supplicant_scan_interval 180
 setprop pm.sleep_mode 1
-setprop sys.mem.max_hidden_apps 10
 
 log -p i -t userinit.sh "Updated properties"
 
@@ -41,6 +40,8 @@ log -p i -t userinit.sh "Undervolting"
 echo "smartassV2" >/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
 echo 134400 >/sys/devices/system/cpu/cpufreq/smartass/sleep_wakeup_freq
 echo 134400 >/sys/devices/system/cpu/cpufreq/smartass/sleep_ideal_freq
+echo 48000 >/sys/devices/system/cpu/cpufreq/smartass/down_rate_us
+echo 128000 >/sys/devices/system/cpu/cpufreq/smartass/ramp_down_step
 echo 1 >/sys/devices/system/cpu/cpufreq/smartass/boost_enabled
 log -p i -t userinit.sh "Setup SmartassV2"
 
