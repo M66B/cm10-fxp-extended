@@ -20,3 +20,376 @@ index 166f7ce..2f156d5 100644
          LocationProvider output = null;
          
          if (pSet != null) {
+diff --git a/privacy/java/android/privacy/surrogate/PrivacyTelephonyManager.java b/privacy/java/android/privacy/surrogate/PrivacyTelephonyManager.java
+index 5beefe4..6bc38f0 100644
+--- a/privacy/java/android/privacy/surrogate/PrivacyTelephonyManager.java
++++ b/privacy/java/android/privacy/surrogate/PrivacyTelephonyManager.java
+@@ -68,15 +68,14 @@ public final class PrivacyTelephonyManager extends TelephonyManager {
+     @Override
+     public String getDeviceId() {
+         String packageName = context.getPackageName();
+-        int uid = Binder.getCallingUid();
+-        PrivacySettings pSet = pSetMan.getSettings(packageName, uid);
++        PrivacySettings pSet = pSetMan.getSettings(packageName);
+         String output;
+         if (pSet != null && pSet.getDeviceIdSetting() != PrivacySettings.REAL) {
+             output = pSet.getDeviceId(); // can be empty, custom or random
+-            pSetMan.notification(packageName, uid, pSet.getDeviceIdSetting(), PrivacySettings.DATA_DEVICE_ID, output, pSet);
++            pSetMan.notification(packageName, 0, pSet.getDeviceIdSetting(), PrivacySettings.DATA_DEVICE_ID, output, pSet);
+         } else {
+             output = super.getDeviceId();
+-            pSetMan.notification(packageName, uid, PrivacySettings.REAL, PrivacySettings.DATA_DEVICE_ID, output, pSet);
++            pSetMan.notification(packageName, 0, PrivacySettings.REAL, PrivacySettings.DATA_DEVICE_ID, output, pSet);
+         }
+ //        Log.d(TAG, "getDeviceId - " + context.getPackageName() + " (" + Binder.getCallingUid() + ") output: " + output);
+         return output;
+@@ -88,15 +87,15 @@ public final class PrivacyTelephonyManager extends TelephonyManager {
+     @Override
+     public String getLine1Number() {
+         String packageName = context.getPackageName();
+-        int uid = Binder.getCallingUid();
+-        PrivacySettings pSet = pSetMan.getSettings(packageName, uid);
++        PrivacySettings pSet = pSetMan.getSettings(packageName);
++
+         String output;
+         if (pSet != null && pSet.getLine1NumberSetting() != PrivacySettings.REAL) {
+             output = pSet.getLine1Number(); // can be empty, custom or random
+-            pSetMan.notification(packageName, uid, pSet.getLine1NumberSetting(), PrivacySettings.DATA_LINE_1_NUMBER, output, pSet);
++            pSetMan.notification(packageName, 0, pSet.getLine1NumberSetting(), PrivacySettings.DATA_LINE_1_NUMBER, output, pSet);
+         } else {
+             output = super.getLine1Number();
+-            pSetMan.notification(packageName, uid, PrivacySettings.REAL, PrivacySettings.DATA_LINE_1_NUMBER, output, pSet);
++            pSetMan.notification(packageName, 0, PrivacySettings.REAL, PrivacySettings.DATA_LINE_1_NUMBER, output, pSet);
+         }
+ //        Log.d(TAG, "getLine1Number - " + context.getPackageName() + " (" + Binder.getCallingUid() + ") output: " + output);
+         return output;
+@@ -109,15 +108,14 @@ public final class PrivacyTelephonyManager extends TelephonyManager {
+     @Override
+     public String getVoiceMailNumber() {
+         String packageName = context.getPackageName();
+-        int uid = Binder.getCallingUid();
+-        PrivacySettings pSet = pSetMan.getSettings(packageName, uid);
++        PrivacySettings pSet = pSetMan.getSettings(packageName);
+         String output;
+         if (pSet != null && pSet.getLine1NumberSetting() != PrivacySettings.REAL) {
+             output = pSet.getLine1Number(); // can be empty, custom or random
+-            pSetMan.notification(packageName, uid, pSet.getLine1NumberSetting(), PrivacySettings.DATA_LINE_1_NUMBER, output, pSet);
++            pSetMan.notification(packageName, 0, pSet.getLine1NumberSetting(), PrivacySettings.DATA_LINE_1_NUMBER, output, pSet);
+         } else {
+             output = super.getVoiceMailNumber();
+-            pSetMan.notification(packageName, uid, PrivacySettings.REAL, PrivacySettings.DATA_LINE_1_NUMBER, output, pSet);
++            pSetMan.notification(packageName, 0, PrivacySettings.REAL, PrivacySettings.DATA_LINE_1_NUMBER, output, pSet);
+         }
+ //        Log.d(TAG, "getVoiceMailNumber - " + context.getPackageName() + " (" + Binder.getCallingUid() + ") output: " + output);
+         return output;
+@@ -129,7 +127,7 @@ public final class PrivacyTelephonyManager extends TelephonyManager {
+      */
+     @Override
+     public List<NeighboringCellInfo> getNeighboringCellInfo() {
+-        PrivacySettings pSet = pSetMan.getSettings(context.getPackageName(), Binder.getCallingUid());
++        PrivacySettings pSet = pSetMan.getSettings(context.getPackageName());
+         List<NeighboringCellInfo> output = null;
+         String output_label = "[null]";
+         
+@@ -181,13 +179,12 @@ public final class PrivacyTelephonyManager extends TelephonyManager {
+      */
+     private String getNetworkInfo() {
+         String packageName = context.getPackageName();
+-        int uid = Binder.getCallingUid();
+-        PrivacySettings pSet = pSetMan.getSettings(packageName, uid);
++        PrivacySettings pSet = pSetMan.getSettings(packageName);
+         if (pSet != null && pSet.getNetworkInfoSetting() != PrivacySettings.REAL) {
+-            pSetMan.notification(packageName, uid, PrivacySettings.EMPTY, PrivacySettings.DATA_NETWORK_INFO_CURRENT, null, pSet);            
++    		pSetMan.notification(packageName, 0, PrivacySettings.EMPTY, PrivacySettings.DATA_NETWORK_INFO_CURRENT, null, pSet);     
+             return ""; // can only be empty
+         } else {
+-            pSetMan.notification(packageName, uid, PrivacySettings.REAL, PrivacySettings.DATA_NETWORK_INFO_CURRENT, null, pSet);            
++    		pSetMan.notification(packageName, 0, PrivacySettings.REAL, PrivacySettings.DATA_NETWORK_INFO_CURRENT, null, pSet);  
+             return null;
+         }        
+     }
+@@ -222,13 +219,12 @@ public final class PrivacyTelephonyManager extends TelephonyManager {
+      */    
+     private String getSimInfo() {
+         String packageName = context.getPackageName();
+-        int uid = Binder.getCallingUid();
+-        PrivacySettings pSet = pSetMan.getSettings(packageName, uid);
++        PrivacySettings pSet = pSetMan.getSettings(packageName);
+         if (pSet != null && pSet.getSimInfoSetting() != PrivacySettings.REAL) {
+-            pSetMan.notification(packageName, uid, PrivacySettings.EMPTY, PrivacySettings.DATA_NETWORK_INFO_SIM, null, pSet);            
++    		pSetMan.notification(packageName, 0, PrivacySettings.EMPTY, PrivacySettings.DATA_NETWORK_INFO_SIM, null, pSet);   
+             return ""; // can only be empty
+         } else {
+-            pSetMan.notification(packageName, uid, PrivacySettings.REAL, PrivacySettings.DATA_NETWORK_INFO_SIM, null, pSet);            
++    		pSetMan.notification(packageName, 0, PrivacySettings.REAL, PrivacySettings.DATA_NETWORK_INFO_SIM, null, pSet);
+             return null;
+         }                
+     }
+@@ -239,15 +235,14 @@ public final class PrivacyTelephonyManager extends TelephonyManager {
+     @Override
+     public String getSimSerialNumber() {
+         String packageName = context.getPackageName();
+-        int uid = Binder.getCallingUid();
+-        PrivacySettings pSet = pSetMan.getSettings(packageName, uid);
++        PrivacySettings pSet = pSetMan.getSettings(packageName);
+         String output;
+         if (pSet != null && pSet.getSimSerialNumberSetting() != PrivacySettings.REAL) {
+             output = pSet.getSimSerialNumber(); // can be empty, custom or random
+-            pSetMan.notification(packageName, uid, pSet.getSimSerialNumberSetting(), PrivacySettings.DATA_SIM_SERIAL, output, pSet);            
++        	pSetMan.notification(packageName, 0, pSet.getSimSerialNumberSetting(), PrivacySettings.DATA_SIM_SERIAL, output, pSet); 
+         } else {
+             output = super.getSimSerialNumber();
+-            pSetMan.notification(packageName, uid, PrivacySettings.REAL, PrivacySettings.DATA_SIM_SERIAL, output, pSet);            
++        	pSetMan.notification(packageName, 0, PrivacySettings.REAL, PrivacySettings.DATA_SIM_SERIAL, output, pSet);     
+         }
+ //        Log.d(TAG, "getSimSerialNumber - " + context.getPackageName() + " (" + Binder.getCallingUid() + ") output: " + output);
+         return output;
+@@ -259,16 +254,14 @@ public final class PrivacyTelephonyManager extends TelephonyManager {
+     @Override
+     public String getSubscriberId() {
+         String packageName = context.getPackageName();
+-        int uid = Binder.getCallingUid();
+-        PrivacySettings pSet = pSetMan.getSettings(packageName, uid);
++        PrivacySettings pSet = pSetMan.getSettings(packageName);
+         String output;
+-	Log.i(TAG, "getSubscriberId() - " + context.getPackageName());
+         if (pSet != null && pSet.getSubscriberIdSetting() != PrivacySettings.REAL) {
+             output = pSet.getSubscriberId(); // can be empty, custom or random
+-            pSetMan.notification(packageName, uid, pSet.getSubscriberIdSetting(), PrivacySettings.DATA_SUBSCRIBER_ID, output, pSet);            
++        	pSetMan.notification(packageName, 0, pSet.getSubscriberIdSetting(), PrivacySettings.DATA_SUBSCRIBER_ID, output, pSet); 
+         } else {
+-            output = super.getSubscriberId();
+-            pSetMan.notification(packageName, uid, PrivacySettings.REAL, PrivacySettings.DATA_SUBSCRIBER_ID, output, pSet);            
++        	output = super.getSubscriberId();
++    		pSetMan.notification(packageName, 0, PrivacySettings.REAL, PrivacySettings.DATA_SUBSCRIBER_ID, output, pSet);
+         }
+ //        Log.d(TAG, "getSubscriberId - " + context.getPackageName() + " (" + Binder.getCallingUid() + ") output: " + output);
+         return output;
+@@ -287,16 +280,18 @@ public final class PrivacyTelephonyManager extends TelephonyManager {
+     public void listen(PhoneStateListener listener, int events) {
+ //        Log.d(TAG, "listen - package:" + context.getPackageName() + " uid:" + Binder.getCallingUid() + " events: " + events);
+         if (((events & PhoneStateListener.LISTEN_CELL_LOCATION) != 0) || ((events & PhoneStateListener.LISTEN_CALL_STATE) != 0)) {
+-	    //first check if context exists
+-	    String pkgForDebug = context != null ? context.getPackageName() : null;
+-	    if(pkgForDebug != null){
+-            	listener.setPackageName(pkgForDebug); //we only have to set it if context != null, because if context == null will cause the listener gives no update to app
+-		listener.setContext(context);
+-            }
+-            listener.setUid(Binder.getCallingUid());
+-            super.listen(listener, events);
+-//            Log.d(TAG, "listen for cell location or call state - " + context.getPackageName() + " (" + 
+-//                    Binder.getCallingUid() + ") output: custom listener");
++		    String pkgForDebug = context != null ? context.getPackageName() : null;
++		    Log.i(TAG,"initiate listening. Context: " + ((context != null) ? "available" : "NULL") + " listener: " + ((listener != null) ? "available" : "NULL"));
++		    if(pkgForDebug != null){
++				try{
++		            	listener.setPackageName(pkgForDebug);
++		            	listener.setContext(context);
++				} catch (NullPointerException e){
++					Log.e(TAG, "catched nullPointerException - listen()");
++				}
++	        }
++	        super.listen(listener, events);
++	        Log.d(TAG, "listen for cell location or call state - " + context.getPackageName() + " (" + Binder.getCallingUid() + ") output: custom listener");
+         } else {
+             super.listen(listener, events);
+         }
+@@ -311,21 +306,17 @@ public final class PrivacyTelephonyManager extends TelephonyManager {
+      */
+     @Override
+     public CellLocation getCellLocation() {
+-        try {
+-	    String packageName = context.getPackageName();
+-            int uid = Binder.getCallingUid();
+-            PrivacySettings pSet = pSetMan.getSettings(packageName, uid);
+-            if (pSet != null && ((pSet.getLocationNetworkSetting() != PrivacySettings.REAL) || (pSet.getLocationGpsSetting() != PrivacySettings.REAL))) {
+-		pSetMan.notification(packageName, uid, pSet.getLocationNetworkSetting(), PrivacySettings.DATA_LOCATION_NETWORK, null, pSet);
+-		return null;
+-	    } else {
+-		pSetMan.notification(packageName, uid, pSet.getLocationNetworkSetting(), PrivacySettings.DATA_LOCATION_NETWORK, null, pSet);
+-		CellLocation cl = super.getCellLocation();
+-		return cl;
+-	    }
+-        } catch(Exception e) {
+-		return null;
+-	}
++    	String packageName = context.getPackageName();
++        PrivacySettings pSet = pSetMan.getSettings(packageName);
++        CellLocation output = null;
++        if (pSet != null && ((pSet.getLocationNetworkSetting() != PrivacySettings.REAL) || (pSet.getLocationGpsSetting() != PrivacySettings.REAL))) {
++    		pSetMan.notification(packageName, 0, pSet.getLocationNetworkSetting(), PrivacySettings.DATA_LOCATION_NETWORK, null, pSet);
++        } else {
++    		pSetMan.notification(packageName, 0, PrivacySettings.REAL, PrivacySettings.DATA_LOCATION_NETWORK, null, pSet);
++        	output = super.getCellLocation();
++        }
++        Log.d(TAG, "getCellLocation - " + context.getPackageName() + " (" + Binder.getCallingUid() + ") output: " + ((output != null) ? output : "null"));
++        return output;
+     }
+     
+    /**
+@@ -335,22 +326,18 @@ public final class PrivacyTelephonyManager extends TelephonyManager {
+      */
+     @Override
+     public String getDeviceSoftwareVersion() {
+-        try {
+ 	    String packageName = context.getPackageName();
+-            int uid = Binder.getCallingUid();
+-            PrivacySettings pSet = pSetMan.getSettings(packageName, uid);
++        PrivacySettings pSet = pSetMan.getSettings(packageName);
+ 	    String output = "";
+ 	    if (pSet != null && pSet.getDeviceIdSetting() != PrivacySettings.REAL) {
+-            	output = pSet.getDeviceId(); // can be empty, custom or random
+-            	pSetMan.notification(packageName, uid, pSet.getDeviceIdSetting(), PrivacySettings.DATA_DEVICE_ID, output, pSet);
+-       	    } else {
+-            	output = super.getDeviceSoftwareVersion();
+-            	pSetMan.notification(packageName, uid, PrivacySettings.REAL, PrivacySettings.DATA_DEVICE_ID, output, pSet);
+-            }
+-            return output;
+-        } catch (Exception e){
+-		return null;
+-	}
++        	output = pSet.getDeviceId(); // can be empty, custom or random
++       		pSetMan.notification(packageName, 0, pSet.getDeviceIdSetting(), PrivacySettings.DATA_DEVICE_ID, output, pSet);
++       	} else {
++        	output = super.getDeviceSoftwareVersion();
++    		pSetMan.notification(packageName, 0, PrivacySettings.REAL, PrivacySettings.DATA_DEVICE_ID, output, pSet);
++        }
++	    Log.d(TAG, "getDeviceSoftwareVersion - " + context.getPackageName() + " (" + Binder.getCallingUid() + ") output: " + ((output != null) ? output : "null"));
++        return output;
+     }
+ 
+     /**
+@@ -359,22 +346,18 @@ public final class PrivacyTelephonyManager extends TelephonyManager {
+      */
+     @Override
+     public String getCompleteVoiceMailNumber() {
+-        try {
+-            String packageName = context.getPackageName();
+-            int uid = Binder.getCallingUid();
+-            PrivacySettings pSet = pSetMan.getSettings(packageName, uid);
++        String packageName = context.getPackageName();
++        PrivacySettings pSet = pSetMan.getSettings(packageName);
+ 	    String output = "";
+ 	    if (pSet != null && pSet.getLine1NumberSetting() != PrivacySettings.REAL) {
+-            	output = pSet.getLine1Number(); // can be empty, custom or random
+-            	pSetMan.notification(packageName, uid, pSet.getLine1NumberSetting(), PrivacySettings.DATA_LINE_1_NUMBER, output, pSet);
+-            } else {
+-            	output = super.getCompleteVoiceMailNumber();
+-           	pSetMan.notification(packageName, uid, PrivacySettings.REAL, PrivacySettings.DATA_LINE_1_NUMBER, output, pSet);
+-       	    }
+-            return output;
+-        } catch (Exception e){
+-		return null;
+-	}
++            output = pSet.getLine1Number(); // can be empty, custom or random
++           	pSetMan.notification(packageName, 0, pSet.getLine1NumberSetting(), PrivacySettings.DATA_LINE_1_NUMBER, output, pSet);
++        } else {
++        	output = super.getCompleteVoiceMailNumber();
++       		pSetMan.notification(packageName, 0, PrivacySettings.REAL, PrivacySettings.DATA_LINE_1_NUMBER, output, pSet);
++       	}
++	    Log.d(TAG, "getCompleteVoiceMailNumber - " + context.getPackageName() + " (" + Binder.getCallingUid() + ") output: " + ((output != null) ? output : "null"));
++        return output;
+     }
+     //all types for better overview, based on ics 4.0.4
+     private static final int PHONE_TYPES[] = {PHONE_TYPE_NONE, PHONE_TYPE_GSM, PHONE_TYPE_CDMA, PHONE_TYPE_SIP};
+@@ -427,17 +410,12 @@ public final class PrivacyTelephonyManager extends TelephonyManager {
+      */
+     @Override
+     public int getNetworkType() {
+-        try{
+             String output = getNetworkInfo();
+ 	    //no random support until now in pdroid, change addonApp to support it?
+ 	    //Random x = new Random();
+ 	    int type = NETWORK_TYPES[/*x.nextInt(NETWORK_TYPES.length-1)*/0];
+             if(output == null) type = super.getNetworkType();
+ 	    return type;
+-
+-        } catch(Exception e){
+-        	return NETWORK_TYPES[0];
+-        }
+     }
+     
+     /**
+@@ -452,7 +430,7 @@ public final class PrivacyTelephonyManager extends TelephonyManager {
+      * 15 character long numbers -> handle same as imsi
+      */
+     public String getMsisdn() {
+-	Log.i(TAG, "getMsisdn() - " + context.getPackageName());
++    	Log.d(TAG, "getMsisdn - " + context.getPackageName() + " (" + Binder.getCallingUid() + ")");
+     	return getSubscriberId();
+     }
+     
+@@ -460,6 +438,7 @@ public final class PrivacyTelephonyManager extends TelephonyManager {
+      * It doesn't matter if we give some shit to it, it will work
+      */
+     public String getVoiceMailAlphaTag() {
++    	Log.d(TAG, "getVoiceMailAlphaTag - " + context.getPackageName() + " (" + Binder.getCallingUid() + ")");
+     	return getVoiceMailNumber();
+     }
+     
+@@ -468,7 +447,7 @@ public final class PrivacyTelephonyManager extends TelephonyManager {
+      * handles like subscriber id
+      */
+     public String getIsimImpi() {
+-	Log.i(TAG, "getIsimImpi - " + context.getPackageName());
++    	Log.d(TAG, "getIsimImpi - " + context.getPackageName() + " (" + Binder.getCallingUid() + ")");
+     	return getSubscriberId();
+     }
+     
+@@ -477,6 +456,7 @@ public final class PrivacyTelephonyManager extends TelephonyManager {
+      * lets play with this function, handled like NetworkOperatorName
+      */
+     public String getIsimDomain() {
++    	Log.d(TAG, "getIsimDomain - " + context.getPackageName() + " (" + Binder.getCallingUid() + ")");
+     	return getNetworkOperatorName();
+     }
+     
+@@ -486,17 +466,17 @@ public final class PrivacyTelephonyManager extends TelephonyManager {
+      */
+     public String[] getIsimImpu() {
+     	String packageName = context.getPackageName();
+-        int uid = Binder.getCallingUid();
+-        PrivacySettings pSet = pSetMan.getSettings(packageName, uid);
++        PrivacySettings pSet = pSetMan.getSettings(packageName);
+ 	Log.i(TAG, "getIsimImpu() - " + context.getPackageName());
+         String output[] = new String[1];
+         if (pSet != null && pSet.getSubscriberIdSetting() != PrivacySettings.REAL) {
+             output[0] = pSet.getSubscriberId(); // can be empty, custom or random
+-            pSetMan.notification(packageName, uid, pSet.getSubscriberIdSetting(), PrivacySettings.DATA_SUBSCRIBER_ID, output[0], pSet);            
++        	pSetMan.notification(packageName, 0, pSet.getSubscriberIdSetting(), PrivacySettings.DATA_SUBSCRIBER_ID, output[0], pSet);    
+         } else {
+             output = super.getIsimImpu();
+-            pSetMan.notification(packageName, uid, PrivacySettings.REAL, PrivacySettings.DATA_SUBSCRIBER_ID, output[0], pSet);            
++        	pSetMan.notification(packageName, 0, PrivacySettings.REAL, PrivacySettings.DATA_SUBSCRIBER_ID, output[0], pSet); 
+         }
++        Log.d(TAG, "getIsimImpu - " + context.getPackageName() + " (" + Binder.getCallingUid() + ") output: " + ((output != null) ? output : "null"));
+         return output;
+     }
+     /**
+@@ -504,17 +484,17 @@ public final class PrivacyTelephonyManager extends TelephonyManager {
+      * @return
+      */
+     public List<CellInfo> getAllCellInfo() {
+-    	PrivacySettings pSet = pSetMan.getSettings(context.getPackageName(), Binder.getCallingUid());
++    	PrivacySettings pSet = pSetMan.getSettings(context.getPackageName());
++    	String packageName = context.getPackageName();
+         List<CellInfo> output = null;
+-        if (pSet != null) {
+-            if (pSet.getLocationNetworkSetting() == PrivacySettings.EMPTY) {
+-            	output = new ArrayList<CellInfo>();
+-            } else if (pSet.getLocationNetworkSetting() != PrivacySettings.REAL) {
+-                output = new ArrayList<CellInfo>();
+-            } else {
+-                output = super.getAllCellInfo();
+-            }
++        if (pSet != null && ((pSet.getLocationNetworkSetting() != PrivacySettings.REAL) || (pSet.getNetworkInfoSetting() != PrivacySettings.REAL))) {
++    		pSetMan.notification(packageName, 0, PrivacySettings.EMPTY, PrivacySettings.DATA_LOCATION_NETWORK, null, pSet); 
++        	output = new ArrayList<CellInfo>(); 
++        } else {
++    		pSetMan.notification(packageName, 0, PrivacySettings.REAL, PrivacySettings.DATA_LOCATION_NETWORK, null, pSet); 
++        	output = super.getAllCellInfo();
+         }
++        Log.d(TAG, "getAllCellInfo - " + context.getPackageName() + " (" + Binder.getCallingUid() + ") output: " + ((output != null) ? output : "null"));
+         return output;
+     }
+ }
