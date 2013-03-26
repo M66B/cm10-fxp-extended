@@ -19,29 +19,3 @@ index f3e73c9..9dd92ca 100644
  
              if (cm->boostpulse_fd < 0 && !cm->boostpulse_warned) {
                  strerror_r(errno, buf, sizeof(buf));
-@@ -176,15 +179,22 @@ static void cm_power_hint(struct power_module *module, power_hint_t hint,
-     }
- }
- 
-+static int cm_is_ondemand() {
-+    char governor[80];
-+    return (get_scaling_governor(governor, sizeof(governor)) >= 0 && strncmp(governor, "ondemand", 8) == 0);
-+}
-+
- static void cm_power_set_interactive(struct power_module *module, int on)
- {
--    sysfs_write(SAMPLING_RATE_ONDEMAND,
--            on ? SAMPLING_RATE_SCREEN_ON : SAMPLING_RATE_SCREEN_OFF);
-+    if (cm_is_ondemand())
-+        sysfs_write(SAMPLING_RATE_ONDEMAND,
-+                on ? SAMPLING_RATE_SCREEN_ON : SAMPLING_RATE_SCREEN_OFF);
- }
- 
- static void cm_power_init(struct power_module *module)
- {
--    sysfs_write(SAMPLING_RATE_ONDEMAND, SAMPLING_RATE_SCREEN_ON);
-+    if (cm_is_ondemand())
-+        sysfs_write(SAMPLING_RATE_ONDEMAND, SAMPLING_RATE_SCREEN_ON);
- }
- 
- static struct hw_module_methods_t power_module_methods = {
