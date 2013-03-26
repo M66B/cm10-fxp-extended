@@ -80,7 +80,6 @@ superuser_cm10_1=N
 superuser_koush=Y
 browser_cm10_1=N	#unfinished
 busybox_cm10_1=Y
-supplicant_cm10_1=N	#does not compile
 
 #Say hello
 echo ""
@@ -197,7 +196,6 @@ if [ "${cleanall}" = "Y" ]; then
 	do_deldir ${android}/external/v8
 	do_deldir ${android}/external/koush
 	do_deldir ${android}/external/busybox
-	do_deldir ${android}/external/wpa_supplicant_8
 
 	do_deldir ${android}/.repo/projects/bootable/recovery.git
 	do_deldir ${android}/.repo/projects/system/su.git
@@ -214,7 +212,6 @@ if [ "${cleanall}" = "Y" ]; then
 	do_deldir ${android}/.repo/projects/external/chromium-trace.git
 	do_deldir ${android}/.repo/projects/external/v8.git
 	do_deldir ${android}/.repo/projects/external/busybox.git
-	do_deldir ${android}/.repo/projects/external/wpa_supplicant_8.git
 fi
 
 #Local manifest
@@ -280,13 +277,6 @@ if [ "${busybox_cm10_1}" = "Y" ]; then
 	echo "--- busybox CM10.1"
 else
 	sed -i "/android_external_busybox/d" ${android}/.repo/local_manifests/cmxtended.xml
-fi
-
-#wpa supplicant 8
-if [ "${supplicant_cm10_1}" = "Y" ]; then
-	echo "*** WPA supplicant 8 CM10.1 ***"
-else
-	sed -i "/android_external_wpa_supplicant_8/d" ${android}/.repo/local_manifests/cmxtended.xml
 fi
 
 #Toolchain
