@@ -1,0 +1,638 @@
+diff --git a/res/values/strings.xml b/res/values/strings.xml
+index 5931dae..39e0bf7 100644
+--- a/res/values/strings.xml
++++ b/res/values/strings.xml
+@@ -4690,6 +4692,30 @@
+     <string name="cpu_set_on_boot">Set on boot</string>
+     <string name="cpu_set_on_boot_summary">Restore the processor settings on boot</string>
+ 
++    <!-- Performance Settings : SmartassV2 -->
++    <string name="smartassv2_awake_ideal_freq_title">Awake ideal frequency</string>
++    <string name="smartassv2_awake_ideal_freq_summary">%s\nThe frequency until which CPU is scaled up rapidly on screen-awake (from sleep). Thereafter, scaling up is less aggressive.</string>
++    <string name="smartassv2_sleep_ideal_freq_title">Sleep ideal frequency</string>
++    <string name="smartassv2_sleep_ideal_freq_summary">%s\nThe frequency until which CPU is scaled down rapidly when screen is turned off. Thereafter, scaling down is less aggressive.</string>
++    <string name="smartassv2_sleep_wakeup_freq_title">Sleep wakeup frequency</string>
++    <string name="smartassv2_sleep_wakeup_freq_summary">%s\nThe frequency to set when waking up from sleep. When sleep_ideal_freq=0 this will have no effect.</string>
++    <string name="smartassv2_max_cpu_load_title">Maximum CPU load</string>
++    <string name="smartassv2_max_cpu_load_summary">%s %%\nMeasured in percentage 1-100, When CPU load reaches this point, governor will scale CPU up. Higher value means less responsiveness and lower values corresponds to more responsiveness at the cost of battery.</string>
++    <string name="smartassv2_min_cpu_load_title">Minimum CPU load</string>
++    <string name="smartassv2_min_cpu_load_summary">%s %%\nMeasured in percentage 1-100, When CPU load reaches this point, governor will scale CPU down.</string>
++    <string name="smartassv2_ramp_up_step_title">Ramp up step</string>
++    <string name="smartassv2_ramp_up_step_summary">%s Khz\nFrequency when ramping up above the ideal frequency. Zero disables and causes to always jump straight to max frequency. When below the ideal frequency we always ramp up to the ideal freq.</string>
++    <string name="smartassv2_ramp_down_step_title">Ramp down step</string>
++    <string name="smartassv2_ramp_down_step_summary">%s Khz\nFrequency delta when ramping down below the ideal frequency. Zero disables and will calculate ramp down according to load heuristic. When above the ideal frequency we always ramp down to the ideal freq.</string>
++    <string name="smartassv2_up_rate_us_title">Up rate</string>
++    <string name="smartassv2_up_rate_us_summary">%s µs\nThe minimum amount of time to spend at a frequency before we can ramp up. (Ignored below awake-ideal frequency since governor needs to rapidly scale up to awake_ideal_freq when below it)</string>
++    <string name="smartassv2_down_rate_us_title">Down rate</string>
++    <string name="smartassv2_down_rate_us_summary">%s µs\nThe minimum amount of time to spend at a frequency before we can ramp down. (Ignored above sleep-ideal frequency since governor needs to rapidly scale down to sleep_ideal_freq when above it)</string>
++    <string name="smartassv2_boost_enabled_title">Boost enabled</string>
++    <string name="smartassv2_boost_enabled_summary">Android power manager boost pulse support</string>
++    <string name="smartassv2_boost_pulse_title">Boost pulse</string>
++    <string name="smartassv2_boost_pulse_summary">%s µs\nBoost pulse duration</string>
++
+     <!-- Performance Settings : I/O scheduler settings title -->
+     <string name="io_scheds_title">I/O scheduler</string>
+     <!-- Performance Settings : I/O scheduler settings summary. -->
+diff --git a/res/xml/processor_settings.xml b/res/xml/processor_settings.xml
+index 7d0b0ee..44df037 100644
+--- a/res/xml/processor_settings.xml
++++ b/res/xml/processor_settings.xml
+@@ -19,30 +19,105 @@
+     android:title="@string/processor_title"
+     xmlns:settings="http://schemas.android.com/apk/res/com.android.settings">
+ 
+-    <Preference
+-        android:key="pref_cpu_freq_cur"
+-        style="?android:preferenceInformationStyle"
+-        android:title="@string/cpu_cur_freq_title"
+-        android:selectable="false" />
+-
+-    <ListPreference
+-        android:key="pref_cpu_gov"
+-        android:dialogTitle="@string/cpu_governors_title"
+-        android:title="@string/cpu_governors_title" />
+-
+-    <ListPreference
+-        android:key="pref_cpu_freq_min"
+-        android:dialogTitle="@string/cpu_min_freq_title"
+-        android:title="@string/cpu_min_freq_title" />
+-
+-    <ListPreference
+-        android:key="pref_cpu_freq_max"
+-        android:dialogTitle="@string/cpu_max_freq_title"
+-        android:title="@string/cpu_max_freq_title" />
+-
+-    <CheckBoxPreference
+-        android:key="pref_cpu_set_on_boot"
+-        android:title="@string/cpu_set_on_boot"
+-        android:summary="@string/cpu_set_on_boot_summary"/>
++    <PreferenceCategory android:title="General">
++        <Preference
++            android:key="pref_cpu_freq_cur"
++            style="?android:preferenceInformationStyle"
++            android:title="@string/cpu_cur_freq_title"
++            android:selectable="false" />
++
++        <ListPreference
++            android:key="pref_cpu_gov"
++            android:dialogTitle="@string/cpu_governors_title"
++            android:title="@string/cpu_governors_title" />
++
++        <ListPreference
++            android:key="pref_cpu_freq_min"
++            android:dialogTitle="@string/cpu_min_freq_title"
++            android:title="@string/cpu_min_freq_title" />
++
++        <ListPreference
++            android:key="pref_cpu_freq_max"
++            android:dialogTitle="@string/cpu_max_freq_title"
++            android:title="@string/cpu_max_freq_title" />
++
++        <ListPreference
++            android:key="pref_cpu_freq_max"
++            android:dialogTitle="@string/cpu_max_freq_title"
++            android:title="@string/cpu_max_freq_title" />
++
++        <CheckBoxPreference
++            android:key="pref_cpu_set_on_boot"
++            android:title="@string/cpu_set_on_boot"
++            android:summary="@string/cpu_set_on_boot_summary"/>
++    </PreferenceCategory>
++
++    <PreferenceCategory android:title="SmartassV2">
++        <ListPreference
++            android:key="pref_smartassv2_awake_ideal_freq"
++            android:dialogTitle="@string/smartassv2_awake_ideal_freq_title"
++            android:title="@string/smartassv2_awake_ideal_freq_title"
++            android:summary="@string/smartassv2_awake_ideal_freq_summary" />
++
++        <ListPreference
++            android:key="pref_smartassv2_sleep_ideal_freq"
++            android:dialogTitle="@string/smartassv2_sleep_ideal_freq_title"
++            android:title="@string/smartassv2_sleep_ideal_freq_title"
++            android:summary="@string/smartassv2_sleep_ideal_freq_summary" />
++
++        <ListPreference
++            android:key="pref_smartassv2_sleep_wakeup_freq"
++            android:dialogTitle="@string/smartassv2_sleep_wakeup_freq_title"
++            android:title="@string/smartassv2_sleep_wakeup_freq_title"
++            android:summary="@string/smartassv2_sleep_wakeup_freq_summary" />
++
++        <EditTextPreference
++            android:key="pref_smartassv2_max_cpu_load"
++            android:dialogTitle="@string/smartassv2_max_cpu_load_title"
++            android:title="@string/smartassv2_max_cpu_load_title"
++            android:summary="@string/smartassv2_max_cpu_load_summary" />
++
++        <EditTextPreference
++            android:key="pref_smartassv2_min_cpu_load"
++            android:dialogTitle="@string/smartassv2_min_cpu_load_title"
++            android:title="@string/smartassv2_min_cpu_load_title"
++            android:summary="@string/smartassv2_min_cpu_load_summary" />
++
++        <EditTextPreference
++            android:key="pref_smartassv2_ramp_up_step"
++            android:dialogTitle="@string/smartassv2_ramp_up_step_title"
++            android:title="@string/smartassv2_ramp_up_step_title"
++            android:summary="@string/smartassv2_ramp_up_step_summary" />
++
++        <EditTextPreference
++            android:key="pref_smartassv2_ramp_down_step"
++            android:dialogTitle="@string/smartassv2_ramp_down_step_title"
++            android:title="@string/smartassv2_ramp_down_step_title"
++            android:summary="@string/smartassv2_ramp_down_step_summary" />
++
++        <EditTextPreference
++            android:key="pref_smartassv2_up_rate_us"
++            android:dialogTitle="@string/smartassv2_up_rate_us_title"
++            android:title="@string/smartassv2_up_rate_us_title"
++            android:summary="@string/smartassv2_up_rate_us_summary" />
++
++        <EditTextPreference
++            android:key="pref_smartassv2_down_rate_us"
++            android:dialogTitle="@string/smartassv2_down_rate_us_title"
++            android:title="@string/smartassv2_down_rate_us_title"
++            android:summary="@string/smartassv2_down_rate_us_summary" />
++
++        <CheckBoxPreference
++            android:key="pref_smartassv2_boost_enabled"
++            android:title="@string/smartassv2_boost_enabled_title"
++            android:summary="@string/smartassv2_boost_enabled_summary" />
++
++        <Preference
++            android:key="pref_smartassv2_boost_pulse"
++            style="?android:preferenceInformationStyle"
++            android:title="@string/smartassv2_boost_pulse_title"
++            android:summary="@string/smartassv2_boost_pulse_summary"
++            android:selectable="false" />
++    </PreferenceCategory>
+ 
+ </PreferenceScreen>
+diff --git a/src/com/android/settings/cyanogenmod/BootReceiver.java b/src/com/android/settings/cyanogenmod/BootReceiver.java
+index 0704a66..edb03d0 100644
+--- a/src/com/android/settings/cyanogenmod/BootReceiver.java
++++ b/src/com/android/settings/cyanogenmod/BootReceiver.java
+@@ -104,6 +104,50 @@ public class BootReceiver extends BroadcastReceiver {
+             }
+             Log.d(TAG, "CPU settings restored.");
+         }
++
++        // SmartassV2
++        String awake_ideal_freq = prefs.getString(Processor.SMARTASSV2_AWAKE_IDEAL_FREQ_PREF, null);
++        String sleep_ideal_freq = prefs.getString(Processor.SMARTASSV2_SLEEP_IDEAL_FREQ_PREF, null);
++        String sleep_wakeup_freq = prefs.getString(Processor.SMARTASSV2_SLEEP_WAKEUP_FREQ_PREF, null);
++        String max_cpu_load = prefs.getString(Processor.SMARTASSV2_MAX_CPU_LOAD_PREF, null);
++        String min_cpu_load = prefs.getString(Processor.SMARTASSV2_MIN_CPU_LOAD_PREF, null);
++        String ramp_up_step = prefs.getString(Processor.SMARTASSV2_RAMP_UP_STEP_PREF, null);
++        String ramp_down_step = prefs.getString(Processor.SMARTASSV2_RAMP_DOWN_STEP_PREF, null);
++        String up_rate_us = prefs.getString(Processor.SMARTASSV2_UP_RATE_US_PREF, null);
++        String down_rate_us = prefs.getString(Processor.SMARTASSV2_DOWN_RATE_PREF, null);
++        String boost_enabled = (prefs.getBoolean(Processor.SMARTASSV2_BOOST_ENABLED_PREF, false) ? "1" : "0");
++        
++        if (awake_ideal_freq != null && Utils.fileExists(Processor.SMARTASSV2_AWAKE_IDEAL_FREQ_FILE))
++            Utils.fileWriteOneLine(Processor.SMARTASSV2_AWAKE_IDEAL_FREQ_FILE, awake_ideal_freq);
++
++        if (sleep_ideal_freq != null && Utils.fileExists(Processor.SMARTASSV2_SLEEP_IDEAL_FREQ_FILE))
++            Utils.fileWriteOneLine(Processor.SMARTASSV2_SLEEP_IDEAL_FREQ_FILE, sleep_ideal_freq);
++
++        if (sleep_wakeup_freq != null && Utils.fileExists(Processor.SMARTASSV2_SLEEP_WAKEUP_FREQ_FILE))
++            Utils.fileWriteOneLine(Processor.SMARTASSV2_SLEEP_WAKEUP_FREQ_FILE, sleep_wakeup_freq);
++
++        if (max_cpu_load != null && Utils.fileExists(Processor.SMARTASSV2_MAX_CPU_LOAD_FILE))
++            Utils.fileWriteOneLine(Processor.SMARTASSV2_MAX_CPU_LOAD_FILE, max_cpu_load);
++
++        if (min_cpu_load != null && Utils.fileExists(Processor.SMARTASSV2_MIN_CPU_LOAD_FILE))
++            Utils.fileWriteOneLine(Processor.SMARTASSV2_MIN_CPU_LOAD_FILE, min_cpu_load);
++
++        if (ramp_up_step != null && Utils.fileExists(Processor.SMARTASSV2_RAMP_UP_STEP_FILE))
++            Utils.fileWriteOneLine(Processor.SMARTASSV2_RAMP_UP_STEP_FILE, ramp_up_step);
++
++        if (ramp_down_step != null && Utils.fileExists(Processor.SMARTASSV2_RAMP_DOWN_STEP_FILE))
++            Utils.fileWriteOneLine(Processor.SMARTASSV2_RAMP_DOWN_STEP_FILE, ramp_down_step);
++
++        if (up_rate_us != null && Utils.fileExists(Processor.SMARTASSV2_UP_RATE_US_FILE))
++            Utils.fileWriteOneLine(Processor.SMARTASSV2_UP_RATE_US_FILE, up_rate_us);
++
++        if (down_rate_us != null && Utils.fileExists(Processor.SMARTASSV2_DOWN_RATE_US_FILE))
++            Utils.fileWriteOneLine(Processor.SMARTASSV2_DOWN_RATE_US_FILE, down_rate_us);
++
++        if (boost_enabled != null && Utils.fileExists(Processor.SMARTASSV2_BOOST_ENABLED_FILE))
++            Utils.fileWriteOneLine(Processor.SMARTASSV2_BOOST_ENABLED_FILE, boost_enabled);
++
++        Log.d(TAG, "SmartassV2 settings restored.");
+     }
+ 
+     private void configureIOSched(Context ctx) {
+diff --git a/src/com/android/settings/cyanogenmod/Processor.java b/src/com/android/settings/cyanogenmod/Processor.java
+index ce2c404..59e2831 100644
+--- a/src/com/android/settings/cyanogenmod/Processor.java
++++ b/src/com/android/settings/cyanogenmod/Processor.java
+@@ -22,6 +22,8 @@ import android.os.Message;
+ import android.preference.ListPreference;
+ import android.preference.Preference;
+ import android.preference.PreferenceScreen;
++import android.preference.EditTextPreference;
++import android.preference.CheckBoxPreference;
+ 
+ import com.android.settings.R;
+ import com.android.settings.SettingsPreferenceFragment;
+@@ -47,16 +49,67 @@ public class Processor extends SettingsPreferenceFragment implements
+     public static final String FREQ_MIN_FILE = "/sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq";
+     public static final String SOB_PREF = "pref_cpu_set_on_boot";
+ 
++    public static final String SMARTASSV2_AWAKE_IDEAL_FREQ_PREF = "pref_smartassv2_awake_ideal_freq";
++    public static final String SMARTASSV2_SLEEP_IDEAL_FREQ_PREF = "pref_smartassv2_sleep_ideal_freq";
++    public static final String SMARTASSV2_SLEEP_WAKEUP_FREQ_PREF = "pref_smartassv2_sleep_wakeup_freq";
++    public static final String SMARTASSV2_MAX_CPU_LOAD_PREF = "pref_smartassv2_max_cpu_load";
++    public static final String SMARTASSV2_MIN_CPU_LOAD_PREF = "pref_smartassv2_min_cpu_load";
++    public static final String SMARTASSV2_RAMP_UP_STEP_PREF = "pref_smartassv2_ramp_up_step";
++    public static final String SMARTASSV2_RAMP_DOWN_STEP_PREF = "pref_smartassv2_ramp_down_step";
++    public static final String SMARTASSV2_UP_RATE_US_PREF = "pref_smartassv2_up_rate_us";
++    public static final String SMARTASSV2_DOWN_RATE_PREF = "pref_smartassv2_down_rate_us";
++    public static final String SMARTASSV2_BOOST_ENABLED_PREF = "pref_smartassv2_boost_enabled";
++    public static final String SMARTASSV2_BOOST_PULSE_PREF = "pref_smartassv2_boost_pulse";
++
++    public static final String SMARTASSV2_AWAKE_IDEAL_FREQ_FILE = "/sys/devices/system/cpu/cpufreq/smartass/awake_ideal_freq";
++    public static final String SMARTASSV2_SLEEP_IDEAL_FREQ_FILE = "/sys/devices/system/cpu/cpufreq/smartass/sleep_ideal_freq";
++    public static final String SMARTASSV2_SLEEP_WAKEUP_FREQ_FILE = "/sys/devices/system/cpu/cpufreq/smartass/sleep_wakeup_freq";
++    public static final String SMARTASSV2_MAX_CPU_LOAD_FILE = "/sys/devices/system/cpu/cpufreq/smartass/max_cpu_load";
++    public static final String SMARTASSV2_MIN_CPU_LOAD_FILE = "/sys/devices/system/cpu/cpufreq/smartass/min_cpu_load";
++    public static final String SMARTASSV2_RAMP_UP_STEP_FILE = "/sys/devices/system/cpu/cpufreq/smartass/ramp_up_step";
++    public static final String SMARTASSV2_RAMP_DOWN_STEP_FILE = "/sys/devices/system/cpu/cpufreq/smartass/ramp_down_step";
++    public static final String SMARTASSV2_UP_RATE_US_FILE = "/sys/devices/system/cpu/cpufreq/smartass/up_rate_us";
++    public static final String SMARTASSV2_DOWN_RATE_US_FILE = "/sys/devices/system/cpu/cpufreq/smartass/down_rate_us";
++    public static final String SMARTASSV2_BOOST_ENABLED_FILE = "/sys/devices/system/cpu/cpufreq/smartass/boost_enabled";
++    public static final String SMARTASSV2_BOOST_PULSE_FILE = "/sys/devices/system/cpu/cpufreq/smartass/boost_pulse";
++
+     private static final String TAG = "CPUSettings";
+ 
+     private String mGovernorFormat;
+     private String mMinFrequencyFormat;
+     private String mMaxFrequencyFormat;
+ 
++    private String mSmartassV2AwakeIdealFreqFormat;
++    private String mSmartassV2SleepIdealFreqFormat;
++    private String mSmartassV2SleepWakeupFreqFormat;
++    private String mSmartassV2MaxCpuLoadFormat;
++    private String mSmartassV2MinCpuLoadFormat;
++    private String mSmartassV2RampUpStepFormat;
++    private String mSmartassV2RampDownStepFormat;
++    private String mSmartassV2UpRateUsFormat;
++    private String mSmartassV2DownRateUsFormat;
++    private String mSmartassV2BoostPulseFormat;
++
+     private Preference mCurFrequencyPref;
+     private ListPreference mGovernorPref;
+     private ListPreference mMinFrequencyPref;
+     private ListPreference mMaxFrequencyPref;
++    private CheckBoxPreference mSOBPref;
++
++    private ListPreference mSmartassV2AwakeIdealFreqPref;
++    private ListPreference mSmartassV2SleepIdealFreqPref;
++    private ListPreference mSmartassV2SleepWakeupFreqPref;
++    private EditTextPreference mSmartassV2MaxCpuLoadPref;
++    private EditTextPreference mSmartassV2MinCpuLoadPref;
++    private EditTextPreference mSmartassV2RampUpStepPref;
++    private EditTextPreference mSmartassV2RampDownStepPref;
++    private EditTextPreference mSmartassV2UpRateUsPref;
++    private EditTextPreference mSmartassV2DownRateUsPref;
++    private CheckBoxPreference mSmartassV2BoostEnabledPref;
++    private Preference mSmartassV2BoostPulsePref;
++
++    private static final int what_cur_freq = 1;
++    private static final int what_boost_pulse = 2;
+ 
+     private class CurCPUThread extends Thread {
+         private boolean mInterrupt = false;
+@@ -70,9 +123,18 @@ public class Processor extends SettingsPreferenceFragment implements
+             try {
+                 while (!mInterrupt) {
+                     sleep(500);
+-                    final String curFreq = Utils.fileReadOneLine(FREQ_CUR_FILE);
++
++                    final String curFreq = (Utils.fileExists(FREQ_CUR_FILE)
++                        ? Utils.fileReadOneLine(FREQ_CUR_FILE) 
++                        : null);
+                     if (curFreq != null)
+-                        mCurCPUHandler.sendMessage(mCurCPUHandler.obtainMessage(0, curFreq));
++                        mCurCPUHandler.sendMessage(mCurCPUHandler.obtainMessage(what_cur_freq, curFreq));
++
++                    final String curBoostPulse = (Utils.fileExists(SMARTASSV2_BOOST_PULSE_FILE)
++                        ? Utils.fileReadOneLine(SMARTASSV2_BOOST_PULSE_FILE)
++                        : null);
++                    if (curBoostPulse != null)
++                        mCurCPUHandler.sendMessage(mCurCPUHandler.obtainMessage(what_boost_pulse, curBoostPulse));
+                 }
+             } catch (InterruptedException e) {
+             }
+@@ -83,7 +145,11 @@ public class Processor extends SettingsPreferenceFragment implements
+ 
+     private Handler mCurCPUHandler = new Handler() {
+         public void handleMessage(Message msg) {
+-            mCurFrequencyPref.setSummary(toMHz((String) msg.obj));
++            if (msg.what == what_cur_freq)
++                mCurFrequencyPref.setSummary(toMHz((String) msg.obj));
++            else if (msg.what == what_boost_pulse)
++                mSmartassV2BoostPulsePref.setSummary(String.format(mSmartassV2BoostPulseFormat,
++                    (String) msg.obj));
+         }
+     };
+ 
+@@ -95,6 +161,18 @@ public class Processor extends SettingsPreferenceFragment implements
+         mMinFrequencyFormat = getString(R.string.cpu_min_freq_summary);
+         mMaxFrequencyFormat = getString(R.string.cpu_max_freq_summary);
+ 
++        // SmartassV2 format strings
++        mSmartassV2AwakeIdealFreqFormat = getString(R.string.smartassv2_awake_ideal_freq_summary);
++        mSmartassV2SleepIdealFreqFormat = getString(R.string.smartassv2_sleep_ideal_freq_summary);
++        mSmartassV2SleepWakeupFreqFormat = getString(R.string.smartassv2_sleep_wakeup_freq_summary);
++        mSmartassV2MaxCpuLoadFormat = getString(R.string.smartassv2_max_cpu_load_summary);
++        mSmartassV2MinCpuLoadFormat = getString(R.string.smartassv2_min_cpu_load_summary);
++        mSmartassV2RampUpStepFormat = getString(R.string.smartassv2_ramp_up_step_summary);
++        mSmartassV2RampDownStepFormat = getString(R.string.smartassv2_ramp_down_step_summary);
++        mSmartassV2UpRateUsFormat = getString(R.string.smartassv2_up_rate_us_summary);
++        mSmartassV2DownRateUsFormat = getString(R.string.smartassv2_down_rate_us_summary);
++        mSmartassV2BoostPulseFormat = getString(R.string.smartassv2_boost_pulse_summary);
++
+         String[] availableFrequencies = new String[0];
+         String[] availableGovernors = new String[0];
+         String[] frequencies;
+@@ -110,6 +188,20 @@ public class Processor extends SettingsPreferenceFragment implements
+         mCurFrequencyPref = (Preference) prefScreen.findPreference(FREQ_CUR_PREF);
+         mMinFrequencyPref = (ListPreference) prefScreen.findPreference(FREQ_MIN_PREF);
+         mMaxFrequencyPref = (ListPreference) prefScreen.findPreference(FREQ_MAX_PREF);
++        mSOBPref = (CheckBoxPreference) prefScreen.findPreference(SOB_PREF);
++
++        // SmartassV2 preferences
++        mSmartassV2AwakeIdealFreqPref = (ListPreference) prefScreen.findPreference(SMARTASSV2_AWAKE_IDEAL_FREQ_PREF);
++        mSmartassV2SleepIdealFreqPref = (ListPreference) prefScreen.findPreference(SMARTASSV2_SLEEP_IDEAL_FREQ_PREF);
++        mSmartassV2SleepWakeupFreqPref = (ListPreference) prefScreen.findPreference(SMARTASSV2_SLEEP_WAKEUP_FREQ_PREF);
++        mSmartassV2MaxCpuLoadPref = (EditTextPreference) prefScreen.findPreference(SMARTASSV2_MAX_CPU_LOAD_PREF);
++        mSmartassV2MinCpuLoadPref = (EditTextPreference) prefScreen.findPreference(SMARTASSV2_MIN_CPU_LOAD_PREF);
++        mSmartassV2RampUpStepPref = (EditTextPreference) prefScreen.findPreference(SMARTASSV2_RAMP_UP_STEP_PREF);
++        mSmartassV2RampDownStepPref = (EditTextPreference) prefScreen.findPreference(SMARTASSV2_RAMP_DOWN_STEP_PREF);
++        mSmartassV2UpRateUsPref = (EditTextPreference) prefScreen.findPreference(SMARTASSV2_UP_RATE_US_PREF);
++        mSmartassV2DownRateUsPref = (EditTextPreference) prefScreen.findPreference(SMARTASSV2_DOWN_RATE_PREF);
++        mSmartassV2BoostEnabledPref = (CheckBoxPreference) prefScreen.findPreference(SMARTASSV2_BOOST_ENABLED_PREF);
++        mSmartassV2BoostPulsePref = (Preference) prefScreen.findPreference(SMARTASSV2_BOOST_PULSE_PREF);
+ 
+         /* Governor
+         Some systems might not use governors */
+@@ -167,15 +259,161 @@ public class Processor extends SettingsPreferenceFragment implements
+         // Cur frequency
+         if (!Utils.fileExists(FREQ_CUR_FILE)) {
+             FREQ_CUR_FILE = FREQINFO_CUR_FILE;
++
+         }
+ 
+         if (!Utils.fileExists(FREQ_CUR_FILE) || (temp = Utils.fileReadOneLine(FREQ_CUR_FILE)) == null) {
+             mCurFrequencyPref.setEnabled(false);
+-
+         } else {
+             mCurFrequencyPref.setSummary(toMHz(temp));
++        }
++
++        smartassv2_values();
++
++        mCurCPUThread.start();
++    }
++
++    private void smartassv2_values() {
++        String[] availableFrequencies = new String[0];
++        String[] frequencies;
++        String availableFrequenciesLine;
++        String temp;
++
++        if (!Utils.fileExists(FREQ_LIST_FILE) || (availableFrequenciesLine = Utils.fileReadOneLine(FREQ_LIST_FILE)) == null) {
++            mSmartassV2AwakeIdealFreqPref.setEnabled(false);
++            mSmartassV2SleepIdealFreqPref.setEnabled(false);
++            mSmartassV2SleepWakeupFreqPref.setEnabled(false);
++
++        } else {
++            availableFrequencies = availableFrequenciesLine.split(" ");
++
++            frequencies = new String[availableFrequencies.length];
++            for (int i = 0; i < frequencies.length; i++) {
++                frequencies[i] = toMHz(availableFrequencies[i]);
++            }
+ 
+-            mCurCPUThread.start();
++            // Awake ideal freq
++            if (!Utils.fileExists(SMARTASSV2_AWAKE_IDEAL_FREQ_FILE) || (temp = Utils.fileReadOneLine(SMARTASSV2_AWAKE_IDEAL_FREQ_FILE)) == null) {
++                mSmartassV2AwakeIdealFreqPref.setEnabled(false);
++                mSmartassV2AwakeIdealFreqPref.setSummary(String.format(mSmartassV2AwakeIdealFreqFormat, "? MHz"));
++            } else {
++                mSmartassV2AwakeIdealFreqPref.setEnabled(true);
++                mSmartassV2AwakeIdealFreqPref.setEntryValues(availableFrequencies);
++                mSmartassV2AwakeIdealFreqPref.setEntries(frequencies);
++                mSmartassV2AwakeIdealFreqPref.setValue(temp);
++                mSmartassV2AwakeIdealFreqPref.setSummary(String.format(mSmartassV2AwakeIdealFreqFormat, toMHz(temp)));
++                mSmartassV2AwakeIdealFreqPref.setOnPreferenceChangeListener(this);
++            }
++
++            // Sleep ideal freq
++            if (!Utils.fileExists(SMARTASSV2_SLEEP_IDEAL_FREQ_FILE) || (temp = Utils.fileReadOneLine(SMARTASSV2_SLEEP_IDEAL_FREQ_FILE)) == null) {
++                mSmartassV2SleepIdealFreqPref.setEnabled(false);
++                mSmartassV2SleepIdealFreqPref.setSummary(String.format(mSmartassV2SleepIdealFreqFormat, "? MHz"));
++            } else {
++                mSmartassV2SleepIdealFreqPref.setEnabled(true);
++                mSmartassV2SleepIdealFreqPref.setEntryValues(availableFrequencies);
++                mSmartassV2SleepIdealFreqPref.setEntries(frequencies);
++                mSmartassV2SleepIdealFreqPref.setValue(temp);
++                mSmartassV2SleepIdealFreqPref.setSummary(String.format(mSmartassV2SleepIdealFreqFormat, toMHz(temp)));
++                mSmartassV2SleepIdealFreqPref.setOnPreferenceChangeListener(this);
++            }
++
++            // Sleep wakeup freq
++            if (!Utils.fileExists(SMARTASSV2_SLEEP_WAKEUP_FREQ_FILE) || (temp = Utils.fileReadOneLine(SMARTASSV2_SLEEP_WAKEUP_FREQ_FILE)) == null) {
++                mSmartassV2SleepWakeupFreqPref.setEnabled(false);
++                mSmartassV2SleepWakeupFreqPref.setSummary(String.format(mSmartassV2SleepWakeupFreqFormat, "? MHz"));
++            } else {
++                mSmartassV2SleepWakeupFreqPref.setEnabled(true);
++                mSmartassV2SleepWakeupFreqPref.setEntryValues(availableFrequencies);
++                mSmartassV2SleepWakeupFreqPref.setEntries(frequencies);
++                mSmartassV2SleepWakeupFreqPref.setValue(temp);
++                mSmartassV2SleepWakeupFreqPref.setSummary(String.format(mSmartassV2SleepWakeupFreqFormat, toMHz(temp)));
++                mSmartassV2SleepWakeupFreqPref.setOnPreferenceChangeListener(this);
++            }
++        }
++
++        // Max CPU load
++        if (!Utils.fileExists(SMARTASSV2_MAX_CPU_LOAD_FILE) || (temp = Utils.fileReadOneLine(SMARTASSV2_MAX_CPU_LOAD_FILE)) == null) {
++            mSmartassV2MaxCpuLoadPref.setEnabled(false);
++            mSmartassV2MaxCpuLoadPref.setSummary(String.format(mSmartassV2MaxCpuLoadFormat, "?"));
++        } else {
++            mSmartassV2MaxCpuLoadPref.setEnabled(true);
++            mSmartassV2MaxCpuLoadPref.setText(temp);
++            mSmartassV2MaxCpuLoadPref.setSummary(String.format(mSmartassV2MaxCpuLoadFormat, temp));
++            mSmartassV2MaxCpuLoadPref.setOnPreferenceChangeListener(this);
++        }
++
++        // Min CPU load
++        if (!Utils.fileExists(SMARTASSV2_MIN_CPU_LOAD_FILE) || (temp = Utils.fileReadOneLine(SMARTASSV2_MIN_CPU_LOAD_FILE)) == null) {
++            mSmartassV2MinCpuLoadPref.setEnabled(false);
++            mSmartassV2MinCpuLoadPref.setSummary(String.format(mSmartassV2MinCpuLoadFormat, "?"));
++        } else {
++            mSmartassV2MinCpuLoadPref.setEnabled(true);
++            mSmartassV2MinCpuLoadPref.setText(temp);
++            mSmartassV2MinCpuLoadPref.setSummary(String.format(mSmartassV2MinCpuLoadFormat, temp));
++            mSmartassV2MinCpuLoadPref.setOnPreferenceChangeListener(this);
++        }
++
++        // Ramp up step
++        if (!Utils.fileExists(SMARTASSV2_RAMP_UP_STEP_FILE) || (temp = Utils.fileReadOneLine(SMARTASSV2_RAMP_UP_STEP_FILE)) == null) {
++            mSmartassV2RampUpStepPref.setEnabled(false);
++            mSmartassV2RampUpStepPref.setSummary(String.format(mSmartassV2RampUpStepFormat, "?"));
++        } else {
++            mSmartassV2RampUpStepPref.setEnabled(true);
++            mSmartassV2RampUpStepPref.setText(temp);
++            mSmartassV2RampUpStepPref.setSummary(String.format(mSmartassV2RampUpStepFormat, temp));
++            mSmartassV2RampUpStepPref.setOnPreferenceChangeListener(this);
++        }
++
++        // Ramp down step
++        if (!Utils.fileExists(SMARTASSV2_RAMP_DOWN_STEP_FILE) || (temp = Utils.fileReadOneLine(SMARTASSV2_RAMP_DOWN_STEP_FILE)) == null) {
++            mSmartassV2RampDownStepPref.setEnabled(false);
++            mSmartassV2RampDownStepPref.setSummary(String.format(mSmartassV2RampDownStepFormat, "?"));
++        } else {
++            mSmartassV2RampDownStepPref.setEnabled(true);
++            mSmartassV2RampDownStepPref.setText(temp);
++            mSmartassV2RampDownStepPref.setSummary(String.format(mSmartassV2RampDownStepFormat, temp));
++            mSmartassV2RampDownStepPref.setOnPreferenceChangeListener(this);
++        }
++
++        // Up rate use
++        if (!Utils.fileExists(SMARTASSV2_UP_RATE_US_FILE) || (temp = Utils.fileReadOneLine(SMARTASSV2_UP_RATE_US_FILE)) == null) {
++            mSmartassV2UpRateUsPref.setEnabled(false);
++            mSmartassV2UpRateUsPref.setSummary(String.format(mSmartassV2UpRateUsFormat, "?"));
++        } else {
++            mSmartassV2UpRateUsPref.setEnabled(true);
++            mSmartassV2UpRateUsPref.setText(temp);
++            mSmartassV2UpRateUsPref.setSummary(String.format(mSmartassV2UpRateUsFormat, temp));
++            mSmartassV2UpRateUsPref.setOnPreferenceChangeListener(this);
++        }
++
++        // Down rate use
++        if (!Utils.fileExists(SMARTASSV2_DOWN_RATE_US_FILE) || (temp = Utils.fileReadOneLine(SMARTASSV2_DOWN_RATE_US_FILE)) == null) {
++            mSmartassV2DownRateUsPref.setEnabled(false);
++            mSmartassV2DownRateUsPref.setSummary(String.format(mSmartassV2DownRateUsFormat, "?"));
++        } else {
++            mSmartassV2DownRateUsPref.setEnabled(true);
++            mSmartassV2DownRateUsPref.setText(temp);
++            mSmartassV2DownRateUsPref.setSummary(String.format(mSmartassV2DownRateUsFormat, temp));
++            mSmartassV2DownRateUsPref.setOnPreferenceChangeListener(this);
++        }
++
++        // SmartassV2 Boost enabled
++        if (!Utils.fileExists(SMARTASSV2_BOOST_ENABLED_FILE) || (temp = Utils.fileReadOneLine(SMARTASSV2_BOOST_ENABLED_FILE)) == null) {
++            mSmartassV2BoostEnabledPref.setEnabled(false);
++        } else {
++            mSmartassV2BoostEnabledPref.setEnabled(true);
++            mSmartassV2BoostEnabledPref.setChecked(!temp.startsWith("0"));
++            mSmartassV2BoostEnabledPref.setOnPreferenceChangeListener(this);
++        }
++
++        // Current boost pulse
++        if (!Utils.fileExists(SMARTASSV2_BOOST_PULSE_FILE) || (temp = Utils.fileReadOneLine(SMARTASSV2_BOOST_PULSE_FILE)) == null) {
++            mSmartassV2BoostPulsePref.setEnabled(false);
++            mSmartassV2BoostPulsePref.setSummary(String.format(mSmartassV2BoostPulseFormat, "?"));
++        } else {
++            mSmartassV2BoostPulsePref.setEnabled(true);
++            mSmartassV2BoostPulsePref.setSummary(String.format(mSmartassV2BoostPulseFormat, temp));
+         }
+     }
+ 
+@@ -198,6 +436,8 @@ public class Processor extends SettingsPreferenceFragment implements
+         if (Utils.fileExists(GOV_FILE) && (temp = Utils.fileReadOneLine(GOV_FILE)) != null) {
+             mGovernorPref.setSummary(String.format(mGovernorFormat, temp));
+         }
++
++        smartassv2_values();
+     }
+ 
+     @Override
+@@ -214,12 +454,37 @@ public class Processor extends SettingsPreferenceFragment implements
+         String fname = "";
+ 
+         if (newValue != null) {
++            // Safety first
++            if (preference != mSOBPref)
++                mSOBPref.setChecked(false);
++
+             if (preference == mGovernorPref) {
+                 fname = GOV_FILE;
+             } else if (preference == mMinFrequencyPref) {
+                 fname = FREQ_MIN_FILE;
+             } else if (preference == mMaxFrequencyPref) {
+                 fname = FREQ_MAX_FILE;
++            } else if (preference == mSmartassV2AwakeIdealFreqPref) {
++                fname = SMARTASSV2_AWAKE_IDEAL_FREQ_FILE;
++            } else if (preference == mSmartassV2SleepIdealFreqPref) {
++                fname = SMARTASSV2_SLEEP_IDEAL_FREQ_FILE;
++            } else if (preference == mSmartassV2SleepWakeupFreqPref) {
++                fname = SMARTASSV2_SLEEP_WAKEUP_FREQ_FILE;
++            } else if (preference == mSmartassV2MaxCpuLoadPref) {
++                fname = SMARTASSV2_MAX_CPU_LOAD_FILE;
++            } else if (preference == mSmartassV2MinCpuLoadPref) {
++                fname = SMARTASSV2_MIN_CPU_LOAD_FILE;
++            } else if (preference == mSmartassV2RampUpStepPref) {
++                fname = SMARTASSV2_RAMP_UP_STEP_FILE;
++            } else if (preference == mSmartassV2RampDownStepPref) {
++                fname = SMARTASSV2_RAMP_DOWN_STEP_FILE;
++            } else if (preference == mSmartassV2UpRateUsPref) {
++                fname = SMARTASSV2_UP_RATE_US_FILE;
++            } else if (preference == mSmartassV2DownRateUsPref) {
++                fname = SMARTASSV2_DOWN_RATE_US_FILE;
++            } else if (preference == mSmartassV2BoostEnabledPref) {
++                fname = SMARTASSV2_BOOST_ENABLED_FILE;
++                newValue = (newValue.toString().equals("true") ? "1" : "0");
+             }
+ 
+             if (Utils.fileWriteOneLine(fname, (String) newValue)) {
+@@ -231,7 +496,39 @@ public class Processor extends SettingsPreferenceFragment implements
+                 } else if (preference == mMaxFrequencyPref) {
+                     mMaxFrequencyPref.setSummary(String.format(mMaxFrequencyFormat,
+                             toMHz((String) newValue)));
++                } else if (preference == mSmartassV2AwakeIdealFreqPref) {
++                    mSmartassV2AwakeIdealFreqPref.setSummary(String.format(mSmartassV2AwakeIdealFreqFormat,
++                            toMHz((String) newValue)));
++                } else if (preference == mSmartassV2SleepIdealFreqPref) {
++                    mSmartassV2SleepIdealFreqPref.setSummary(String.format(mSmartassV2SleepIdealFreqFormat,
++                            toMHz((String) newValue)));
++                } else if (preference == mSmartassV2SleepWakeupFreqPref) {
++                    mSmartassV2SleepWakeupFreqPref.setSummary(String.format(mSmartassV2SleepWakeupFreqFormat,
++                            toMHz((String) newValue)));
++                } else if (preference == mSmartassV2MaxCpuLoadPref) {
++                    mSmartassV2MaxCpuLoadPref.setSummary(String.format(mSmartassV2MaxCpuLoadFormat,
++                            (String) newValue));
++                } else if (preference == mSmartassV2MinCpuLoadPref) {
++                    mSmartassV2MinCpuLoadPref.setSummary(String.format(mSmartassV2MinCpuLoadFormat,
++                            (String) newValue));
++                } else if (preference == mSmartassV2RampUpStepPref) {
++                    mSmartassV2RampUpStepPref.setSummary(String.format(mSmartassV2RampUpStepFormat,
++                            (String) newValue));
++                } else if (preference == mSmartassV2RampDownStepPref) {
++                    mSmartassV2RampDownStepPref.setSummary(String.format(mSmartassV2RampDownStepFormat,
++                            (String) newValue));
++                } else if (preference == mSmartassV2UpRateUsPref) {
++                    mSmartassV2UpRateUsPref.setSummary(String.format(mSmartassV2UpRateUsFormat,
++                            (String) newValue));
++                } else if (preference == mSmartassV2DownRateUsPref) {
++                    mSmartassV2DownRateUsPref.setSummary(String.format(mSmartassV2DownRateUsFormat,
++                            (String) newValue));
+                 }
++
++                if (preference == mGovernorPref) {
++                    smartassv2_values();
++                }
++
+                 return true;
+             } else {
+                 return false;
+@@ -244,4 +541,4 @@ public class Processor extends SettingsPreferenceFragment implements
+         return new StringBuilder().append(Integer.valueOf(mhzString) / 1000).append(" MHz")
+                 .toString();
+     }
+-}
+\ No newline at end of file
++}

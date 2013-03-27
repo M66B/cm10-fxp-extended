@@ -30,7 +30,6 @@ kernel_mods=Y
 kernel_60=N
 kernel_linaro=Y
 kernel_cpugovernors=Y
-kernel_smartass2_134=N
 kernel_smartass2_boost=Y
 kernel_ioschedulers=Y
 kernel_voltage=Y
@@ -66,6 +65,7 @@ emptydrawer=Y
 massstorage=Y
 enable720p=N
 als=Y
+smartass2_settings=Y
 wifiautoconnect=Y
 eba=Y
 ssh=Y
@@ -405,10 +405,6 @@ if [ "${kernel_mods}" = "Y" ]; then
 
 			do_append "CONFIG_CPU_FREQ_GOV_SMARTASSH3=y" ${kconfig}
 		done
-		if [ "${kernel_smartass2_134}" = "Y" ]; then
-			echo "--- SmartassV2 134 Mhz"
-			do_patch kernel_smartass2_134.patch
-		fi
 		if [ "${kernel_smartass2_boost}" = "Y" ]; then
 			echo "--- SmartassV2 boost pulse"
 			do_patch kernel_smartass2_boost.patch
@@ -725,6 +721,13 @@ if [ "${als}" = "Y" ]; then
 	do_patch ALS_coconut.patch
 	cd ${android}/frameworks/base
 	do_patch dummy_light_sensor.patch
+fi
+
+#SmartassV2 settings
+if [ "${smartass2_settings}" = "Y" ]; then
+	echo "*** SmartassV2 settings ***"
+	cd ${android}/packages/apps/Settings
+	do_patch smartass2_settings.patch
 fi
 
 #Wi-Fi auto connect option

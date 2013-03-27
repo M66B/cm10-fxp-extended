@@ -1,5 +1,5 @@
 diff --git a/drivers/cpufreq/cpufreq_smartass2.c b/drivers/cpufreq/cpufreq_smartass2.c
-index 2eab720..8bddf79 100644
+index 2eab720..d37cfb9 100644
 --- a/drivers/cpufreq/cpufreq_smartass2.c
 +++ b/drivers/cpufreq/cpufreq_smartass2.c
 @@ -110,9 +110,21 @@ static unsigned int sleep_wakeup_freq;
@@ -296,7 +296,7 @@ index 2eab720..8bddf79 100644
  }
  
  static ssize_t show_min_cpu_load(struct kobject *kobj, struct attribute *attr, char *buf)
-@@ -621,9 +677,50 @@ static ssize_t store_min_cpu_load(struct kobject *kobj, struct attribute *attr,
+@@ -621,14 +677,55 @@ static ssize_t store_min_cpu_load(struct kobject *kobj, struct attribute *attr,
  	ssize_t res;
  	unsigned long input;
  	res = strict_strtoul(buf, 0, &input);
@@ -349,18 +349,22 @@ index 2eab720..8bddf79 100644
  }
  
  #define define_global_rw_attr(_name)		\
-@@ -641,6 +738,10 @@ define_global_rw_attr(ramp_up_step);
+ static struct global_attr _name##_attr =	\
+-	__ATTR(_name, 0644, show_##_name, store_##_name)
++	__ATTR(_name, 0666, show_##_name, store_##_name)
+ 
+ define_global_rw_attr(debug_mask);
+ define_global_rw_attr(up_rate_us);
+@@ -641,6 +738,8 @@ define_global_rw_attr(ramp_up_step);
  define_global_rw_attr(ramp_down_step);
  define_global_rw_attr(max_cpu_load);
  define_global_rw_attr(min_cpu_load);
 +define_global_rw_attr(boost_enabled);
-+
-+static struct global_attr boost_pulse_attr =	\
-+	__ATTR(boost_pulse, 0666, show_boost_pulse, store_boost_pulse);
++define_global_rw_attr(boost_pulse);
  
  static struct attribute * smartass_attributes[] = {
  	&debug_mask_attr.attr,
-@@ -654,6 +755,8 @@ static struct attribute * smartass_attributes[] = {
+@@ -654,6 +753,8 @@ static struct attribute * smartass_attributes[] = {
  	&ramp_down_step_attr.attr,
  	&max_cpu_load_attr.attr,
  	&min_cpu_load_attr.attr,
@@ -369,7 +373,7 @@ index 2eab720..8bddf79 100644
  	NULL,
  };
  
-@@ -812,6 +915,8 @@ static int __init cpufreq_smartass_init(void)
+@@ -812,6 +913,8 @@ static int __init cpufreq_smartass_init(void)
  	ramp_down_step = DEFAULT_RAMP_DOWN_STEP;
  	max_cpu_load = DEFAULT_MAX_CPU_LOAD;
  	min_cpu_load = DEFAULT_MIN_CPU_LOAD;
