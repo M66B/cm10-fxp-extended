@@ -73,7 +73,7 @@ layout=Y
 mvolume=Y
 qcomdispl=Y
 noliblights=Y
-iw=N				#does not work
+iw=Y
 trebuchet_cm10_1=Y
 deskclock_cm10_1=Y
 superuser_cm10_1=N
@@ -277,6 +277,12 @@ if [ "${busybox_cm10_1}" = "Y" ]; then
 	echo "--- busybox CM10.1"
 else
 	sed -i "/android_external_busybox/d" ${android}/.repo/local_manifests/cmxtended.xml
+fi
+
+if [ "${iw}" = "Y" ]; then
+	echo "--- iw"
+else
+	sed -i "/dickychiang/d" ${android}/.repo/local_manifests/cmxtended.xml
 fi
 
 #Toolchain
@@ -800,18 +806,8 @@ fi
 #iw
 if [ "${iw}" = "Y" ]; then
 	echo "*** iw ***"
-	cd ~/Downloads
-	if [ ! -d "iw" ]; then
-		git clone http://git.sipsolutions.net/iw.git
-		do_patch iw.patch
-	fi
-	cd iw
-	git checkout master
-	git pull
-	sh version.sh version.c
-
-	cd ${android}/system/core
-	do_patch system_core_iw.patch
+	cd ${android}/external/iw
+	do_patch iw.patch
 	cd ${android}/vendor/semc
 	do_patch vendor_semc_iw.patch
 fi
