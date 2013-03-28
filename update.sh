@@ -292,6 +292,14 @@ else
 	echo "--- 32 bit toolchain"
 fi
 
+#CMUpdater
+if [ "`hostname`" = "ALGEIBA" ]; then
+	do_deldir ${android}/packages/apps/CMUpdater
+	do_deldir ${android}/.repo/projects/packages/apps/CMUpdater.git
+else
+	sed -i "/android_packages_apps_CMUpdater/d" ${android}/.repo/local_manifests/cmxtended.xml
+fi
+
 echo "*** Repo sync ***"
 cd ${android}
 repo forall -c "git reset --hard && git clean -df"

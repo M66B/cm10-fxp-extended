@@ -69,4 +69,6 @@
   <project name="CyanogenMod/android_external_busybox" path="external/busybox" remote="github" revision="cm-10.1" />
 
   <project name="dickychiang/iw" path="external/iw" remote="github" revision="android" />
+
+  <remove-project name="CyanogenMod/android_packages_apps_CMUpdater" />
 </manifest>
