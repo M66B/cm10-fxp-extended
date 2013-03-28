@@ -331,6 +331,10 @@ fi
 if [ "${openpdroid}" = "Y" ]; then
 	do_append "curl -L -o ${android}/vendor/cm/proprietary/pdroidalternative.apk -O -L https://github.com/wsot/pdroid_manager_build/blob/master/PDroid_Manager_latest.apk?raw=true" ${android}/vendor/cm/get-prebuilts
 fi
+if [ "`hostname`" = "ALGEIBA" ]; then
+	do_append "curl -L -o ${android}/vendor/cm/proprietary/GooManager.apk -O -L http://goo.im/devs/s0updev/goomanager/GooManager_2.1.2.apk" ${android}/vendor/cm/get-prebuilts
+	do_append "PRODUCT_COPY_FILES += vendor/cm/proprietary/GooManager.apk:system/app/GooManager.apk" ${android}/vendor/cm/config/common.mk
+fi
 ${android}/vendor/cm/get-prebuilts
 if [ $? -ne 0 ]; then
 	exit
