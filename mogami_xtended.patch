@@ -1,0 +1,40 @@
+diff --git a/prebuilt/init.semc.rc b/prebuilt/init.semc.rc
+index d0d1e98..66d3eb8 100644
+--- a/prebuilt/init.semc.rc
++++ b/prebuilt/init.semc.rc
+@@ -117,6 +117,35 @@ on boot
+     write /sys/devices/system/cpu/cpufreq/ondemand/sampling_down_factor 4
+     write /sys/devices/system/cpu/cpufreq/ondemand/down_differential 10
+ 
++    # Xtended
++    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor smartassV2
++    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq 1209600
++    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq 24576
++    chown root system /sys/devices/system/cpu/cpufreq/smartass/awake_ideal_freq
++    chown root system /sys/devices/system/cpu/cpufreq/smartass/sleep_ideal_freq
++    chown root system /sys/devices/system/cpu/cpufreq/smartass/sleep_wakeup_freq
++    chown root system /sys/devices/system/cpu/cpufreq/smartass/max_cpu_load
++    chown root system /sys/devices/system/cpu/cpufreq/smartass/min_cpu_load
++    chown root system /sys/devices/system/cpu/cpufreq/smartass/ramp_up_step
++    chown root system /sys/devices/system/cpu/cpufreq/smartass/ramp_down_step
++    chown root system /sys/devices/system/cpu/cpufreq/smartass/up_rate_us
++    chown root system /sys/devices/system/cpu/cpufreq/smartass/down_rate_us
++    chown root system /sys/devices/system/cpu/cpufreq/smartass/boost_enabled
++    chown root system /sys/devices/system/cpu/cpufreq/smartass/boost_pulse
++    write /sys/devices/system/cpu/cpufreq/smartass/awake_ideal_freq 768000
++    write /sys/devices/system/cpu/cpufreq/smartass/sleep_ideal_freq 134400
++    write /sys/devices/system/cpu/cpufreq/smartass/sleep_wakeup_freq 249600
++    write /sys/devices/system/cpu/cpufreq/smartass/max_cpu_load 50
++    write /sys/devices/system/cpu/cpufreq/smartass/min_cpu_load 25
++    write /sys/devices/system/cpu/cpufreq/smartass/ramp_up_step 128000
++    write /sys/devices/system/cpu/cpufreq/smartass/ramp_down_step 128000
++    write /sys/devices/system/cpu/cpufreq/smartass/up_rate_us 48000
++    write /sys/devices/system/cpu/cpufreq/smartass/down_rate_us 48000
++    write /sys/devices/system/cpu/cpufreq/smartass/boost_enabled 1
++    chown root system /sys/devices/system/cpu/cpu0/cpufreq/vdd_levels
++    chown root system /proc/sys/kernel/sched_autogroup_enabled
++    chown root system /sys/module/lowmemorykiller/parameters/minfree
++
+     mount debugfs /sys/kernel/debug /sys/kernel/debug
+ 
+ on property:init.svc.bluetoothd=running
