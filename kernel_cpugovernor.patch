@@ -454,7 +454,7 @@ index 5df6fb7..aeb0da9 100644
  define_one_rw(scaling_governor);
  define_one_rw(scaling_setspeed);
 +#ifdef CONFIG_CPU_FREQ_VDD_LEVELS
-+define_one_rw(vdd_levels);
++static struct freq_attr vdd_levels = __ATTR(vdd_levels, 0666, show_vdd_levels, store_vdd_levels);
 +#endif
  
  static struct attribute *default_attrs[] = {

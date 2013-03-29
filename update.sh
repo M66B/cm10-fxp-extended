@@ -65,7 +65,7 @@ emptydrawer=Y
 massstorage=Y
 enable720p=N
 als=Y
-smartass2_settings=Y
+xsettings=Y
 wifiautoconnect=Y
 eba=Y
 ssh=Y
@@ -528,7 +528,7 @@ if [ "${kernel_mods}" = "Y" ]; then
 	if [ "${kernel_misc}" = "Y" ]; then
 		echo "-- Misc"
 		if [ "${kernel_60}" != "Y" ]; then
-			do_patch kernel_slowdeath.patch
+			do_patch kernel_lowmem.patch
 		fi
 
 		do_patch kernel_oom_nokill.patch
@@ -735,11 +735,11 @@ if [ "${als}" = "Y" ]; then
 	do_patch dummy_light_sensor.patch
 fi
 
-#SmartassV2 settings
-if [ "${smartass2_settings}" = "Y" ]; then
-	echo "*** SmartassV2 settings ***"
+#Xtended settings
+if [ "${xsettings}" = "Y" ]; then
+	echo "*** Xtended settings ***"
 	cd ${android}/packages/apps/Settings
-	do_patch smartass2_settings.patch
+	do_patch xsettings.patch
 fi
 
 #Wi-Fi auto connect option
