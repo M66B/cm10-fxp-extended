@@ -1,11 +1,13 @@
 diff --git a/res/values/strings.xml b/res/values/strings.xml
-index 5931dae..dff4c01 100644
+index 5931dae..bf5de27 100644
 --- a/res/values/strings.xml
 +++ b/res/values/strings.xml
-@@ -4689,6 +4691,31 @@
+@@ -4688,7 +4690,36 @@
+     <string name="cpu_max_freq_title">Maximum CPU frequency</string>
      <string name="cpu_max_freq_summary">%s</string>
      <string name="cpu_set_on_boot">Set on boot</string>
-     <string name="cpu_set_on_boot_summary">Restore the processor settings on boot</string>
+-    <string name="cpu_set_on_boot_summary">Restore the processor settings on boot</string>
++    <string name="cpu_set_on_boot_summary">Restore the general, SmartassV2, and voltage processor settings on boot</string>
 +    <string name="cpu_set_on_boot_disabled">Set on boot disabled</string>
 +
 +    <!-- Performance Settings : SmartassV2 -->
@@ -31,16 +33,20 @@ index 5931dae..dff4c01 100644
 +    <string name="smartassv2_boost_enabled_summary">Android power manager boost pulse support</string>
 +    <string name="smartassv2_boost_pulse_title">Boost pulse (boost_pulse)</string>
 +    <string name="smartassv2_boost_pulse_summary">%s\nCurrent boost pulse duration</string>
++
++    <!-- Performance Settings : Voltage -->
++    <string name="voltage_title">Voltage</string>
++    <string name="voltage_warning">(use with care)</string>
  
      <!-- Performance Settings : I/O scheduler settings title -->
      <string name="io_scheds_title">I/O scheduler</string>
-@@ -4713,6 +4740,26 @@
+@@ -4713,6 +4744,26 @@
      <!-- Purgeable Assets -->
      <string name="pref_purgeable_assets_title">Allow purging of assets</string>
      <string name="pref_purgeable_assets_summary">Purging of bitmap memory assets allows the freeing of more RAM when needed (requires reboot)</string>
 +    <!-- Autogroup -->
 +    <string name="pref_autogroup_title">Autogroup</string>
-+    <string name="pref_autogroup_summary">Automated per tty (app) task groups</string>
++    <string name="pref_autogroup_summary">Automated per tty (app) task groups. Always restored on boot.</string>
 +
 +    <!-- Lowmemkiller -->
 +    <string name="lowmem_foreground_app_title">Foreground app</string>
@@ -62,10 +68,10 @@ index 5931dae..dff4c01 100644
      <!-- Performance Settings : Dithering -->
      <string name="pref_use_dithering_title">Surface improvement</string>
 diff --git a/res/xml/memory_management.xml b/res/xml/memory_management.xml
-index 187c815..621110d 100644
+index 187c815..1e14775 100644
 --- a/res/xml/memory_management.xml
 +++ b/res/xml/memory_management.xml
-@@ -37,4 +37,52 @@
+@@ -37,4 +37,46 @@
          android:title="@string/pref_ksm_title"
          android:summary="@string/pref_ksm_summary" />
  
@@ -78,38 +84,32 @@ index 187c815..621110d 100644
 +        <EditTextPreference
 +            android:key="pref_lowmem_foreground_app"
 +            android:dialogTitle="@string/lowmem_foreground_app_title"
-+            android:title="@string/lowmem_foreground_app_title"
-+            android:summary="@string/lowmem_foreground_app_summary" />
++            android:title="@string/lowmem_foreground_app_title" />
 +
 +        <EditTextPreference
 +            android:key="pref_lowmem_visible_app"
 +            android:dialogTitle="@string/lowmem_visible_app_title"
-+            android:title="@string/lowmem_visible_app_title"
-+            android:summary="@string/lowmem_visible_app_summary" />
++            android:title="@string/lowmem_visible_app_title" />
 +
 +        <EditTextPreference
 +            android:key="pref_lowmem_secondary_server_app"
 +            android:dialogTitle="@string/lowmem_secondary_server_title"
-+            android:title="@string/lowmem_secondary_server_title"
-+            android:summary="@string/lowmem_secondary_server_summary" />
++            android:title="@string/lowmem_secondary_server_title" />
 +
 +        <EditTextPreference
 +            android:key="pref_lowmem_hidden_app"
 +            android:dialogTitle="@string/lowmem_hidden_app_title"
-+            android:title="@string/lowmem_hidden_app_title"
-+            android:summary="@string/lowmem_hidden_app_summary" />
++            android:title="@string/lowmem_hidden_app_title" />
 +
 +        <EditTextPreference
 +            android:key="pref_lowmem_content_provider"
 +            android:dialogTitle="@string/lowmem_content_provider_title"
-+            android:title="@string/lowmem_content_provider_title"
-+            android:summary="@string/lowmem_content_provider_summary" />
++            android:title="@string/lowmem_content_provider_title" />
 +
 +        <EditTextPreference
 +            android:key="pref_lowmem_empty_app"
 +            android:dialogTitle="@string/lowmem_empty_app_title"
-+            android:title="@string/lowmem_empty_app_title"
-+            android:summary="@string/lowmem_empty_app_summary" />
++            android:title="@string/lowmem_empty_app_title" />
 +
 +        <CheckBoxPreference
 +            android:key="pref_lowmem_set_on_boot"
@@ -119,10 +119,10 @@ index 187c815..621110d 100644
 +
  </PreferenceScreen>
 diff --git a/res/xml/processor_settings.xml b/res/xml/processor_settings.xml
-index 7d0b0ee..9e64790 100644
+index 7d0b0ee..f25a07a 100644
 --- a/res/xml/processor_settings.xml
 +++ b/res/xml/processor_settings.xml
-@@ -19,30 +19,106 @@
+@@ -19,30 +19,97 @@
      android:title="@string/processor_title"
      xmlns:settings="http://schemas.android.com/apk/res/com.android.settings">
  
@@ -192,56 +192,47 @@ index 7d0b0ee..9e64790 100644
 +        <ListPreference
 +            android:key="pref_smartassv2_awake_ideal_freq"
 +            android:dialogTitle="@string/smartassv2_awake_ideal_freq_title"
-+            android:title="@string/smartassv2_awake_ideal_freq_title"
-+            android:summary="@string/smartassv2_awake_ideal_freq_summary" />
++            android:title="@string/smartassv2_awake_ideal_freq_title" />
 +
 +        <ListPreference
 +            android:key="pref_smartassv2_sleep_ideal_freq"
 +            android:dialogTitle="@string/smartassv2_sleep_ideal_freq_title"
-+            android:title="@string/smartassv2_sleep_ideal_freq_title"
-+            android:summary="@string/smartassv2_sleep_ideal_freq_summary" />
++            android:title="@string/smartassv2_sleep_ideal_freq_title" />
 +
 +        <ListPreference
 +            android:key="pref_smartassv2_sleep_wakeup_freq"
 +            android:dialogTitle="@string/smartassv2_sleep_wakeup_freq_title"
-+            android:title="@string/smartassv2_sleep_wakeup_freq_title"
-+            android:summary="@string/smartassv2_sleep_wakeup_freq_summary" />
++            android:title="@string/smartassv2_sleep_wakeup_freq_title" />
 +
 +        <EditTextPreference
 +            android:key="pref_smartassv2_max_cpu_load"
 +            android:dialogTitle="@string/smartassv2_max_cpu_load_title"
-+            android:title="@string/smartassv2_max_cpu_load_title"
-+            android:summary="@string/smartassv2_max_cpu_load_summary" />
++            android:title="@string/smartassv2_max_cpu_load_title" />
 +
 +        <EditTextPreference
 +            android:key="pref_smartassv2_min_cpu_load"
 +            android:dialogTitle="@string/smartassv2_min_cpu_load_title"
-+            android:title="@string/smartassv2_min_cpu_load_title"
-+            android:summary="@string/smartassv2_min_cpu_load_summary" />
++            android:title="@string/smartassv2_min_cpu_load_title" />
 +
 +        <EditTextPreference
 +            android:key="pref_smartassv2_ramp_up_step"
 +            android:dialogTitle="@string/smartassv2_ramp_up_step_title"
-+            android:title="@string/smartassv2_ramp_up_step_title"
-+            android:summary="@string/smartassv2_ramp_up_step_summary" />
++            android:title="@string/smartassv2_ramp_up_step_title" />
 +
 +        <EditTextPreference
 +            android:key="pref_smartassv2_ramp_down_step"
 +            android:dialogTitle="@string/smartassv2_ramp_down_step_title"
-+            android:title="@string/smartassv2_ramp_down_step_title"
-+            android:summary="@string/smartassv2_ramp_down_step_summary" />
++            android:title="@string/smartassv2_ramp_down_step_title" />
 +
 +        <EditTextPreference
 +            android:key="pref_smartassv2_up_rate_us"
 +            android:dialogTitle="@string/smartassv2_up_rate_us_title"
-+            android:title="@string/smartassv2_up_rate_us_title"
-+            android:summary="@string/smartassv2_up_rate_us_summary" />
++            android:title="@string/smartassv2_up_rate_us_title" />
 +
 +        <EditTextPreference
 +            android:key="pref_smartassv2_down_rate_us"
 +            android:dialogTitle="@string/smartassv2_down_rate_us_title"
-+            android:title="@string/smartassv2_down_rate_us_title"
-+            android:summary="@string/smartassv2_down_rate_us_summary" />
++            android:title="@string/smartassv2_down_rate_us_title" />
 +
 +        <CheckBoxPreference
 +            android:key="pref_smartassv2_boost_enabled"
@@ -250,7 +241,7 @@ index 7d0b0ee..9e64790 100644
 +    </PreferenceCategory>
 +
 +    <PreferenceCategory
-+        android:title="Voltage"
++        android:title="@string/voltage_title"
 +        android:key="pref_vdd_levels" />
  
  </PreferenceScreen>
@@ -423,10 +414,10 @@ index 0704a66..eb0b2f1 100644
 +    }
  }
 diff --git a/src/com/android/settings/cyanogenmod/MemoryManagement.java b/src/com/android/settings/cyanogenmod/MemoryManagement.java
-index 8626b06..5ca9285 100644
+index 8626b06..d9d73dc 100644
 --- a/src/com/android/settings/cyanogenmod/MemoryManagement.java
 +++ b/src/com/android/settings/cyanogenmod/MemoryManagement.java
-@@ -22,14 +22,19 @@ import android.os.Bundle;
+@@ -22,14 +22,20 @@ import android.os.Bundle;
  import android.os.SystemProperties;
  import android.preference.CheckBoxPreference;
  import android.preference.ListPreference;
@@ -435,6 +426,7 @@ index 8626b06..5ca9285 100644
  import android.preference.Preference.OnPreferenceChangeListener;
  import android.preference.PreferenceScreen;
 +import android.widget.Toast;
++import android.view.Gravity;
 +import android.util.Log;
  
  import com.android.settings.R;
@@ -446,7 +438,7 @@ index 8626b06..5ca9285 100644
  public class MemoryManagement extends SettingsPreferenceFragment implements
          OnPreferenceChangeListener {
  
-@@ -53,11 +58,39 @@ public class MemoryManagement extends SettingsPreferenceFragment implements
+@@ -53,11 +59,39 @@ public class MemoryManagement extends SettingsPreferenceFragment implements
  
      private static final String PURGEABLE_ASSETS_DEFAULT = "0";
  
@@ -487,7 +479,7 @@ index 8626b06..5ca9285 100644
  
      private int swapAvailable = -1;
  
-@@ -66,6 +99,12 @@ public class MemoryManagement extends SettingsPreferenceFragment implements
+@@ -66,6 +100,12 @@ public class MemoryManagement extends SettingsPreferenceFragment implements
          super.onCreate(savedInstanceState);
  
          if (getPreferenceManager() != null) {
@@ -500,7 +492,7 @@ index 8626b06..5ca9285 100644
  
              addPreferencesFromResource(R.xml.memory_management);
  
-@@ -74,6 +113,15 @@ public class MemoryManagement extends SettingsPreferenceFragment implements
+@@ -74,6 +114,15 @@ public class MemoryManagement extends SettingsPreferenceFragment implements
              mzRAM = (ListPreference) prefSet.findPreference(ZRAM_PREF);
              mPurgeableAssetsPref = (CheckBoxPreference) prefSet.findPreference(PURGEABLE_ASSETS_PREF);
              mKSMPref = (CheckBoxPreference) prefSet.findPreference(KSM_PREF);
@@ -516,7 +508,7 @@ index 8626b06..5ca9285 100644
  
              if (isSwapAvailable()) {
                  if (SystemProperties.get(ZRAM_PERSIST_PROP) == "1")
-@@ -90,10 +138,49 @@ public class MemoryManagement extends SettingsPreferenceFragment implements
+@@ -90,10 +139,49 @@ public class MemoryManagement extends SettingsPreferenceFragment implements
                  prefSet.removePreference(mKSMPref);
              }
  
@@ -567,7 +559,7 @@ index 8626b06..5ca9285 100644
          }
      }
  
-@@ -115,11 +202,60 @@ public class MemoryManagement extends SettingsPreferenceFragment implements
+@@ -115,11 +203,61 @@ public class MemoryManagement extends SettingsPreferenceFragment implements
      }
  
      public boolean onPreferenceChange(Preference preference, Object newValue) {
@@ -580,6 +572,7 @@ index 8626b06..5ca9285 100644
 +                Toast toast = Toast.makeText(preference.getContext(),
 +                    preference.getContext().getString(R.string.lowmem_set_on_boot_disabled),
 +                    Toast.LENGTH_SHORT);
++                toast.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL, 0, 0);
 +                toast.show();
 +            }
 +
@@ -630,7 +623,7 @@ index 8626b06..5ca9285 100644
          }
  
          return false;
-@@ -134,4 +270,27 @@ public class MemoryManagement extends SettingsPreferenceFragment implements
+@@ -134,4 +272,27 @@ public class MemoryManagement extends SettingsPreferenceFragment implements
          }
          return swapAvailable > 0;
      }
@@ -659,10 +652,10 @@ index 8626b06..5ca9285 100644
 +    }
  }
 diff --git a/src/com/android/settings/cyanogenmod/Processor.java b/src/com/android/settings/cyanogenmod/Processor.java
-index ce2c404..9b8ec51 100644
+index ce2c404..6925089 100644
 --- a/src/com/android/settings/cyanogenmod/Processor.java
 +++ b/src/com/android/settings/cyanogenmod/Processor.java
-@@ -22,11 +22,19 @@ import android.os.Message;
+@@ -22,11 +22,20 @@ import android.os.Message;
  import android.preference.ListPreference;
  import android.preference.Preference;
  import android.preference.PreferenceScreen;
@@ -670,6 +663,7 @@ index ce2c404..9b8ec51 100644
 +import android.preference.CheckBoxPreference;
 +import android.preference.PreferenceCategory;
 +import android.widget.Toast;
++import android.view.Gravity;
 +import android.util.Log;
  
  import com.android.settings.R;
@@ -682,7 +676,7 @@ index ce2c404..9b8ec51 100644
  //
  // CPU Related Settings
  //
-@@ -47,16 +55,74 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -47,16 +56,75 @@ public class Processor extends SettingsPreferenceFragment implements
      public static final String FREQ_MIN_FILE = "/sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq";
      public static final String SOB_PREF = "pref_cpu_set_on_boot";
  
@@ -714,8 +708,9 @@ index ce2c404..9b8ec51 100644
 +    public static final String VDD_LEVELS_PREF =  "pref_volt_";
 +    public static final String VDD_LEVELS_FILE = "/sys/devices/system/cpu/cpu0/cpufreq/vdd_levels";
 +    private final static int VDD_MIN = 750;
-+    private final static int VDD_MAX = 1300;
++    private final static int VDD_MAX = 1500;
 +    private final static int VDD_STEP = 25;
++    private final static int VDD_WARN = 1325;
 +
      private static final String TAG = "CPUSettings";
  
@@ -757,7 +752,7 @@ index ce2c404..9b8ec51 100644
  
      private class CurCPUThread extends Thread {
          private boolean mInterrupt = false;
-@@ -70,9 +136,18 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -70,9 +138,18 @@ public class Processor extends SettingsPreferenceFragment implements
              try {
                  while (!mInterrupt) {
                      sleep(500);
@@ -778,7 +773,7 @@ index ce2c404..9b8ec51 100644
                  }
              } catch (InterruptedException e) {
              }
-@@ -83,7 +158,11 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -83,7 +160,11 @@ public class Processor extends SettingsPreferenceFragment implements
  
      private Handler mCurCPUHandler = new Handler() {
          public void handleMessage(Message msg) {
@@ -791,7 +786,7 @@ index ce2c404..9b8ec51 100644
          }
      };
  
-@@ -95,6 +174,18 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -95,6 +176,18 @@ public class Processor extends SettingsPreferenceFragment implements
          mMinFrequencyFormat = getString(R.string.cpu_min_freq_summary);
          mMaxFrequencyFormat = getString(R.string.cpu_max_freq_summary);
  
@@ -810,7 +805,7 @@ index ce2c404..9b8ec51 100644
          String[] availableFrequencies = new String[0];
          String[] availableGovernors = new String[0];
          String[] frequencies;
-@@ -110,6 +201,64 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -110,6 +203,66 @@ public class Processor extends SettingsPreferenceFragment implements
          mCurFrequencyPref = (Preference) prefScreen.findPreference(FREQ_CUR_PREF);
          mMinFrequencyPref = (ListPreference) prefScreen.findPreference(FREQ_MIN_PREF);
          mMaxFrequencyPref = (ListPreference) prefScreen.findPreference(FREQ_MAX_PREF);
@@ -837,6 +832,8 @@ index ce2c404..9b8ec51 100644
 +            for (int mv = VDD_MIN; mv <= VDD_MAX; mv += VDD_STEP) {
 +                availableVoltages[(mv - VDD_MIN) / VDD_STEP] = Integer.toString(mv);
 +                voltages[(mv - VDD_MIN) / VDD_STEP] = String.format("%s mV", mv);
++                if (mv >= VDD_WARN)
++                    voltages[(mv - VDD_MIN) / VDD_STEP] += " " + getString(R.string.voltage_warning);
 +            }
 +
 +            PreferenceCategory catVoltage = (PreferenceCategory) prefScreen.findPreference(VDD_LEVELS_CAT);
@@ -867,7 +864,7 @@ index ce2c404..9b8ec51 100644
 +                    vddReader.close();
 +                }
 +            } catch (Exception e) {
-+                // Houston we have a problem
++                e.printStackTrace();
 +            }
 +
 +            prefScreen.addPreference(catVoltage);
@@ -875,7 +872,7 @@ index ce2c404..9b8ec51 100644
  
          /* Governor
          Some systems might not use governors */
-@@ -171,12 +320,168 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -171,12 +324,168 @@ public class Processor extends SettingsPreferenceFragment implements
  
          if (!Utils.fileExists(FREQ_CUR_FILE) || (temp = Utils.fileReadOneLine(FREQ_CUR_FILE)) == null) {
              mCurFrequencyPref.setEnabled(false);
@@ -1046,7 +1043,7 @@ index ce2c404..9b8ec51 100644
      }
  
      @Override
-@@ -196,8 +501,37 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -196,8 +505,37 @@ public class Processor extends SettingsPreferenceFragment implements
          }
  
          if (Utils.fileExists(GOV_FILE) && (temp = Utils.fileReadOneLine(GOV_FILE)) != null) {
@@ -1078,13 +1075,13 @@ index ce2c404..9b8ec51 100644
 +                    vddReader.close();
 +                }
 +            } catch (Exception e) {
-+                // Houston we have problem
++                e.printStackTrace();
 +            }
 +        }
      }
  
      @Override
-@@ -211,27 +545,76 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -211,27 +549,77 @@ public class Processor extends SettingsPreferenceFragment implements
      }
  
      public boolean onPreferenceChange(Preference preference, Object newValue) {
@@ -1099,6 +1096,7 @@ index ce2c404..9b8ec51 100644
 +                Toast toast = Toast.makeText(preference.getContext(),
 +                    preference.getContext().getString(R.string.cpu_set_on_boot_disabled),
 +                    Toast.LENGTH_SHORT);
++                toast.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL, 0, 0);
 +                toast.show();
 +            }
 +
@@ -1163,7 +1161,7 @@ index ce2c404..9b8ec51 100644
                  return true;
              } else {
                  return false;
-@@ -244,4 +627,27 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -244,4 +632,27 @@ public class Processor extends SettingsPreferenceFragment implements
          return new StringBuilder().append(Integer.valueOf(mhzString) / 1000).append(" MHz")
                  .toString();
      }
