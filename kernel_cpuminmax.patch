@@ -6,7 +6,7 @@ index 9bd34d2..8f2c905 100644
  	cpu_work = &per_cpu(cpufreq_work, policy->cpu);
  	INIT_WORK(&cpu_work->work, set_cpu_work);
  #endif
-+	policy->min = 184320;
++	policy->min = 249600;
 +	policy->max = 1017600;
 +
  	return 0;

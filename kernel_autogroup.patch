@@ -688,7 +688,7 @@ index 771ac48..97d9c5b 100644
 +    .procname  = "sched_autogroup_enabled",
 +    .data    = &sysctl_sched_autogroup_enabled,
 +    .maxlen    = sizeof(unsigned int),
-+    .mode    = 0664,
++    .mode    = 0666,
 +    .proc_handler  = proc_dointvec,
 +    .extra1    = &zero,
 +    .extra2    = &one,

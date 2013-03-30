@@ -1,7 +1,42 @@
 diff --git a/drivers/cpufreq/cpufreq_smartass2.c b/drivers/cpufreq/cpufreq_smartass2.c
-index 2eab720..d37cfb9 100644
+index 6f0ce32..5f69e51 100644
 --- a/drivers/cpufreq/cpufreq_smartass2.c
 +++ b/drivers/cpufreq/cpufreq_smartass2.c
+@@ -52,7 +52,7 @@ static unsigned int awake_ideal_freq;
+  * that practically when sleep_ideal_freq==0 the awake_ideal_freq is used
+  * also when suspended).
+  */
+-#define DEFAULT_SLEEP_IDEAL_FREQ 249600
++#define DEFAULT_SLEEP_IDEAL_FREQ 134400
+ static unsigned int sleep_ideal_freq;
+ 
+ /*
+@@ -68,7 +68,7 @@ static unsigned int ramp_up_step;
+  * Zero disables and will calculate ramp down according to load heuristic.
+  * When above the ideal freqeuncy we always ramp down to the ideal freq.
+  */
+-#define DEFAULT_RAMP_DOWN_STEP 256000
++#define DEFAULT_RAMP_DOWN_STEP 128000
+ static unsigned int ramp_down_step;
+ 
+ /*
+@@ -94,14 +94,14 @@ static unsigned long up_rate_us;
+  * The minimum amount of time to spend at a frequency before we can ramp down.
+  * Notice we ignore this when we are above the ideal frequency.
+  */
+-#define DEFAULT_DOWN_RATE_US 99000;
++#define DEFAULT_DOWN_RATE_US 48000;
+ static unsigned long down_rate_us;
+ 
+ /*
+  * The frequency to set when waking up from sleep.
+  * When sleep_ideal_freq=0 this will have no effect.
+  */
+-#define DEFAULT_SLEEP_WAKEUP_FREQ 99999999
++#define DEFAULT_SLEEP_WAKEUP_FREQ 249600
+ static unsigned int sleep_wakeup_freq;
+ 
+ /*
 @@ -110,9 +110,21 @@ static unsigned int sleep_wakeup_freq;
  #define DEFAULT_SAMPLE_RATE_JIFFIES 2
  static unsigned int sample_rate_jiffies;
@@ -34,7 +69,7 @@ index 2eab720..d37cfb9 100644
  	for_each_possible_cpu(cpu) {
  		this_smartass = &per_cpu(smartass_info, cpu);
  		if (!work_cpumask_test_and_clear(cpu))
-@@ -391,52 +405,75 @@ static void cpufreq_smartass_freq_change_time_work(struct work_struct *work)
+@@ -391,52 +405,77 @@ static void cpufreq_smartass_freq_change_time_work(struct work_struct *work)
  		old_freq = this_smartass->old_freq;
  		policy = this_smartass->cur_policy;
  
@@ -51,26 +86,28 @@ index 2eab720..d37cfb9 100644
 -			else if (ramp_up_step) {
 -				new_freq = old_freq + ramp_up_step;
 -				relation = CPUFREQ_RELATION_H;
-+		// boost pulse:
++		// boost pulse
 +		boosted = 0;
-+		if (boost_enabled > 0 && boost_pulse > 0) {
++		if (boost_pulse > 0) {
 +			u64 now = ktime_to_us(ktime_get());
 +			if (now <= boost_pulse_time + boost_pulse) {
 +				// boost logic:
-+				if (old_freq < this_smartass->ideal_speed) {
++				if (boost_enabled > 0 &&
++					old_freq < this_smartass->ideal_speed) {
++					// Jump to ideal frequency
 +					new_freq = this_smartass->ideal_speed;
 +					relation = CPUFREQ_RELATION_H;
++					// Skip normal logic
 +					boosted = 1;
++					dprintk(SMARTASS_DEBUG_ALG,"smartassQ @ %d boost %d\n",
++						old_freq,new_freq);
 +				}
-+				dprintk(SMARTASS_DEBUG_ALG,"smartassQ @ %d boost %d\n",
-+					old_freq,new_freq);
  			}
  			else {
 -				new_freq = policy->max;
 -				relation = CPUFREQ_RELATION_H;
++				// Reset boost pulse
 +				boost_pulse = 0;
-+				dprintk(SMARTASS_DEBUG_ALG,"smartassQ @ %d boost end\n",
-+					old_freq);
  			}
 -			dprintk(SMARTASS_DEBUG_ALG,"smartassQ @ %d ramp up: ramp_dir=%d ideal=%d\n",
 -				old_freq,ramp_dir,this_smartass->ideal_speed);
@@ -150,7 +187,7 @@ index 2eab720..d37cfb9 100644
  		}
  
  		// do actual ramp up (returns 0, if frequency change failed):
-@@ -465,9 +502,10 @@ static ssize_t store_debug_mask(struct kobject *kobj, struct attribute *attr, co
+@@ -465,9 +504,10 @@ static ssize_t store_debug_mask(struct kobject *kobj, struct attribute *attr, co
  	ssize_t res;
  	unsigned long input;
  	res = strict_strtoul(buf, 0, &input);
@@ -164,7 +201,7 @@ index 2eab720..d37cfb9 100644
  }
  
  static ssize_t show_up_rate_us(struct kobject *kobj, struct attribute *attr, char *buf)
-@@ -480,9 +518,11 @@ static ssize_t store_up_rate_us(struct kobject *kobj, struct attribute *attr, co
+@@ -480,9 +520,11 @@ static ssize_t store_up_rate_us(struct kobject *kobj, struct attribute *attr, co
  	ssize_t res;
  	unsigned long input;
  	res = strict_strtoul(buf, 0, &input);
@@ -178,7 +215,7 @@ index 2eab720..d37cfb9 100644
  }
  
  static ssize_t show_down_rate_us(struct kobject *kobj, struct attribute *attr, char *buf)
-@@ -495,9 +535,11 @@ static ssize_t store_down_rate_us(struct kobject *kobj, struct attribute *attr,
+@@ -495,9 +537,11 @@ static ssize_t store_down_rate_us(struct kobject *kobj, struct attribute *attr,
  	ssize_t res;
  	unsigned long input;
  	res = strict_strtoul(buf, 0, &input);
@@ -192,7 +229,7 @@ index 2eab720..d37cfb9 100644
  }
  
  static ssize_t show_sleep_ideal_freq(struct kobject *kobj, struct attribute *attr, char *buf)
-@@ -510,12 +552,14 @@ static ssize_t store_sleep_ideal_freq(struct kobject *kobj, struct attribute *at
+@@ -510,12 +554,14 @@ static ssize_t store_sleep_ideal_freq(struct kobject *kobj, struct attribute *at
  	ssize_t res;
  	unsigned long input;
  	res = strict_strtoul(buf, 0, &input);
@@ -209,7 +246,7 @@ index 2eab720..d37cfb9 100644
  }
  
  static ssize_t show_sleep_wakeup_freq(struct kobject *kobj, struct attribute *attr, char *buf)
-@@ -528,9 +572,11 @@ static ssize_t store_sleep_wakeup_freq(struct kobject *kobj, struct attribute *a
+@@ -528,9 +574,11 @@ static ssize_t store_sleep_wakeup_freq(struct kobject *kobj, struct attribute *a
  	ssize_t res;
  	unsigned long input;
  	res = strict_strtoul(buf, 0, &input);
@@ -223,7 +260,7 @@ index 2eab720..d37cfb9 100644
  }
  
  static ssize_t show_awake_ideal_freq(struct kobject *kobj, struct attribute *attr, char *buf)
-@@ -543,12 +589,14 @@ static ssize_t store_awake_ideal_freq(struct kobject *kobj, struct attribute *at
+@@ -543,12 +591,14 @@ static ssize_t store_awake_ideal_freq(struct kobject *kobj, struct attribute *at
  	ssize_t res;
  	unsigned long input;
  	res = strict_strtoul(buf, 0, &input);
@@ -240,7 +277,7 @@ index 2eab720..d37cfb9 100644
  }
  
  static ssize_t show_sample_rate_jiffies(struct kobject *kobj, struct attribute *attr, char *buf)
-@@ -561,9 +609,11 @@ static ssize_t store_sample_rate_jiffies(struct kobject *kobj, struct attribute
+@@ -561,9 +611,11 @@ static ssize_t store_sample_rate_jiffies(struct kobject *kobj, struct attribute
  	ssize_t res;
  	unsigned long input;
  	res = strict_strtoul(buf, 0, &input);
@@ -254,7 +291,7 @@ index 2eab720..d37cfb9 100644
  }
  
  static ssize_t show_ramp_up_step(struct kobject *kobj, struct attribute *attr, char *buf)
-@@ -576,9 +626,11 @@ static ssize_t store_ramp_up_step(struct kobject *kobj, struct attribute *attr,
+@@ -576,9 +628,11 @@ static ssize_t store_ramp_up_step(struct kobject *kobj, struct attribute *attr,
  	ssize_t res;
  	unsigned long input;
  	res = strict_strtoul(buf, 0, &input);
@@ -268,7 +305,7 @@ index 2eab720..d37cfb9 100644
  }
  
  static ssize_t show_ramp_down_step(struct kobject *kobj, struct attribute *attr, char *buf)
-@@ -591,9 +643,11 @@ static ssize_t store_ramp_down_step(struct kobject *kobj, struct attribute *attr
+@@ -591,9 +645,11 @@ static ssize_t store_ramp_down_step(struct kobject *kobj, struct attribute *attr
  	ssize_t res;
  	unsigned long input;
  	res = strict_strtoul(buf, 0, &input);
@@ -282,7 +319,7 @@ index 2eab720..d37cfb9 100644
  }
  
  static ssize_t show_max_cpu_load(struct kobject *kobj, struct attribute *attr, char *buf)
-@@ -606,9 +660,11 @@ static ssize_t store_max_cpu_load(struct kobject *kobj, struct attribute *attr,
+@@ -606,9 +662,11 @@ static ssize_t store_max_cpu_load(struct kobject *kobj, struct attribute *attr,
  	ssize_t res;
  	unsigned long input;
  	res = strict_strtoul(buf, 0, &input);
@@ -296,7 +333,7 @@ index 2eab720..d37cfb9 100644
  }
  
  static ssize_t show_min_cpu_load(struct kobject *kobj, struct attribute *attr, char *buf)
-@@ -621,14 +677,55 @@ static ssize_t store_min_cpu_load(struct kobject *kobj, struct attribute *attr,
+@@ -621,9 +679,51 @@ static ssize_t store_min_cpu_load(struct kobject *kobj, struct attribute *attr,
  	ssize_t res;
  	unsigned long input;
  	res = strict_strtoul(buf, 0, &input);
@@ -344,18 +381,13 @@ index 2eab720..d37cfb9 100644
 +		boost_pulse = DEFAULT_BOOST_PULSE;
 +	else
 +		boost_pulse = input;
-+	dprintk(SMARTASS_DEBUG_ALG,"Smartass: boost input=%lu pulse=%lu\n", input, boost_pulse);
++	dprintk(SMARTASS_DEBUG_ALG,"Smartass: boost pulse %lu/%lu enabled %d\n",
++		input,boost_pulse,boost_enabled);
 +	return count;
  }
  
  #define define_global_rw_attr(_name)		\
- static struct global_attr _name##_attr =	\
--	__ATTR(_name, 0644, show_##_name, store_##_name)
-+	__ATTR(_name, 0666, show_##_name, store_##_name)
- 
- define_global_rw_attr(debug_mask);
- define_global_rw_attr(up_rate_us);
-@@ -641,6 +738,8 @@ define_global_rw_attr(ramp_up_step);
+@@ -641,6 +741,8 @@ define_global_rw_attr(ramp_up_step);
  define_global_rw_attr(ramp_down_step);
  define_global_rw_attr(max_cpu_load);
  define_global_rw_attr(min_cpu_load);
@@ -364,7 +396,7 @@ index 2eab720..d37cfb9 100644
  
  static struct attribute * smartass_attributes[] = {
  	&debug_mask_attr.attr,
-@@ -654,6 +753,8 @@ static struct attribute * smartass_attributes[] = {
+@@ -654,6 +756,8 @@ static struct attribute * smartass_attributes[] = {
  	&ramp_down_step_attr.attr,
  	&max_cpu_load_attr.attr,
  	&min_cpu_load_attr.attr,
@@ -373,7 +405,7 @@ index 2eab720..d37cfb9 100644
  	NULL,
  };
  
-@@ -812,6 +913,8 @@ static int __init cpufreq_smartass_init(void)
+@@ -812,6 +916,8 @@ static int __init cpufreq_smartass_init(void)
  	ramp_down_step = DEFAULT_RAMP_DOWN_STEP;
  	max_cpu_load = DEFAULT_MAX_CPU_LOAD;
  	min_cpu_load = DEFAULT_MIN_CPU_LOAD;

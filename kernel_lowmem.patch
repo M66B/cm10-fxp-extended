@@ -29,7 +29,7 @@ index b901301..b913496 100644
  			 S_IRUGO | S_IWUSR);
  module_param_array_named(minfree, lowmem_minfree, uint, &lowmem_minfree_size,
 -			 S_IRUGO | S_IWUSR);
-+			 0664);
++			 S_IRUGO | S_IWUSR | S_IWGRP);
  module_param_named(debug_level, lowmem_debug_level, uint, S_IRUGO | S_IWUSR);
  
  module_init(lowmem_init);
