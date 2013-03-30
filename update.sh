@@ -123,6 +123,19 @@ do_patch() {
 	fi
 }
 
+do_patch_reverse() {
+	if [ -f ${patches}/$1 ]; then
+		patch -p1 --reverse -r- --no-backup-if-mismatch <${patches}/$1
+		if [ $? -ne 0 ]; then
+			echo "!!! Error applying reverse patch $1"
+			exit
+		fi
+	else
+		echo "!!! Patch $1 not found"
+		exit
+	fi
+}
+
 do_append() {
 	if [ -f $2 ]; then
 		echo "$1" >>$2
@@ -527,8 +540,8 @@ if [ "${kernel_mods}" = "Y" ]; then
 
 	if [ "${als}" = "Y" ]; then
 		echo "-- Automatic brightness"
-		do_patch kernel_ALS1.patch
-		do_patch kernel_ALS2.patch
+		do_patch_reverse kernel_ALS1.patch
+		do_patch_reverse kernel_ALS2.patch
 	fi
 
 	if [ "${kernel_misc}" = "Y" ]; then
@@ -807,7 +820,7 @@ fi
 if [ "${noliblights}" = "Y" ]; then
 	echo "*** No liblights update ***"
 	cd ${android}/device/semc/msm7x30-common
-	patch -p1 --reverse -r- --no-backup-if-mismatch <${patches}/liblights_update.patch
+	do_patch_reverse liblights_update.patch
 fi
 
 #SmartassV2 boost pulse
