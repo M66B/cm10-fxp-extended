@@ -525,6 +525,12 @@ if [ "${kernel_mods}" = "Y" ]; then
 		do_patch kernel_disable_720p.patch
 	fi
 
+	if [ "${als}" = "Y" ]; then
+		echo "-- Automatic brightness"
+		do_patch kernel_ALS1.patch
+		do_patch kernel_ALS2.patch
+	fi
+
 	if [ "${kernel_misc}" = "Y" ]; then
 		echo "-- Misc"
 		if [ "${kernel_60}" != "Y" ]; then

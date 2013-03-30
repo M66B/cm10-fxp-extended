@@ -1,0 +1,199 @@
+From 3cd3828044ab5baf7e39af8b265459951ba6bf15 Mon Sep 17 00:00:00 2001
+From: Alin Jerpelea <jerpelea@gmail.com>
+Date: Fri, 29 Mar 2013 17:50:03 +0200
+Subject: [PATCH] msm7x30: disable ambiental brightness
+
+Change-Id: I5f2a8afc1570f30deba354c8a32554e71b049da0
+---
+ arch/arm/mach-msm/board-semc_zeus.c |    4 +---
+ arch/arm/mach-msm/leds-akane.c      |    2 +-
+ arch/arm/mach-msm/leds-anzu.c       |    2 +-
+ arch/arm/mach-msm/leds-azusa.c      |    2 +-
+ arch/arm/mach-msm/leds-coconut.c    |    2 +-
+ arch/arm/mach-msm/leds-haida.c      |    2 +-
+ arch/arm/mach-msm/leds-hallon.c     |    3 +--
+ arch/arm/mach-msm/leds-iyokan.c     |    2 +-
+ arch/arm/mach-msm/leds-mango.c      |    2 +-
+ arch/arm/mach-msm/leds-mogami_cdb.c |    2 +-
+ arch/arm/mach-msm/leds-satsuma.c    |    3 +--
+ arch/arm/mach-msm/leds-smultron.c   |    3 +--
+ arch/arm/mach-msm/leds-urushi.c     |    2 +-
+ 13 files changed, 13 insertions(+), 18 deletions(-)
+
+diff --git a/arch/arm/mach-msm/board-semc_zeus.c b/arch/arm/mach-msm/board-semc_zeus.c
+index a45838f..55c9e22 100644
+--- a/arch/arm/mach-msm/board-semc_zeus.c
++++ b/arch/arm/mach-msm/board-semc_zeus.c
+@@ -1324,9 +1324,7 @@ static struct as3676_platform_led as3676_pdata_leds[] = {
+ 	{
+ 		.name = "lcd-backlight",
+ 		.sinks = BIT(AS3676_SINK_01),
+-		.flags = AS3676_FLAG_ALS | AS3676_FLAG_PWM_INIT
+-		| AS3676_FLAG_WAIT_RESUME
+-			| AS3676_FLAG_DLS,
++		.flags = AS3676_FLAG_PWM_CTRL | AS3676_FLAG_PWM_INIT,
+ 		.max_current = 20000,
+ 		.default_brightness = LED_FULL,
+ 	},
+diff --git a/arch/arm/mach-msm/leds-akane.c b/arch/arm/mach-msm/leds-akane.c
+index b77b58f..7cdb68b 100644
+--- a/arch/arm/mach-msm/leds-akane.c
++++ b/arch/arm/mach-msm/leds-akane.c
+@@ -15,7 +15,7 @@ static struct as3676_platform_led as3676_leds_mapping[] = {
+ 	{
+ 		.name = "lcd-backlight",
+ 		.sinks = BIT(AS3676_SINK_01),
+-		.flags = AS3676_FLAG_ALS | AS3676_FLAG_WAIT_RESUME,
++		.flags = AS3676_FLAG_PWM_CTRL | AS3676_FLAG_PWM_INIT,
+ 		.max_current = 25000,
+ 		.default_brightness = LED_FULL,
+ 	},
+diff --git a/arch/arm/mach-msm/leds-anzu.c b/arch/arm/mach-msm/leds-anzu.c
+index 8e4dcdb..92da5db 100644
+--- a/arch/arm/mach-msm/leds-anzu.c
++++ b/arch/arm/mach-msm/leds-anzu.c
+@@ -15,7 +15,7 @@ static struct as3676_platform_led as3676_leds_mapping[] = {
+ 	{
+ 		.name = "lcd-backlight",
+ 		.sinks = BIT(AS3676_SINK_01),
+-		.flags = AS3676_FLAG_ALS | AS3676_FLAG_WAIT_RESUME,
++		.flags = AS3676_FLAG_PWM_CTRL | AS3676_FLAG_PWM_INIT,
+ 		.max_current = 25000,
+ 		.default_brightness = LED_FULL,
+ 	},
+diff --git a/arch/arm/mach-msm/leds-azusa.c b/arch/arm/mach-msm/leds-azusa.c
+index 461be74..c270d5e 100644
+--- a/arch/arm/mach-msm/leds-azusa.c
++++ b/arch/arm/mach-msm/leds-azusa.c
+@@ -15,7 +15,7 @@ static struct as3676_platform_led as3676_leds_mapping[] = {
+ 	{
+ 		.name = "lcd-backlight",
+ 		.sinks = BIT(AS3676_SINK_01),
+-		.flags = AS3676_FLAG_ALS | AS3676_FLAG_WAIT_RESUME,
++		.flags = AS3676_FLAG_PWM_CTRL | AS3676_FLAG_PWM_INIT,
+ 		.max_current = 25000,
+ 		.default_brightness = LED_FULL,
+ 	},
+diff --git a/arch/arm/mach-msm/leds-coconut.c b/arch/arm/mach-msm/leds-coconut.c
+index 01d1874..b636656 100644
+--- a/arch/arm/mach-msm/leds-coconut.c
++++ b/arch/arm/mach-msm/leds-coconut.c
+@@ -15,7 +15,7 @@ static struct as3676_platform_led as3676_leds_mapping[] = {
+ 	{
+ 		.name = "lcd-backlight",
+ 		.sinks = BIT(AS3676_SINK_01),
+-		.flags = AS3676_FLAG_ALS | AS3676_FLAG_WAIT_RESUME,
++		.flags = AS3676_FLAG_PWM_CTRL | AS3676_FLAG_PWM_INIT,
+ 		.max_current = 25000,
+ 		.default_brightness = LED_FULL,
+ 	},
+diff --git a/arch/arm/mach-msm/leds-haida.c b/arch/arm/mach-msm/leds-haida.c
+index 9d6b8d2..4e716ac 100644
+--- a/arch/arm/mach-msm/leds-haida.c
++++ b/arch/arm/mach-msm/leds-haida.c
+@@ -15,7 +15,7 @@ static struct as3676_platform_led as3676_leds_mapping[] = {
+ 	{
+ 		.name = "lcd-backlight",
+ 		.sinks = BIT(AS3676_SINK_01),
+-		.flags = AS3676_FLAG_ALS | AS3676_FLAG_PWM_INIT
++		.flags = AS3676_FLAG_PWM_CTRL | AS3676_FLAG_PWM_INIT,
+ 			| AS3676_FLAG_DLS,
+ 		.max_current = 25000,
+ 		.default_brightness = LED_FULL,
+diff --git a/arch/arm/mach-msm/leds-hallon.c b/arch/arm/mach-msm/leds-hallon.c
+index 37eb4eb..b1fc986 100644
+--- a/arch/arm/mach-msm/leds-hallon.c
++++ b/arch/arm/mach-msm/leds-hallon.c
+@@ -15,8 +15,7 @@ static struct as3676_platform_led as3676_leds_mapping[] = {
+ 	{
+ 		.name = "lcd-backlight",
+ 		.sinks = BIT(AS3676_SINK_01),
+-		.flags = AS3676_FLAG_ALS | AS3676_FLAG_PWM_INIT
+-			| AS3676_FLAG_DLS | AS3676_FLAG_WAIT_RESUME,
++		.flags = AS3676_FLAG_PWM_CTRL | AS3676_FLAG_PWM_INIT,
+ 		.max_current = 25000,
+ 		.default_brightness = LED_FULL,
+ 	},
+diff --git a/arch/arm/mach-msm/leds-iyokan.c b/arch/arm/mach-msm/leds-iyokan.c
+index 24b0e0f..075131b 100644
+--- a/arch/arm/mach-msm/leds-iyokan.c
++++ b/arch/arm/mach-msm/leds-iyokan.c
+@@ -15,7 +15,7 @@ static struct as3676_platform_led as3676_leds_mapping[] = {
+ 	{
+ 		.name = "lcd-backlight",
+ 		.sinks = BIT(AS3676_SINK_01),
+-		.flags = AS3676_FLAG_ALS_GROUP1 | AS3676_FLAG_WAIT_RESUME,
++		.flags = AS3676_FLAG_PWM_CTRL | AS3676_FLAG_PWM_INIT,
+ 		.max_current = 25000,
+ 		.default_brightness = LED_FULL,
+ 	},
+diff --git a/arch/arm/mach-msm/leds-mango.c b/arch/arm/mach-msm/leds-mango.c
+index 7112f56..9b63e34 100644
+--- a/arch/arm/mach-msm/leds-mango.c
++++ b/arch/arm/mach-msm/leds-mango.c
+@@ -15,7 +15,7 @@ static struct as3676_platform_led as3676_leds_mapping[] = {
+ 	{
+ 		.name = "lcd-backlight",
+ 		.sinks = BIT(AS3676_SINK_01),
+-		.flags = AS3676_FLAG_ALS | AS3676_FLAG_WAIT_RESUME,
++		.flags = AS3676_FLAG_PWM_CTRL | AS3676_FLAG_PWM_INIT,
+ 		.max_current = 25000,
+ 		.default_brightness = LED_FULL,
+ 	},
+diff --git a/arch/arm/mach-msm/leds-mogami_cdb.c b/arch/arm/mach-msm/leds-mogami_cdb.c
+index 74fcb61..f65fd20 100644
+--- a/arch/arm/mach-msm/leds-mogami_cdb.c
++++ b/arch/arm/mach-msm/leds-mogami_cdb.c
+@@ -15,7 +15,7 @@ static struct as3676_platform_led as3676_leds_mapping[] = {
+ 	{
+ 		.name = "lcd-backlight",
+ 		.sinks = BIT(AS3676_SINK_01),
+-		.flags = AS3676_FLAG_ALS | AS3676_FLAG_WAIT_RESUME,
++		.flags = AS3676_FLAG_PWM_CTRL | AS3676_FLAG_PWM_INIT,
+ 		.max_current = 25000,
+ 		.default_brightness = LED_FULL,
+ 	},
+diff --git a/arch/arm/mach-msm/leds-satsuma.c b/arch/arm/mach-msm/leds-satsuma.c
+index 9e1b72c..dfc92d2 100644
+--- a/arch/arm/mach-msm/leds-satsuma.c
++++ b/arch/arm/mach-msm/leds-satsuma.c
+@@ -15,8 +15,7 @@ static struct as3676_platform_led as3676_leds_mapping[] = {
+ 	{
+ 		.name = "lcd-backlight",
+ 		.sinks = BIT(AS3676_SINK_01),
+-		.flags = AS3676_FLAG_ALS | AS3676_FLAG_DLS
+-		| AS3676_FLAG_WAIT_RESUME,
++		.flags = AS3676_FLAG_PWM_CTRL | AS3676_FLAG_PWM_INIT,
+ 		.max_current = 25000,
+ 		.default_brightness = LED_FULL,
+ 	},
+diff --git a/arch/arm/mach-msm/leds-smultron.c b/arch/arm/mach-msm/leds-smultron.c
+index c26fbe9..c0d971d 100644
+--- a/arch/arm/mach-msm/leds-smultron.c
++++ b/arch/arm/mach-msm/leds-smultron.c
+@@ -15,8 +15,7 @@ static struct as3676_platform_led as3676_leds_mapping[] = {
+ 	{
+ 		.name = "lcd-backlight",
+ 		.sinks = BIT(AS3676_SINK_01),
+-		.flags = AS3676_FLAG_ALS | AS3676_FLAG_DLS
+-		| AS3676_FLAG_WAIT_RESUME,
++		.flags = AS3676_FLAG_PWM_CTRL | AS3676_FLAG_PWM_INIT,
+ 		.max_current = 25000,
+ 		.default_brightness = LED_FULL,
+ 	},
+diff --git a/arch/arm/mach-msm/leds-urushi.c b/arch/arm/mach-msm/leds-urushi.c
+index c23d94b..12cc76f 100644
+--- a/arch/arm/mach-msm/leds-urushi.c
++++ b/arch/arm/mach-msm/leds-urushi.c
+@@ -15,7 +15,7 @@ static struct as3676_platform_led as3676_leds_mapping[] = {
+ 	{
+ 		.name = "lcd-backlight",
+ 		.sinks = BIT(AS3676_SINK_01),
+-		.flags = AS3676_FLAG_ALS_GROUP1 | AS3676_FLAG_WAIT_RESUME,
++		.flags = AS3676_FLAG_PWM_CTRL | AS3676_FLAG_PWM_INIT,
+ 		.max_current = 20000,
+ 		.default_brightness = LED_FULL,
+ 	},
+-- 
+1.7.10.4
+
