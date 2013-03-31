@@ -1,0 +1,54 @@
+diff --git a/msm7x30/AudioHardware.cpp b/msm7x30/AudioHardware.cpp
+index 5756729..333fdfe 100644
+--- a/msm7x30/AudioHardware.cpp
++++ b/msm7x30/AudioHardware.cpp
+@@ -1402,6 +1402,14 @@ status_t AudioHardware::setVoiceVolume(float v)
+     ALOGD("setVoiceVolume(%f)\n", v);
+     ALOGI("Setting in-call volume to %d (available range is 0 to 100)\n", vol);
+ 
++#ifdef QCOM_FM_ENABLED
++    if(fmState == FM_ON) {
++        ALOGD("setFmVolume(%f)\n", v);
++        setFmVolume(v);
++        return -1;
++    }
++#endif
++
+     if(msm_set_voice_rx_vol(vol)) {
+         ALOGE("msm_set_voice_rx_vol(%d) failed errno = %d",vol,errno);
+         return -1;
+@@ -2362,8 +2370,15 @@ status_t AudioHardware::doRouting(AudioStreamInMSM7x30 *input)
+             enableComboDevice(sndDevice,1);
+             audProcess = (ADRC_ENABLE | EQ_ENABLE | RX_IIR_ENABLE | MBADRC_ENABLE);
+ #endif
+-        }   else if (outputDevices & AudioSystem::DEVICE_OUT_WIRED_HEADPHONE) {
+-            if (outputDevices & AudioSystem::DEVICE_OUT_SPEAKER) {
++        } else if (outputDevices & AudioSystem::DEVICE_OUT_WIRED_HEADPHONE) {
++            if (fmState == FM_ON) {
++                ALOGI("Routing audio to SEMC FM Wired Headset");
++                if (outputDevices & AudioSystem::DEVICE_OUT_WIRED_HEADPHONE)
++                    sndDevice = SND_DEVICE_NO_MIC_HEADSET;
++                else
++                    sndDevice = SND_DEVICE_HEADSET;
++                audProcess = (ADRC_ENABLE | EQ_ENABLE | RX_IIR_ENABLE | MBADRC_ENABLE);
++            } else if (outputDevices & AudioSystem::DEVICE_OUT_SPEAKER) {
+                 ALOGI("Routing audio to No microphone Wired Headset and Speaker (%d,%x)\n", mMode, outputDevices);
+                 sndDevice = SND_DEVICE_HEADPHONE_AND_SPEAKER;
+                 audProcess = (ADRC_ENABLE | EQ_ENABLE | RX_IIR_ENABLE | MBADRC_ENABLE);
+@@ -2404,16 +2419,7 @@ status_t AudioHardware::doRouting(AudioStreamInMSM7x30 *input)
+ #ifdef QCOM_FM_ENABLED
+ #ifdef HAVE_SEMC_FM_RADIO
+     if ((fmState == FM_ON) && (mFmFd == -1) && !isInCall() && (mMode != AudioSystem::MODE_RINGTONE))
+-    {
+-        /* FIXME force FM audio to HEADSET */
+-        ALOGI("Routing audio to SEMC FM Wired Headset");
+-        if (outputDevices & AudioSystem::DEVICE_OUT_WIRED_HEADPHONE)
+-            sndDevice = SND_DEVICE_NO_MIC_HEADSET;
+-        else
+-            sndDevice = SND_DEVICE_HEADSET;
+-
+         enableFM(sndDevice);
+-    }
+ 
+     if (((fmState != FM_ON) && (mFmFd != -1)) || isInCall() || (mMode == AudioSystem::MODE_RINGTONE))
+         disableFM();

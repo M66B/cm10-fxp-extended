@@ -74,6 +74,7 @@ mvolume=Y
 qcomdispl=Y
 noliblights=Y
 iw=Y
+fmrouting=Y
 trebuchet_cm10_1=Y
 deskclock_cm10_1=Y
 superuser_cm10_1=N
@@ -848,6 +849,13 @@ if [ "${iw}" = "Y" ]; then
 	do_patch iw.patch
 	cd ${android}/vendor/semc
 	do_patch vendor_semc_iw.patch
+fi
+
+#FM routing patch
+if [ "${fmrouting}" = "Y" ]; then
+	echo "*** FM routing ***"
+	cd ${android}/hardware/qcom/audio
+	do_patch fm_routing.patch
 fi
 
 #Trebuchet CM10.1
