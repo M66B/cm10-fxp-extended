@@ -752,6 +752,8 @@ if [ "${als}" = "Y" ]; then
 	do_patch ALS_coconut.patch
 	cd ${android}/frameworks/base
 	do_patch dummy_light_sensor.patch
+	cd ${android}/device/semc/msm7x30-common
+	do_patch ALS_overlay.patch
 fi
 
 #Xtended settings
@@ -837,6 +839,8 @@ if [ "`hostname`" = "ALGEIBA" ]; then
 	do_append "    ro.goo.developerid=M66B \\" ${android}/device/semc/msm7x30-common/msm7x30.mk
 	do_append "    ro.goo.rom=Xtended \\" ${android}/device/semc/msm7x30-common/msm7x30.mk
 	do_append "    ro.goo.version=\$(shell date +%s)" ${android}/device/semc/msm7x30-common/msm7x30.mk
+	cd ${android}/packages/apps/Settings
+	do_patch statistics.patch
 fi
 
 #iw
