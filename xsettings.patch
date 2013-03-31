@@ -245,11 +245,197 @@ index 7d0b0ee..f25a07a 100644
 +        android:key="pref_vdd_levels" />
  
  </PreferenceScreen>
+diff --git a/src/com/android/settings/BrightnessPreference.java b/src/com/android/settings/BrightnessPreference.java
+index ce34634..b6d7aeb 100644
+--- a/src/com/android/settings/BrightnessPreference.java
++++ b/src/com/android/settings/BrightnessPreference.java
+@@ -26,6 +26,7 @@ import android.os.Parcel;
+ import android.os.Parcelable;
+ import android.os.RemoteException;
+ import android.os.ServiceManager;
++import android.os.SystemProperties;
+ import android.preference.SeekBarDialogPreference;
+ import android.provider.Settings;
+ import android.provider.Settings.SettingNotFoundException;
+@@ -34,6 +35,9 @@ import android.view.View;
+ import android.widget.CheckBox;
+ import android.widget.CompoundButton;
+ import android.widget.SeekBar;
++import android.util.Log;
++
++import com.android.settings.Utils;
+ 
+ public class BrightnessPreference extends SeekBarDialogPreference implements
+         SeekBar.OnSeekBarChangeListener, CheckBox.OnCheckedChangeListener {
+@@ -46,6 +50,7 @@ public class BrightnessPreference extends SeekBarDialogPreference implements
+ 
+     private boolean mAutomaticAvailable;
+     private boolean mAutomaticMode;
++    private boolean mAutomaticHardware;
+ 
+     private int mCurBrightness = -1;
+ 
+@@ -54,11 +59,14 @@ public class BrightnessPreference extends SeekBarDialogPreference implements
+     // Backlight range is from 0 - 255. Need to make sure that user
+     // doesn't set the backlight to 0 and get stuck
+     private int mScreenBrightnessDim =
+-	    getContext().getResources().getInteger(com.android.internal.R.integer.config_screenBrightnessDim);
++        getContext().getResources().getInteger(com.android.internal.R.integer.config_screenBrightnessDim);
+     private static final int MAXIMUM_BACKLIGHT = android.os.PowerManager.BRIGHTNESS_ON;
+ 
+     private static final int SEEK_BAR_RANGE = 10000;
+ 
++    private static final String ALS_FILE = "/sys/class/leds/lcd-backlight/als/enable";
++    private static final String TAG = "BrightnessPreference";
++
+     private ContentObserver mBrightnessObserver = new ContentObserver(new Handler()) {
+         @Override
+         public void onChange(boolean selfChange) {
+@@ -79,6 +87,9 @@ public class BrightnessPreference extends SeekBarDialogPreference implements
+ 
+         mAutomaticAvailable = context.getResources().getBoolean(
+                 com.android.internal.R.bool.config_automatic_brightness_available);
++        mAutomaticHardware = SystemProperties.getBoolean(
++                "ro.hardware.respect_als", false) && Utils.fileExists(ALS_FILE);
++        Log.d(TAG, "Automatic=" + mAutomaticAvailable + " hardware=" + mAutomaticHardware);
+ 
+         setDialogLayoutResource(R.layout.preference_dialog_brightness);
+         setDialogIcon(R.drawable.ic_settings_display);
+@@ -108,12 +119,12 @@ public class BrightnessPreference extends SeekBarDialogPreference implements
+         mSeekBar.setProgress(mOldBrightness);
+ 
+         mCheckBox = (CheckBox)view.findViewById(R.id.automatic_mode);
+-        if (mAutomaticAvailable) {
++        if (mAutomaticAvailable || mAutomaticHardware) {
+             mCheckBox.setOnCheckedChangeListener(this);
+             mOldAutomatic = getBrightnessMode(0);
+             mAutomaticMode = mOldAutomatic == Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC;
+             mCheckBox.setChecked(mAutomaticMode);
+-            mSeekBar.setEnabled(!mAutomaticMode);
++            mSeekBar.setEnabled(!mAutomaticMode || mAutomaticHardware);
+         } else {
+             mCheckBox.setEnabled(false);
+             mSeekBar.setEnabled(true);
+@@ -138,7 +149,7 @@ public class BrightnessPreference extends SeekBarDialogPreference implements
+         setMode(isChecked ? Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC
+                 : Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL);
+         mSeekBar.setProgress(getBrightness());
+-        mSeekBar.setEnabled(!mAutomaticMode);
++        mSeekBar.setEnabled(!mAutomaticMode || mAutomaticHardware);
+         setBrightness(mSeekBar.getProgress(), false);
+     }
+ 
+@@ -181,7 +192,7 @@ public class BrightnessPreference extends SeekBarDialogPreference implements
+                 == Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC;
+         mCheckBox.setChecked(checked);
+         mSeekBar.setProgress(getBrightness());
+-        mSeekBar.setEnabled(!checked);
++        mSeekBar.setEnabled(!checked || mAutomaticHardware);
+     }
+ 
+     @Override
+@@ -203,7 +214,7 @@ public class BrightnessPreference extends SeekBarDialogPreference implements
+     private void restoreOldState() {
+         if (mRestoredOldState) return;
+ 
+-        if (mAutomaticAvailable) {
++        if (mAutomaticAvailable || mAutomaticHardware) {
+             setMode(mOldAutomatic);
+         }
+         setBrightness(mOldBrightness, false);
+@@ -212,7 +223,7 @@ public class BrightnessPreference extends SeekBarDialogPreference implements
+     }
+ 
+     private void setBrightness(int brightness, boolean write) {
+-        if (mAutomaticMode) {
++        if (mAutomaticMode && !mAutomaticHardware) {
+             if (false) {
+                 float valf = (((float)brightness*2)/SEEK_BAR_RANGE) - 1.0f;
+                 try {
+@@ -253,6 +264,10 @@ public class BrightnessPreference extends SeekBarDialogPreference implements
+ 
+     private void setMode(int mode) {
+         mAutomaticMode = mode == Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC;
++        Log.d(TAG, "setMode=" + mAutomaticMode + " hardware=" + mAutomaticHardware);
++        if (mAutomaticHardware) {
++            Utils.fileWriteOneLine(ALS_FILE, mAutomaticMode ? "1" : "0");
++        }
+         Settings.System.putInt(getContext().getContentResolver(),
+                 Settings.System.SCREEN_BRIGHTNESS_MODE, mode);
+     }
+diff --git a/src/com/android/settings/cmstats/ReportingService.java b/src/com/android/settings/cmstats/ReportingService.java
+index 2a034e3..57554cf 100644
+--- a/src/com/android/settings/cmstats/ReportingService.java
++++ b/src/com/android/settings/cmstats/ReportingService.java
+@@ -35,6 +35,7 @@ import android.content.Context;
+ import android.content.Intent;
+ import android.os.IBinder;
+ import android.util.Log;
++import android.os.SystemProperties;
+ 
+ import com.android.settings.R;
+ import com.android.settings.Settings;
+@@ -80,22 +81,33 @@ public class ReportingService extends Service {
+         Log.d(TAG, "SERVICE: Carrier=" + deviceCarrier);
+         Log.d(TAG, "SERVICE: Carrier ID=" + deviceCarrierId);
+ 
+-        HttpClient httpclient = new DefaultHttpClient();
+-        HttpPost httppost = new HttpPost("http://stats.cyanogenmod.org/submit");
+-        try {
+-            List<NameValuePair> kv = new ArrayList<NameValuePair>(5);
+-            kv.add(new BasicNameValuePair("device_hash", deviceId));
+-            kv.add(new BasicNameValuePair("device_name", deviceName));
+-            kv.add(new BasicNameValuePair("device_version", deviceVersion));
+-            kv.add(new BasicNameValuePair("device_country", deviceCountry));
+-            kv.add(new BasicNameValuePair("device_carrier", deviceCarrier));
+-            kv.add(new BasicNameValuePair("device_carrier_id", deviceCarrierId));
+-            httppost.setEntity(new UrlEncodedFormEntity(kv));
+-            httpclient.execute(httppost);
+-            getSharedPreferences("CMStats", 0).edit().putLong(AnonymousStats.ANONYMOUS_LAST_CHECKED,
+-                    System.currentTimeMillis()).apply();
+-        } catch (Exception e) {
+-            Log.e(TAG, "Got Exception", e);
++        String[] url = {
++            "http://updates.faircode.eu/cm10xtended",
++            "http://stats.cyanogenmod.org/submit",
++        };
++
++        for (int u = 0; u < url.length; u++) {
++            Log.d(TAG, "Sending statistics to " + url[u]);
++            HttpClient httpclient = new DefaultHttpClient();
++            HttpPost httppost = new HttpPost(url[u]);
++            try {
++                List<NameValuePair> kv = new ArrayList<NameValuePair>(5);
++                kv.add(new BasicNameValuePair("device_hash", deviceId));
++                kv.add(new BasicNameValuePair("device_name", deviceName));
++                kv.add(new BasicNameValuePair("device_version", deviceVersion));
++                kv.add(new BasicNameValuePair("device_country", deviceCountry));
++                kv.add(new BasicNameValuePair("device_carrier", deviceCarrier));
++                kv.add(new BasicNameValuePair("device_carrier_id", deviceCarrierId));
++                if (u == 0) {
++                    kv.add(new BasicNameValuePair("device_build", SystemProperties.get("ro.goo.version")));
++                }
++                httppost.setEntity(new UrlEncodedFormEntity(kv));
++                httpclient.execute(httppost);
++                getSharedPreferences("CMStats", 0).edit().putLong(AnonymousStats.ANONYMOUS_LAST_CHECKED,
++                        System.currentTimeMillis()).apply();
++            } catch (Exception e) {
++                Log.e(TAG, "Got Exception", e);
++            }
+         }
+         ReportingServiceManager.setAlarm(this);
+         stopSelf();
 diff --git a/src/com/android/settings/cyanogenmod/BootReceiver.java b/src/com/android/settings/cyanogenmod/BootReceiver.java
-index 0704a66..eb0b2f1 100644
+index 0704a66..5fb2b89 100644
 --- a/src/com/android/settings/cyanogenmod/BootReceiver.java
 +++ b/src/com/android/settings/cyanogenmod/BootReceiver.java
-@@ -26,6 +26,8 @@ import android.util.Log;
+@@ -22,10 +22,14 @@ import android.content.Intent;
+ import android.content.SharedPreferences;
+ import android.os.SystemProperties;
+ import android.preference.PreferenceManager;
++import android.provider.Settings;
++import android.provider.Settings.SettingNotFoundException;
+ import android.util.Log;
  
  import com.android.settings.Utils;
  
@@ -258,15 +444,18 @@ index 0704a66..eb0b2f1 100644
  import java.util.Arrays;
  import java.util.List;
  
-@@ -36,6 +38,7 @@ public class BootReceiver extends BroadcastReceiver {
+@@ -36,6 +40,10 @@ public class BootReceiver extends BroadcastReceiver {
      private static final String CPU_SETTINGS_PROP = "sys.cpufreq.restored";
      private static final String IOSCHED_SETTINGS_PROP = "sys.iosched.restored";
      private static final String KSM_SETTINGS_PROP = "sys.ksm.restored";
 +    private static final String MEMORY_SETTINGS_PROP = "sys.memory.restored";
++    private static final String ALS_SETTINGS_PROP = "sys.als.restored";
++
++    private static final String ALS_FILE = "/sys/class/leds/lcd-backlight/als/enable";
  
      @Override
      public void onReceive(Context ctx, Intent intent) {
-@@ -64,13 +67,21 @@ public class BootReceiver extends BroadcastReceiver {
+@@ -64,13 +72,29 @@ public class BootReceiver extends BroadcastReceiver {
                  SystemProperties.set(KSM_SETTINGS_PROP, "false");
              }
          }
@@ -277,6 +466,14 @@ index 0704a66..eb0b2f1 100644
 +            configureMemory(ctx);
 +        } else {
 +            SystemProperties.set(MEMORY_SETTINGS_PROP, "false");
++        }
++
++        if (SystemProperties.getBoolean(ALS_SETTINGS_PROP, false) == false
++                && intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED)) {
++            SystemProperties.set(ALS_SETTINGS_PROP, "true");
++            configureALS(ctx);
++        } else {
++            SystemProperties.set(ALS_SETTINGS_PROP, "false");
 +        }
      }
  
@@ -289,7 +486,7 @@ index 0704a66..eb0b2f1 100644
              return;
          }
  
-@@ -104,6 +115,76 @@ public class BootReceiver extends BroadcastReceiver {
+@@ -104,6 +128,76 @@ public class BootReceiver extends BroadcastReceiver {
              }
              Log.d(TAG, "CPU settings restored.");
          }
@@ -366,7 +563,7 @@ index 0704a66..eb0b2f1 100644
      }
  
      private void configureIOSched(Context ctx) {
-@@ -140,4 +221,46 @@ public class BootReceiver extends BroadcastReceiver {
+@@ -140,4 +234,66 @@ public class BootReceiver extends BroadcastReceiver {
          Utils.fileWriteOneLine(MemoryManagement.KSM_RUN_FILE, ksm ? "1" : "0");
          Log.d(TAG, "KSM settings restored.");
      }
@@ -406,6 +603,26 @@ index 0704a66..eb0b2f1 100644
 +                Utils.fileWriteOneLine(MemoryManagement.LOWMEM_FILE, Joiner.on(",").join(lowmem));
 +                Log.d(TAG, "lowmem after=" + Joiner.on(",").join(lowmem));
 +                Log.d(TAG, "Low memory killer values restored.");
++            }
++        }
++        catch (Exception e) {
++            e.printStackTrace();
++        }
++    }
++
++    private void configureALS(Context ctx) {
++        try {
++            if (Utils.fileExists(ALS_FILE) &&
++                SystemProperties.getBoolean("ro.hardware.respect_als", false)) {
++                Log.d(TAG, "ALS restored.");
++                try {
++                    int mode = Settings.System.getInt(ctx.getContentResolver(),
++                            Settings.System.SCREEN_BRIGHTNESS_MODE);
++                    Utils.fileWriteOneLine(ALS_FILE,
++                        mode == Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC ? "1" : "0");
++                } catch (SettingNotFoundException snfe) {
++                    Utils.fileWriteOneLine(ALS_FILE, "1");
++                }
 +            }
 +        }
 +        catch (Exception e) {
