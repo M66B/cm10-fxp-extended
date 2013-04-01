@@ -474,6 +474,9 @@ if [ "${kernel_mods}" = "Y" ]; then
 			echo "--- SmartassH3 boost pulse"
 			do_patch kernel_smartass3_boost.patch
 		fi
+		if [ "${kernel_smartass2_boost}" = "Y" ] || [ "${kernel_smartass3_boost}" = "Y" ]; then
+			do_patch kernel_smartass_perm.patch
+		fi
 	fi
 
 	if [ "${kernel_ioschedulers}" = "Y" ]; then
