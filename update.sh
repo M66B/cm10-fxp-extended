@@ -5,12 +5,19 @@ patches=`pwd`
 
 #Configuration
 android=~/android/system
-device=mango
 devices="anzu coconut haida hallon iyokan mango satsuma smultron urushi"
 debug=N
 cleanall=N
+updates=N
+if [ "`hostname`" = "ALGEIBA" ]; then
+	updates=Y
+fi
 if [ "$1" = "clean" ]; then
 	cleanall=Y
+fi
+onecorebuild=N
+if [ "`hostname`" = "ALGEIBA" ]; then
+	onecorebuild=Y
 fi
 
 linaro_name=arm-eabi-4.7-linaro
@@ -19,10 +26,6 @@ linaro_url=https://android-build.linaro.org/jenkins/view/Toolchain/job/linaro-an
 
 #Building TWRP with 32 bits toolchain fails
 toolchain_32bit=N
-onecorebuild=N
-if [ "`hostname`" = "ALGEIBA" ]; then
-	onecorebuild=Y
-fi
 
 #--- bootimage ---
 
@@ -307,7 +310,7 @@ else
 fi
 
 #CMUpdater
-if [ "`hostname`" = "ALGEIBA" ]; then
+if [ "${updates}" = "Y" ]; then
 	do_deldir ${android}/packages/apps/CMUpdater
 	do_deldir ${android}/.repo/projects/packages/apps/CMUpdater.git
 else
@@ -354,7 +357,7 @@ if [ "${openpdroid}" = "Y" ]; then
 	do_append "curl -L -o ${android}/vendor/cm/proprietary/PDroid_Manager.apk -O -L https://github.com/wsot/pdroid_manager_build/blob/master/PDroid_Manager_latest.apk?raw=true" ${android}/vendor/cm/get-prebuilts
 	do_append "PRODUCT_COPY_FILES += vendor/cm/proprietary/PDroid_Manager.apk:system/app/PDroid_Manager.apk" ${android}/vendor/cm/config/common.mk
 fi
-if [ "`hostname`" = "ALGEIBA" ]; then
+if [ "${updates}" = "Y" ]; then
 	do_append "curl -L -o ${android}/vendor/cm/proprietary/GooManager.apk -O -L https://github.com/solarnz/GooManager_prebuilt/blob/master/GooManager.apk?raw=true" ${android}/vendor/cm/get-prebuilts
 	do_append "PRODUCT_COPY_FILES += vendor/cm/proprietary/GooManager.apk:system/app/GooManager.apk" ${android}/vendor/cm/config/common.mk
 fi
@@ -834,7 +837,7 @@ if [ "${kernel_smartass2_boost}" = "Y" ]; then
 fi
 
 #goo.im
-if [ "`hostname`" = "ALGEIBA" ]; then
+if [ "${updates}" = "Y" ]; then
 	echo "*** goo.im ***"
 	do_append "PRODUCT_PROPERTY_OVERRIDES += \\" ${android}/device/semc/msm7x30-common/msm7x30.mk
 	do_append "    ro.goo.developerid=M66B \\" ${android}/device/semc/msm7x30-common/msm7x30.mk
