@@ -432,10 +432,10 @@ if [ "${kernel_mods}" = "Y" ]; then
 		if [ "${kernel_naa}" != "Y" ]; then
 			do_patch kernel_cpugovernor.patch
 			do_patch kernel_underclock.patch
+			do_patch kernel_cpuminmax.patch
 		fi
 
 		if [ "${kernel_naa}" != "Y" ]; then
-			do_patch kernel_cpuminmax.patch
 			for device in ${devices}
 			do
 				kconfig=${android}/kernel/semc/msm7x30/arch/arm/configs/cyanogen_${device}_defconfig
@@ -491,12 +491,9 @@ if [ "${kernel_mods}" = "Y" ]; then
 		fi
 	fi
 
-	if [ "${kernel_voltage}" = "Y" ]; then
+	if [ "${kernel_voltage}" = "Y" ] && [ "${kernel_naa}" != "Y" ]; then
 		echo "--- Undervolt"
-		#TODO: replaces instead of patch
-		if [ "${kernel_naa}" != "Y" ]; then
-			do_patch kernel_board_config.patch
-		fi
+		do_patch kernel_board_config.patch
 		for device in ${devices}
 		do
 			kconfig=${android}/kernel/semc/msm7x30/arch/arm/configs/cyanogen_${device}_defconfig
@@ -587,8 +584,10 @@ if [ "${kernel_mods}" = "Y" ]; then
 		done
 	fi
 
-	echo "-- iyokan touch precision"
-	do_patch kernel_iyokan_touch.patch
+	if [ "${kernel_naa}" != "Y" ]; then
+		echo "-- iyokan touch precision"
+		do_patch kernel_iyokan_touch.patch
+	fi
 
 	if [ "${enable720p}" != "Y" ] && [ "${kernel_naa}" != "Y" ]; then
 		echo "-- 720p disabled: free memory"
