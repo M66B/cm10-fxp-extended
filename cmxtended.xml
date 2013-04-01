@@ -71,4 +71,7 @@
   <project name="dickychiang/iw" path="external/iw" remote="github" revision="android" />
 
   <remove-project name="CyanogenMod/android_packages_apps_CMUpdater" />
+
+  <remove-project name="CyanogenMod/semc-kernel-msm7x30" />
+  <project name="nobodyAtall/msm7x30-2.6.32.x-nAa" path="kernel/semc/msm7x30" remote="github" revision="master" />
 </manifest>
