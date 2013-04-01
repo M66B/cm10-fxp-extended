@@ -1,5 +1,5 @@
 diff --git a/res/values/strings.xml b/res/values/strings.xml
-index 5931dae..bf5de27 100644
+index 5931dae..8150d0d 100644
 --- a/res/values/strings.xml
 +++ b/res/values/strings.xml
 @@ -4688,7 +4690,36 @@
@@ -40,7 +40,16 @@ index 5931dae..bf5de27 100644
  
      <!-- Performance Settings : I/O scheduler settings title -->
      <string name="io_scheds_title">I/O scheduler</string>
-@@ -4713,6 +4744,26 @@
+@@ -4698,6 +4729,8 @@
+     <!-- Performance Settings : I/O scheduler settings sub items -->
+     <string name="io_sched_title">I/O scheduler</string>
+     <string name="io_sched_summary">%S</string>
++    <string name="fsync_title">fsync</string>
++    <string name="fsync_summary">synchronize a file\'s in-core state with storage device\nDo not disable unless you know what you are doing</string>
+     <string name="io_sched_set_on_boot">Set on boot</string>
+     <string name="io_sched_set_on_boot_summary">Restore the I/O scheduler settings on boot</string>
+ 
+@@ -4713,6 +4746,26 @@
      <!-- Purgeable Assets -->
      <string name="pref_purgeable_assets_title">Allow purging of assets</string>
      <string name="pref_purgeable_assets_summary">Purging of bitmap memory assets allows the freeing of more RAM when needed (requires reboot)</string>
@@ -67,6 +76,22 @@ index 5931dae..bf5de27 100644
  
      <!-- Performance Settings : Dithering -->
      <string name="pref_use_dithering_title">Surface improvement</string>
+diff --git a/res/xml/ioscheduler_settings.xml b/res/xml/ioscheduler_settings.xml
+index e8eb267..b9e4dd3 100644
+--- a/res/xml/ioscheduler_settings.xml
++++ b/res/xml/ioscheduler_settings.xml
+@@ -25,6 +25,11 @@
+         android:title="@string/io_sched_title" />
+ 
+     <CheckBoxPreference
++        android:key="pref_fsync"
++        android:title="@string/fsync_title"
++        android:summary="@string/fsync_summary"/>
++
++    <CheckBoxPreference
+         android:key="pref_io_sched_set_on_boot"
+         android:title="@string/io_sched_set_on_boot"
+         android:summary="@string/io_sched_set_on_boot_summary"/>
 diff --git a/res/xml/memory_management.xml b/res/xml/memory_management.xml
 index 187c815..1e14775 100644
 --- a/res/xml/memory_management.xml
@@ -426,7 +451,7 @@ index 2a034e3..57554cf 100644
          ReportingServiceManager.setAlarm(this);
          stopSelf();
 diff --git a/src/com/android/settings/cyanogenmod/BootReceiver.java b/src/com/android/settings/cyanogenmod/BootReceiver.java
-index 0704a66..5fb2b89 100644
+index 0704a66..585facc 100644
 --- a/src/com/android/settings/cyanogenmod/BootReceiver.java
 +++ b/src/com/android/settings/cyanogenmod/BootReceiver.java
 @@ -22,10 +22,14 @@ import android.content.Intent;
@@ -455,7 +480,7 @@ index 0704a66..5fb2b89 100644
  
      @Override
      public void onReceive(Context ctx, Intent intent) {
-@@ -64,13 +72,29 @@ public class BootReceiver extends BroadcastReceiver {
+@@ -64,45 +72,137 @@ public class BootReceiver extends BroadcastReceiver {
                  SystemProperties.set(KSM_SETTINGS_PROP, "false");
              }
          }
@@ -486,10 +511,66 @@ index 0704a66..5fb2b89 100644
              return;
          }
  
-@@ -104,6 +128,76 @@ public class BootReceiver extends BroadcastReceiver {
+-        String governor = prefs.getString(Processor.GOV_PREF, null);
+-        String minFrequency = prefs.getString(Processor.FREQ_MIN_PREF, null);
+-        String maxFrequency = prefs.getString(Processor.FREQ_MAX_PREF, null);
+-        String availableFrequenciesLine = Utils.fileReadOneLine(Processor.FREQ_LIST_FILE);
+-        String availableGovernorsLine = Utils.fileReadOneLine(Processor.GOV_LIST_FILE);
+-        boolean noSettings = ((availableGovernorsLine == null) || (governor == null)) &&
+-                             ((availableFrequenciesLine == null) || ((minFrequency == null) && (maxFrequency == null)));
+-        List<String> frequencies = null;
+-        List<String> governors = null;
++        try {
++            String governor = prefs.getString(Processor.GOV_PREF, null);
++            String minFrequency = prefs.getString(Processor.FREQ_MIN_PREF, null);
++            String maxFrequency = prefs.getString(Processor.FREQ_MAX_PREF, null);
++            String availableFrequenciesLine = Utils.fileReadOneLine(Processor.FREQ_LIST_FILE);
++            String availableGovernorsLine = Utils.fileReadOneLine(Processor.GOV_LIST_FILE);
++            boolean noSettings = ((availableGovernorsLine == null) || (governor == null)) &&
++                                 ((availableFrequenciesLine == null) || ((minFrequency == null) && (maxFrequency == null)));
++            List<String> frequencies = null;
++            List<String> governors = null;
+ 
+-        if (noSettings) {
+-            Log.d(TAG, "No CPU settings saved. Nothing to restore.");
+-        } else {
+-            if (availableGovernorsLine != null){
+-                governors = Arrays.asList(availableGovernorsLine.split(" "));
+-            }
+-            if (availableFrequenciesLine != null){
+-                frequencies = Arrays.asList(availableFrequenciesLine.split(" "));
+-            }
+-            if (governor != null && governors != null && governors.contains(governor)) {
+-                Utils.fileWriteOneLine(Processor.GOV_FILE, governor);
+-            }
+-            if (maxFrequency != null && frequencies != null && frequencies.contains(maxFrequency)) {
+-                Utils.fileWriteOneLine(Processor.FREQ_MAX_FILE, maxFrequency);
++            if (noSettings) {
++                Log.d(TAG, "No CPU settings saved. Nothing to restore.");
++            } else {
++                if (availableGovernorsLine != null){
++                    governors = Arrays.asList(availableGovernorsLine.split(" "));
++                }
++                if (availableFrequenciesLine != null){
++                    frequencies = Arrays.asList(availableFrequenciesLine.split(" "));
++                }
++                if (governor != null && governors != null && governors.contains(governor)) {
++                    Utils.fileWriteOneLine(Processor.GOV_FILE, governor);
++                }
++                if (maxFrequency != null && frequencies != null && frequencies.contains(maxFrequency)) {
++                    Utils.fileWriteOneLine(Processor.FREQ_MAX_FILE, maxFrequency);
++                }
++                if (minFrequency != null && frequencies != null && frequencies.contains(minFrequency)) {
++                    Utils.fileWriteOneLine(Processor.FREQ_MIN_FILE, minFrequency);
++                }
++                Log.d(TAG, "CPU settings restored.");
              }
-             Log.d(TAG, "CPU settings restored.");
-         }
+-            if (minFrequency != null && frequencies != null && frequencies.contains(minFrequency)) {
+-                Utils.fileWriteOneLine(Processor.FREQ_MIN_FILE, minFrequency);
++        }
++        catch (Exception e) {
++            e.printStackTrace();
++        }
 +
 +        // SmartassV2
 +        try {
@@ -542,10 +623,11 @@ index 0704a66..5fb2b89 100644
 +
 +        // Voltage
 +        try {
++            String temp;
 +            if (Utils.fileExists(Processor.VDD_LEVELS_FILE) &&
 +                Utils.fileExists(Processor.FREQ_LIST_FILE) &&
-+                (availableFrequenciesLine = Utils.fileReadOneLine(Processor.FREQ_LIST_FILE)) != null) {
-+                String[] availableFrequencies = availableFrequenciesLine.split(" ");
++                (temp = Utils.fileReadOneLine(Processor.FREQ_LIST_FILE)) != null) {
++                String[] availableFrequencies = temp.split(" ");
 +                for (int i = 0; i < availableFrequencies.length; i++) {
 +                    String freq = availableFrequencies[i];
 +                    String mv = prefs.getString(Processor.VDD_LEVELS_PREF + freq, null);
@@ -555,15 +637,68 @@ index 0704a66..5fb2b89 100644
 +                    }
 +                }
 +                Log.d(TAG, "Voltage settings restored.");
-+            }
+             }
+-            Log.d(TAG, "CPU settings restored.");
++        }
++        catch (Exception e) {
++            e.printStackTrace();
+         }
+     }
+ 
+@@ -114,21 +214,40 @@ public class BootReceiver extends BroadcastReceiver {
+             return;
+         }
+ 
+-        String ioscheduler = prefs.getString(IOScheduler.IOSCHED_PREF, null);
+-        String availableIOSchedulersLine = Utils.fileReadOneLine(IOScheduler.IOSCHED_LIST_FILE);
+-        boolean noSettings = ((availableIOSchedulersLine == null) || (ioscheduler == null));
+-        List<String> ioschedulers = null;
++        // I/O scheduler
++        try {
++            String ioscheduler = prefs.getString(IOScheduler.IOSCHED_PREF, null);
++            String availableIOSchedulersLine = Utils.fileReadOneLine(IOScheduler.IOSCHED_LIST_FILE);
++            boolean noSettings = ((availableIOSchedulersLine == null) || (ioscheduler == null));
++            List<String> ioschedulers = null;
+ 
+-        if (noSettings) {
+-            Log.d(TAG, "No I/O scheduler settings saved. Nothing to restore.");
+-        } else {
+-            if (availableIOSchedulersLine != null){
+-                ioschedulers = Arrays.asList(availableIOSchedulersLine.replace("[", "").replace("]", "").split(" "));
++            if (noSettings) {
++                Log.d(TAG, "No I/O scheduler settings saved. Nothing to restore.");
++            } else {
++                if (availableIOSchedulersLine != null){
++                    ioschedulers = Arrays.asList(availableIOSchedulersLine.replace("[", "").replace("]", "").split(" "));
++                }
++                if (ioscheduler != null && ioschedulers != null && ioschedulers.contains(ioscheduler)) {
++                    Utils.fileWriteOneLine(IOScheduler.IOSCHED_LIST_FILE, ioscheduler);
++                }
++                Log.d(TAG, "I/O scheduler settings restored.");
+             }
+-            if (ioscheduler != null && ioschedulers != null && ioschedulers.contains(ioscheduler)) {
+-                Utils.fileWriteOneLine(IOScheduler.IOSCHED_LIST_FILE, ioscheduler);
 +        }
 +        catch (Exception e) {
 +            e.printStackTrace();
 +        }
++
++        // fsync
++        try {
++            if (Utils.fileExists(IOScheduler.FSYNC_FILE)) {
++                String fsync = (prefs.getBoolean(IOScheduler.FSYNC_PREF, true) ? "Y" : "N");
++                Log.d(TAG, "fsync=" + fsync);
++                Utils.fileWriteOneLine(IOScheduler.FSYNC_FILE, fsync);
++                Log.d(TAG, "fsync restored.");
+             }
+-            Log.d(TAG, "I/O scheduler settings restored.");
++        }
++        catch (Exception e) {
++            e.printStackTrace();
+         }
      }
  
-     private void configureIOSched(Context ctx) {
-@@ -140,4 +234,66 @@ public class BootReceiver extends BroadcastReceiver {
+@@ -140,4 +259,70 @@ public class BootReceiver extends BroadcastReceiver {
          Utils.fileWriteOneLine(MemoryManagement.KSM_RUN_FILE, ksm ? "1" : "0");
          Log.d(TAG, "KSM settings restored.");
      }
@@ -591,18 +726,22 @@ index 0704a66..5fb2b89 100644
 +
 +        // Lowmem
 +        try {
-+            if (Utils.fileExists(MemoryManagement.LOWMEM_FILE)) {
++            String temp;
++            if (Utils.fileExists(MemoryManagement.LOWMEM_FILE) &&
++                (temp = Utils.fileReadOneLine(MemoryManagement.LOWMEM_FILE)) != null) {
 +                String[] lowmem = Utils.fileReadOneLine(MemoryManagement.LOWMEM_FILE).split(",");
 +                Log.d(TAG, "lowmem before=" + Joiner.on(",").join(lowmem));
-+                lowmem[0] = MemoryManagement.toPages(prefs.getString(MemoryManagement.LOWMEM_FOREGROUND_APP_PREF, MemoryManagement.fromPages(lowmem[0])));
-+                lowmem[1] = MemoryManagement.toPages(prefs.getString(MemoryManagement.LOWMEM_VISIBLE_APP_PREF,  MemoryManagement.fromPages(lowmem[1])));
-+                lowmem[2] = MemoryManagement.toPages(prefs.getString(MemoryManagement.LOWMEM_SECONDARY_SERVER_APP_PREF,  MemoryManagement.fromPages(lowmem[2])));
-+                lowmem[3] = MemoryManagement.toPages(prefs.getString(MemoryManagement.LOWMEM_HIDDEN_APP_PREF,  MemoryManagement.fromPages(lowmem[3])));
-+                lowmem[4] = MemoryManagement.toPages(prefs.getString(MemoryManagement.LOWMEM_CONTENT_PROVIDER_PREF,  MemoryManagement.fromPages(lowmem[4])));
-+                lowmem[5] = MemoryManagement.toPages(prefs.getString(MemoryManagement.LOWMEM_EMPTY_APP_PREF,  MemoryManagement.fromPages(lowmem[5])));
-+                Utils.fileWriteOneLine(MemoryManagement.LOWMEM_FILE, Joiner.on(",").join(lowmem));
-+                Log.d(TAG, "lowmem after=" + Joiner.on(",").join(lowmem));
-+                Log.d(TAG, "Low memory killer values restored.");
++                if (lowmem.length == 6) {
++                    lowmem[0] = MemoryManagement.toPages(prefs.getString(MemoryManagement.LOWMEM_FOREGROUND_APP_PREF, MemoryManagement.fromPages(lowmem[0])));
++                    lowmem[1] = MemoryManagement.toPages(prefs.getString(MemoryManagement.LOWMEM_VISIBLE_APP_PREF,  MemoryManagement.fromPages(lowmem[1])));
++                    lowmem[2] = MemoryManagement.toPages(prefs.getString(MemoryManagement.LOWMEM_SECONDARY_SERVER_APP_PREF,  MemoryManagement.fromPages(lowmem[2])));
++                    lowmem[3] = MemoryManagement.toPages(prefs.getString(MemoryManagement.LOWMEM_HIDDEN_APP_PREF,  MemoryManagement.fromPages(lowmem[3])));
++                    lowmem[4] = MemoryManagement.toPages(prefs.getString(MemoryManagement.LOWMEM_CONTENT_PROVIDER_PREF,  MemoryManagement.fromPages(lowmem[4])));
++                    lowmem[5] = MemoryManagement.toPages(prefs.getString(MemoryManagement.LOWMEM_EMPTY_APP_PREF,  MemoryManagement.fromPages(lowmem[5])));
++                    Utils.fileWriteOneLine(MemoryManagement.LOWMEM_FILE, Joiner.on(",").join(lowmem));
++                    Log.d(TAG, "lowmem after=" + Joiner.on(",").join(lowmem));
++                    Log.d(TAG, "Low memory killer values restored.");
++                }
 +            }
 +        }
 +        catch (Exception e) {
@@ -614,12 +753,12 @@ index 0704a66..5fb2b89 100644
 +        try {
 +            if (Utils.fileExists(ALS_FILE) &&
 +                SystemProperties.getBoolean("ro.hardware.respect_als", false)) {
-+                Log.d(TAG, "ALS restored.");
 +                try {
 +                    int mode = Settings.System.getInt(ctx.getContentResolver(),
 +                            Settings.System.SCREEN_BRIGHTNESS_MODE);
 +                    Utils.fileWriteOneLine(ALS_FILE,
 +                        mode == Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC ? "1" : "0");
++                    Log.d(TAG, "ALS restored.");
 +                } catch (SettingNotFoundException snfe) {
 +                    Utils.fileWriteOneLine(ALS_FILE, "1");
 +                }
@@ -630,8 +769,71 @@ index 0704a66..5fb2b89 100644
 +        }
 +    }
  }
+diff --git a/src/com/android/settings/cyanogenmod/IOScheduler.java b/src/com/android/settings/cyanogenmod/IOScheduler.java
+index 68142c5..a8d6524 100644
+--- a/src/com/android/settings/cyanogenmod/IOScheduler.java
++++ b/src/com/android/settings/cyanogenmod/IOScheduler.java
+@@ -19,6 +19,7 @@ package com.android.settings.cyanogenmod;
+ import android.os.Bundle;
+ import android.os.Handler;
+ import android.os.Message;
++import android.preference.CheckBoxPreference;
+ import android.preference.ListPreference;
+ import android.preference.Preference;
+ import android.preference.PreferenceScreen;
+@@ -35,6 +36,8 @@ public class IOScheduler extends SettingsPreferenceFragment implements
+ 
+     public static final String IOSCHED_PREF = "pref_io_sched";
+     public static final String IOSCHED_LIST_FILE = "/sys/block/mmcblk0/queue/scheduler";
++    public static final String FSYNC_PREF = "pref_fsync";
++    public static final String FSYNC_FILE = "/sys/module/sync/parameters/fsync_enabled";
+ 
+     public static final String SOB_PREF = "pref_io_sched_set_on_boot";
+ 
+@@ -43,6 +46,7 @@ public class IOScheduler extends SettingsPreferenceFragment implements
+     private String mIOSchedulerFormat;
+ 
+     private ListPreference mIOSchedulerPref;
++    private CheckBoxPreference mFsyncPref;
+ 
+     @Override
+     public void onCreate(Bundle savedInstanceState) {
+@@ -60,6 +64,7 @@ public class IOScheduler extends SettingsPreferenceFragment implements
+         PreferenceScreen prefScreen = getPreferenceScreen();
+ 
+         mIOSchedulerPref = (ListPreference) prefScreen.findPreference(IOSCHED_PREF);
++        mFsyncPref = (CheckBoxPreference) prefScreen.findPreference(FSYNC_PREF);
+ 
+         /* I/O scheduler
+         Some systems might not use I/O schedulers */
+@@ -81,6 +86,14 @@ public class IOScheduler extends SettingsPreferenceFragment implements
+             mIOSchedulerPref.setSummary(String.format(mIOSchedulerFormat, currentIOScheduler));
+             mIOSchedulerPref.setOnPreferenceChangeListener(this);
+         }
++
++        String temp;
++        if (!Utils.fileExists(FSYNC_FILE) || (temp = Utils.fileReadOneLine(FSYNC_FILE)) == null) {
++            mFsyncPref.setEnabled(false);
++        } else {
++            mFsyncPref.setChecked(!temp.startsWith("N"));
++            mFsyncPref.setOnPreferenceChangeListener(this);
++        }
+     }
+ 
+     @Override
+@@ -109,6 +122,10 @@ public class IOScheduler extends SettingsPreferenceFragment implements
+             if (preference == mIOSchedulerPref) {
+                 fname = IOSCHED_LIST_FILE;
+             }
++            else if (preference == mFsyncPref) {
++                fname = FSYNC_FILE;
++                newValue = (newValue.toString().equals("true") ? "Y" : "N");
++            }
+ 
+             if (Utils.fileWriteOneLine(fname, (String) newValue)) {
+                 if (preference == mIOSchedulerPref) {
 diff --git a/src/com/android/settings/cyanogenmod/MemoryManagement.java b/src/com/android/settings/cyanogenmod/MemoryManagement.java
-index 8626b06..d9d73dc 100644
+index 8626b06..e0fd081 100644
 --- a/src/com/android/settings/cyanogenmod/MemoryManagement.java
 +++ b/src/com/android/settings/cyanogenmod/MemoryManagement.java
 @@ -22,14 +22,20 @@ import android.os.Bundle;
@@ -725,7 +927,7 @@ index 8626b06..d9d73dc 100644
  
              if (isSwapAvailable()) {
                  if (SystemProperties.get(ZRAM_PERSIST_PROP) == "1")
-@@ -90,10 +139,49 @@ public class MemoryManagement extends SettingsPreferenceFragment implements
+@@ -90,10 +139,59 @@ public class MemoryManagement extends SettingsPreferenceFragment implements
                  prefSet.removePreference(mKSMPref);
              }
  
@@ -746,27 +948,37 @@ index 8626b06..d9d73dc 100644
 +                mLowmemEmptyAppPref.setEnabled(false);
 +            } else {
 +                String[] lowmemValue = temp.split(",");
++                if (lowmemValue.length != 6) {
++                    mLowmemForegroundAppPref.setEnabled(false);
++                    mLowmemVisibleAppPref.setEnabled(false);
++                    mLowmemSecondaryServerPref.setEnabled(false);
++                    mLowmemHiddenAppPref.setEnabled(false);
++                    mLowmemContentProviderPref.setEnabled(false);
++                    mLowmemEmptyAppPref.setEnabled(false);
++                    Log.w(TAG, LOWMEM_FILE + " has " + lowmemValue.length + " entries: " + temp);
++                }
++                else {
++                    mLowmemForegroundAppPref.setText(fromPages(lowmemValue[0]));
++                    mLowmemVisibleAppPref.setText(fromPages(lowmemValue[1]));
++                    mLowmemSecondaryServerPref.setText(fromPages(lowmemValue[2]));
++                    mLowmemHiddenAppPref.setText(fromPages(lowmemValue[3]));
++                    mLowmemContentProviderPref.setText(fromPages(lowmemValue[4]));
++                    mLowmemEmptyAppPref.setText(fromPages(lowmemValue[5]));
 +
-+                mLowmemForegroundAppPref.setText(fromPages(lowmemValue[0]));
-+                mLowmemVisibleAppPref.setText(fromPages(lowmemValue[1]));
-+                mLowmemSecondaryServerPref.setText(fromPages(lowmemValue[2]));
-+                mLowmemHiddenAppPref.setText(fromPages(lowmemValue[3]));
-+                mLowmemContentProviderPref.setText(fromPages(lowmemValue[4]));
-+                mLowmemEmptyAppPref.setText(fromPages(lowmemValue[5]));
++                    mLowmemForegroundAppPref.setSummary(String.format(mLowmemForegroundAppFormat, toMB(lowmemValue[0])));
++                    mLowmemVisibleAppPref.setSummary(String.format(mLowmemVisibleAppFormat, toMB(lowmemValue[1])));
++                    mLowmemSecondaryServerPref.setSummary(String.format(mLowmemSecondaryServerFormat, toMB(lowmemValue[2])));
++                    mLowmemHiddenAppPref.setSummary(String.format(mLowmemHiddenAppFormat, toMB(lowmemValue[3])));
++                    mLowmemContentProviderPref.setSummary(String.format(mLowmemContentProviderFormat, toMB(lowmemValue[4])));
++                    mLowmemEmptyAppPref.setSummary(String.format(mLowmemEmptyAppFormat, toMB(lowmemValue[5])));
 +
-+                mLowmemForegroundAppPref.setSummary(String.format(mLowmemForegroundAppFormat, toMB(lowmemValue[0])));
-+                mLowmemVisibleAppPref.setSummary(String.format(mLowmemVisibleAppFormat, toMB(lowmemValue[1])));
-+                mLowmemSecondaryServerPref.setSummary(String.format(mLowmemSecondaryServerFormat, toMB(lowmemValue[2])));
-+                mLowmemHiddenAppPref.setSummary(String.format(mLowmemHiddenAppFormat, toMB(lowmemValue[3])));
-+                mLowmemContentProviderPref.setSummary(String.format(mLowmemContentProviderFormat, toMB(lowmemValue[4])));
-+                mLowmemEmptyAppPref.setSummary(String.format(mLowmemEmptyAppFormat, toMB(lowmemValue[5])));
-+
-+                mLowmemForegroundAppPref.setOnPreferenceChangeListener(this);
-+                mLowmemVisibleAppPref.setOnPreferenceChangeListener(this);
-+                mLowmemSecondaryServerPref.setOnPreferenceChangeListener(this);
-+                mLowmemHiddenAppPref.setOnPreferenceChangeListener(this);
-+                mLowmemContentProviderPref.setOnPreferenceChangeListener(this);
-+                mLowmemEmptyAppPref.setOnPreferenceChangeListener(this);
++                    mLowmemForegroundAppPref.setOnPreferenceChangeListener(this);
++                    mLowmemVisibleAppPref.setOnPreferenceChangeListener(this);
++                    mLowmemSecondaryServerPref.setOnPreferenceChangeListener(this);
++                    mLowmemHiddenAppPref.setOnPreferenceChangeListener(this);
++                    mLowmemContentProviderPref.setOnPreferenceChangeListener(this);
++                    mLowmemEmptyAppPref.setOnPreferenceChangeListener(this);
++                }
 +            }
 +
              String purgeableAssets = SystemProperties.get(PURGEABLE_ASSETS_PERSIST_PROP,
@@ -776,7 +988,7 @@ index 8626b06..d9d73dc 100644
          }
      }
  
-@@ -115,11 +203,61 @@ public class MemoryManagement extends SettingsPreferenceFragment implements
+@@ -115,11 +213,60 @@ public class MemoryManagement extends SettingsPreferenceFragment implements
      }
  
      public boolean onPreferenceChange(Preference preference, Object newValue) {
@@ -800,8 +1012,7 @@ index 8626b06..d9d73dc 100644
 +            else if (preference == mAutogroupPref) {
 +                newValue = (newValue.toString().equals("true") ? "1" : "0");
 +                Log.d(TAG, "Autogroup=" + newValue);
-+                Utils.fileWriteOneLine(AUTOGROUP_FILE, (String) newValue);
-+                return true;
++                return Utils.fileWriteOneLine(AUTOGROUP_FILE, (String) newValue);
 +            }
 +            else if (preference == mLowmemForegroundAppPref ||
 +                preference == mLowmemVisibleAppPref ||
@@ -826,21 +1037,21 @@ index 8626b06..d9d73dc 100644
 +                if (preference == mLowmemEmptyAppPref)
 +                    lowmemValue[5] = (String) newValue;
 +                Log.d(TAG, "lowmem after=" + Joiner.on(",").join(lowmemValue));
-+                Utils.fileWriteOneLine(LOWMEM_FILE, Joiner.on(",").join(lowmemValue));
 +
-+                mLowmemForegroundAppPref.setSummary(String.format(mLowmemForegroundAppFormat, toMB(lowmemValue[0])));
-+                mLowmemVisibleAppPref.setSummary(String.format(mLowmemVisibleAppFormat, toMB(lowmemValue[1])));
-+                mLowmemSecondaryServerPref.setSummary(String.format(mLowmemSecondaryServerFormat, toMB(lowmemValue[2])));
-+                mLowmemHiddenAppPref.setSummary(String.format(mLowmemHiddenAppFormat, toMB(lowmemValue[3])));
-+                mLowmemContentProviderPref.setSummary(String.format(mLowmemContentProviderFormat, toMB(lowmemValue[4])));
-+                mLowmemEmptyAppPref.setSummary(String.format(mLowmemEmptyAppFormat, toMB(lowmemValue[5])));
-+
-+                return true;
++                if (Utils.fileWriteOneLine(LOWMEM_FILE, Joiner.on(",").join(lowmemValue))) {
++                    mLowmemForegroundAppPref.setSummary(String.format(mLowmemForegroundAppFormat, toMB(lowmemValue[0])));
++                    mLowmemVisibleAppPref.setSummary(String.format(mLowmemVisibleAppFormat, toMB(lowmemValue[1])));
++                    mLowmemSecondaryServerPref.setSummary(String.format(mLowmemSecondaryServerFormat, toMB(lowmemValue[2])));
++                    mLowmemHiddenAppPref.setSummary(String.format(mLowmemHiddenAppFormat, toMB(lowmemValue[3])));
++                    mLowmemContentProviderPref.setSummary(String.format(mLowmemContentProviderFormat, toMB(lowmemValue[4])));
++                    mLowmemEmptyAppPref.setSummary(String.format(mLowmemEmptyAppFormat, toMB(lowmemValue[5])));
++                    return true;
++                }
 +            }
          }
  
          return false;
-@@ -134,4 +272,27 @@ public class MemoryManagement extends SettingsPreferenceFragment implements
+@@ -134,4 +281,27 @@ public class MemoryManagement extends SettingsPreferenceFragment implements
          }
          return swapAvailable > 0;
      }
