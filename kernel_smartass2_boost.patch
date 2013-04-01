@@ -2,41 +2,6 @@ diff --git a/drivers/cpufreq/cpufreq_smartass2.c b/drivers/cpufreq/cpufreq_smart
 index 6f0ce32..5f69e51 100644
 --- a/drivers/cpufreq/cpufreq_smartass2.c
 +++ b/drivers/cpufreq/cpufreq_smartass2.c
-@@ -52,7 +52,7 @@ static unsigned int awake_ideal_freq;
-  * that practically when sleep_ideal_freq==0 the awake_ideal_freq is used
-  * also when suspended).
-  */
--#define DEFAULT_SLEEP_IDEAL_FREQ 249600
-+#define DEFAULT_SLEEP_IDEAL_FREQ 134400
- static unsigned int sleep_ideal_freq;
- 
- /*
-@@ -68,7 +68,7 @@ static unsigned int ramp_up_step;
-  * Zero disables and will calculate ramp down according to load heuristic.
-  * When above the ideal freqeuncy we always ramp down to the ideal freq.
-  */
--#define DEFAULT_RAMP_DOWN_STEP 256000
-+#define DEFAULT_RAMP_DOWN_STEP 128000
- static unsigned int ramp_down_step;
- 
- /*
-@@ -94,14 +94,14 @@ static unsigned long up_rate_us;
-  * The minimum amount of time to spend at a frequency before we can ramp down.
-  * Notice we ignore this when we are above the ideal frequency.
-  */
--#define DEFAULT_DOWN_RATE_US 99000;
-+#define DEFAULT_DOWN_RATE_US 48000;
- static unsigned long down_rate_us;
- 
- /*
-  * The frequency to set when waking up from sleep.
-  * When sleep_ideal_freq=0 this will have no effect.
-  */
--#define DEFAULT_SLEEP_WAKEUP_FREQ 99999999
-+#define DEFAULT_SLEEP_WAKEUP_FREQ 249600
- static unsigned int sleep_wakeup_freq;
- 
- /*
 @@ -110,9 +110,21 @@ static unsigned int sleep_wakeup_freq;
  #define DEFAULT_SAMPLE_RATE_JIFFIES 2
  static unsigned int sample_rate_jiffies;
