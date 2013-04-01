@@ -244,6 +244,8 @@ cp ${patches}/cmxtended.xml ${android}/.repo/local_manifests/cmxtended.xml
 #Kernel nobodyAtall
 if [ "${kernel_naa}" = "Y" ]; then
 	echo "--- kernel nobodyAtall"
+	#svn checkout http://lz4.googlecode.com/svn/trunk/ lz4
+	#cd lz4 && make && cp lz4demo ~/bin/lz4
 else
 	sed -i "/remove-project.*semc-kernel-msm7x30/d" ${android}/.repo/local_manifests/cmxtended.xml
 	sed -i "/nobodyAtall/d" ${android}/.repo/local_manifests/cmxtended.xml
