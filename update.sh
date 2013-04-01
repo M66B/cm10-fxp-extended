@@ -431,9 +431,8 @@ if [ "${kernel_mods}" = "Y" ]; then
 		echo "--- CPU governors"
 		if [ "${kernel_naa}" != "Y" ]; then
 			do_patch kernel_cpugovernor.patch
+			do_patch kernel_underclock.patch
 		fi
-
-		do_patch kernel_underclock.patch
 
 		if [ "${kernel_naa}" != "Y" ]; then
 			do_patch kernel_cpuminmax.patch
@@ -466,7 +465,7 @@ if [ "${kernel_mods}" = "Y" ]; then
 			done
 		fi
 
-		if [ "${kernel_smartass2_boost}" = "Y" ]; then
+		if [ "${kernel_smartass2_boost}" = "Y" ] && [ "${kernel_naa}" != "Y" ]; then
 			echo "--- SmartassV2 boost pulse"
 			do_patch kernel_smartass2_boost.patch
 		fi
@@ -495,7 +494,9 @@ if [ "${kernel_mods}" = "Y" ]; then
 	if [ "${kernel_voltage}" = "Y" ]; then
 		echo "--- Undervolt"
 		#TODO: replaces instead of patch
-		do_patch kernel_board_config.patch
+		if [ "${kernel_naa}" != "Y" ]; then
+			do_patch kernel_board_config.patch
+		fi
 		for device in ${devices}
 		do
 			kconfig=${android}/kernel/semc/msm7x30/arch/arm/configs/cyanogen_${device}_defconfig
