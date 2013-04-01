@@ -467,11 +467,8 @@ if [ "${kernel_mods}" = "Y" ]; then
 		fi
 
 		if [ "${kernel_smartass2_boost}" = "Y" ] && [ "${kernel_naa}" != "Y" ]; then
-			echo "--- SmartassV2 boost pulse"
+			echo "--- SmartassV2/H3 boost pulse"
 			do_patch kernel_smartass2_boost.patch
-		fi
-		if [ "${kernel_smartass3_boost}" = "Y" ]; then
-			echo "--- SmartassH3 boost pulse"
 			do_patch kernel_smartass3_boost.patch
 		fi
 		if [ "${kernel_smartass2_boost}" = "Y" ] || [ "${kernel_smartass3_boost}" = "Y" ]; then
