@@ -245,7 +245,7 @@ cp ${patches}/cmxtended.xml ${android}/.repo/local_manifests/cmxtended.xml
 if [ "${kernel_naa}" = "Y" ]; then
 	echo "--- kernel nobodyAtall"
 else
-	sed -i "/semc-kernel-msm7x30/d" ${android}/.repo/local_manifests/cmxtended.xml
+	sed -i "/remove-project.*semc-kernel-msm7x30/d" ${android}/.repo/local_manifests/cmxtended.xml
 	sed -i "/nobodyAtall/d" ${android}/.repo/local_manifests/cmxtended.xml
 fi
 
