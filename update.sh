@@ -34,6 +34,7 @@ kernel_linaro=Y
 kernel_naa=Y
 kernel_cpugovernors=Y
 kernel_smartass2_boost=Y
+kernel_smartass3_boost=Y
 kernel_ioschedulers=Y
 kernel_voltage=Y
 kernel_autogroup=Y
@@ -469,6 +470,10 @@ if [ "${kernel_mods}" = "Y" ]; then
 			echo "--- SmartassV2 boost pulse"
 			do_patch kernel_smartass2_boost.patch
 		fi
+		if [ "${kernel_smartass3_boost}" = "Y" ]; then
+			echo "--- SmartassH3 boost pulse"
+			do_patch kernel_smartass3_boost.patch
+		fi
 	fi
 
 	if [ "${kernel_ioschedulers}" = "Y" ]; then
@@ -877,10 +882,10 @@ if [ "${noliblights}" = "Y" ]; then
 fi
 
 #SmartassV2 boost pulse
-if [ "${kernel_smartass2_boost}" = "Y" ]; then
+if [ "${kernel_smartass2_boost}" = "Y" ] || [ "${kernel_smartass3_boost}" = "Y" ]; then
 	echo "*** Enable SmartassV2 boost pulse ***"
 	cd ${android}/device/semc/msm7x30-common
-	do_patch power_boost_smartass2.patch
+	do_patch power_boost_pulse.patch
 fi
 
 #goo.im

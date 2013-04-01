@@ -1080,7 +1080,7 @@ index 8626b06..e0fd081 100644
 +    }
  }
 diff --git a/src/com/android/settings/cyanogenmod/Processor.java b/src/com/android/settings/cyanogenmod/Processor.java
-index ce2c404..6925089 100644
+index ce2c404..79df2a2 100644
 --- a/src/com/android/settings/cyanogenmod/Processor.java
 +++ b/src/com/android/settings/cyanogenmod/Processor.java
 @@ -22,11 +22,20 @@ import android.os.Message;
@@ -1104,7 +1104,7 @@ index ce2c404..6925089 100644
  //
  // CPU Related Settings
  //
-@@ -47,16 +56,75 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -47,16 +56,77 @@ public class Processor extends SettingsPreferenceFragment implements
      public static final String FREQ_MIN_FILE = "/sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq";
      public static final String SOB_PREF = "pref_cpu_set_on_boot";
  
@@ -1131,6 +1131,8 @@ index ce2c404..6925089 100644
 +    public static final String SMARTASSV2_DOWN_RATE_US_FILE = "/sys/devices/system/cpu/cpufreq/smartass/down_rate_us";
 +    public static final String SMARTASSV2_BOOST_ENABLED_FILE = "/sys/devices/system/cpu/cpufreq/smartass/boost_enabled";
 +    public static final String SMARTASSV2_BOOST_PULSE_FILE = "/sys/devices/system/cpu/cpufreq/smartass/boost_pulse";
++
++    public static final String SMARTASSH3_BOOST_PULSE_FILE = "/sys/devices/system/cpu/cpufreq/smartassH3/boost_pulse";
 +
 +    private static final String VDD_LEVELS_CAT = "pref_vdd_levels";
 +    public static final String VDD_LEVELS_PREF =  "pref_volt_";
@@ -1180,7 +1182,7 @@ index ce2c404..6925089 100644
  
      private class CurCPUThread extends Thread {
          private boolean mInterrupt = false;
-@@ -70,9 +138,18 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -70,9 +140,24 @@ public class Processor extends SettingsPreferenceFragment implements
              try {
                  while (!mInterrupt) {
                      sleep(500);
@@ -1198,10 +1200,16 @@ index ce2c404..6925089 100644
 +                        : null);
 +                    if (curBoostPulse != null)
 +                        mCurCPUHandler.sendMessage(mCurCPUHandler.obtainMessage(what_boost_pulse, curBoostPulse));
++
++                    final String curBoostPulse = (Utils.fileExists(SMARTASSH3_BOOST_PULSE_FILE)
++                        ? Utils.fileReadOneLine(SMARTASSH3_BOOST_PULSE_FILE)
++                        : null);
++                    if (curBoostPulse != null)
++                        mCurCPUHandler.sendMessage(mCurCPUHandler.obtainMessage(what_boost_pulse, curBoostPulse));
                  }
              } catch (InterruptedException e) {
              }
-@@ -83,7 +160,11 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -83,7 +168,11 @@ public class Processor extends SettingsPreferenceFragment implements
  
      private Handler mCurCPUHandler = new Handler() {
          public void handleMessage(Message msg) {
@@ -1214,7 +1222,7 @@ index ce2c404..6925089 100644
          }
      };
  
-@@ -95,6 +176,18 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -95,6 +184,18 @@ public class Processor extends SettingsPreferenceFragment implements
          mMinFrequencyFormat = getString(R.string.cpu_min_freq_summary);
          mMaxFrequencyFormat = getString(R.string.cpu_max_freq_summary);
  
@@ -1233,7 +1241,7 @@ index ce2c404..6925089 100644
          String[] availableFrequencies = new String[0];
          String[] availableGovernors = new String[0];
          String[] frequencies;
-@@ -110,6 +203,66 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -110,6 +211,66 @@ public class Processor extends SettingsPreferenceFragment implements
          mCurFrequencyPref = (Preference) prefScreen.findPreference(FREQ_CUR_PREF);
          mMinFrequencyPref = (ListPreference) prefScreen.findPreference(FREQ_MIN_PREF);
          mMaxFrequencyPref = (ListPreference) prefScreen.findPreference(FREQ_MAX_PREF);
@@ -1300,7 +1308,7 @@ index ce2c404..6925089 100644
  
          /* Governor
          Some systems might not use governors */
-@@ -171,12 +324,168 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -171,12 +332,168 @@ public class Processor extends SettingsPreferenceFragment implements
  
          if (!Utils.fileExists(FREQ_CUR_FILE) || (temp = Utils.fileReadOneLine(FREQ_CUR_FILE)) == null) {
              mCurFrequencyPref.setEnabled(false);
@@ -1310,8 +1318,7 @@ index ce2c404..6925089 100644
 +        }
 +
 +        smartassv2_values(null);
- 
--            mCurCPUThread.start();
++
 +        mCurCPUThread.start();
 +    }
 +
@@ -1333,7 +1340,8 @@ index ce2c404..6925089 100644
 +            for (int i = 0; i < frequencies.length; i++) {
 +                frequencies[i] = toMHz(availableFrequencies[i]);
 +            }
-+
+ 
+-            mCurCPUThread.start();
 +            // Awake ideal freq
 +            if (preference == null || preference == mSmartassV2AwakeIdealFreqPref)
 +                if (!Utils.fileExists(SMARTASSV2_AWAKE_IDEAL_FREQ_FILE) || (temp = Utils.fileReadOneLine(SMARTASSV2_AWAKE_IDEAL_FREQ_FILE)) == null) {
@@ -1471,7 +1479,7 @@ index ce2c404..6925089 100644
      }
  
      @Override
-@@ -196,8 +505,37 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -196,8 +513,37 @@ public class Processor extends SettingsPreferenceFragment implements
          }
  
          if (Utils.fileExists(GOV_FILE) && (temp = Utils.fileReadOneLine(GOV_FILE)) != null) {
@@ -1509,7 +1517,7 @@ index ce2c404..6925089 100644
      }
  
      @Override
-@@ -211,27 +549,77 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -211,27 +557,77 @@ public class Processor extends SettingsPreferenceFragment implements
      }
  
      public boolean onPreferenceChange(Preference preference, Object newValue) {
@@ -1589,7 +1597,7 @@ index ce2c404..6925089 100644
                  return true;
              } else {
                  return false;
-@@ -244,4 +632,27 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -244,4 +640,27 @@ public class Processor extends SettingsPreferenceFragment implements
          return new StringBuilder().append(Integer.valueOf(mhzString) / 1000).append(" MHz")
                  .toString();
      }
