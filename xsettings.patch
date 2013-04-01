@@ -1080,7 +1080,7 @@ index 8626b06..e0fd081 100644
 +    }
  }
 diff --git a/src/com/android/settings/cyanogenmod/Processor.java b/src/com/android/settings/cyanogenmod/Processor.java
-index ce2c404..79df2a2 100644
+index ce2c404..42c0ffb 100644
 --- a/src/com/android/settings/cyanogenmod/Processor.java
 +++ b/src/com/android/settings/cyanogenmod/Processor.java
 @@ -22,11 +22,20 @@ import android.os.Message;
@@ -1195,17 +1195,17 @@ index ce2c404..79df2a2 100644
 -                        mCurCPUHandler.sendMessage(mCurCPUHandler.obtainMessage(0, curFreq));
 +                        mCurCPUHandler.sendMessage(mCurCPUHandler.obtainMessage(what_cur_freq, curFreq));
 +
-+                    final String curBoostPulse = (Utils.fileExists(SMARTASSV2_BOOST_PULSE_FILE)
++                    final String curBoostPulse2 = (Utils.fileExists(SMARTASSV2_BOOST_PULSE_FILE)
 +                        ? Utils.fileReadOneLine(SMARTASSV2_BOOST_PULSE_FILE)
 +                        : null);
-+                    if (curBoostPulse != null)
-+                        mCurCPUHandler.sendMessage(mCurCPUHandler.obtainMessage(what_boost_pulse, curBoostPulse));
++                    if (curBoostPulse2 != null)
++                        mCurCPUHandler.sendMessage(mCurCPUHandler.obtainMessage(what_boost_pulse, curBoostPulse2));
 +
-+                    final String curBoostPulse = (Utils.fileExists(SMARTASSH3_BOOST_PULSE_FILE)
++                    final String curBoostPulse3 = (Utils.fileExists(SMARTASSH3_BOOST_PULSE_FILE)
 +                        ? Utils.fileReadOneLine(SMARTASSH3_BOOST_PULSE_FILE)
 +                        : null);
-+                    if (curBoostPulse != null)
-+                        mCurCPUHandler.sendMessage(mCurCPUHandler.obtainMessage(what_boost_pulse, curBoostPulse));
++                    if (curBoostPulse3 != null)
++                        mCurCPUHandler.sendMessage(mCurCPUHandler.obtainMessage(what_boost_pulse, curBoostPulse3));
                  }
              } catch (InterruptedException e) {
              }
