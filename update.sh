@@ -31,7 +31,7 @@ toolchain_32bit=N
 
 kernel_mods=Y
 kernel_linaro=Y
-kernel_naa=N
+kernel_naa=Y
 kernel_cpugovernors=Y
 kernel_smartass2_boost=Y
 kernel_ioschedulers=Y
@@ -514,13 +514,16 @@ if [ "${kernel_mods}" = "Y" ]; then
 
 	if [ "${kernel_autogroup}" = "Y" ]; then
 		echo "--- autogroup"
-		if [ "${kernel_naa}" != "Y" ]; then
+		if [ "${kernel_naa}" = "Y" ]; then
+			do_patch kernel_autogroup_perm.patch
+		else
 			do_patch kernel_autogroup.patch
 		fi
 		for device in ${devices}
 		do
 			kconfig=${android}/kernel/semc/msm7x30/arch/arm/configs/cyanogen_${device}_defconfig
 			if [ -f ${kconfig} ]; then
+				sed -i "/CONFIG_SCHED_AUTOGROUP/d" ${kconfig}
 				do_append "CONFIG_SCHED_AUTOGROUP=y" ${kconfig}
 			fi
 		done
