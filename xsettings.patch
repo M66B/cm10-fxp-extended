@@ -1113,7 +1113,7 @@ index 8626b06..e0fd081 100644
 +    }
  }
 diff --git a/src/com/android/settings/cyanogenmod/Processor.java b/src/com/android/settings/cyanogenmod/Processor.java
-index ce2c404..d95384d 100644
+index ce2c404..1cad618 100644
 --- a/src/com/android/settings/cyanogenmod/Processor.java
 +++ b/src/com/android/settings/cyanogenmod/Processor.java
 @@ -22,11 +22,20 @@ import android.os.Message;
@@ -1141,17 +1141,17 @@ index ce2c404..d95384d 100644
      public static final String FREQ_MIN_FILE = "/sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq";
      public static final String SOB_PREF = "pref_cpu_set_on_boot";
  
-+    public static final String SMARTASSV2_AWAKE_IDEAL_FREQ_PREF = "pref_smartassv2_awake_ideal_freq";
-+    public static final String SMARTASSV2_SLEEP_IDEAL_FREQ_PREF = "pref_smartassv2_sleep_ideal_freq";
-+    public static final String SMARTASSV2_SLEEP_WAKEUP_FREQ_PREF = "pref_smartassv2_sleep_wakeup_freq";
-+    public static final String SMARTASSV2_MAX_CPU_LOAD_PREF = "pref_smartassv2_max_cpu_load";
-+    public static final String SMARTASSV2_MIN_CPU_LOAD_PREF = "pref_smartassv2_min_cpu_load";
-+    public static final String SMARTASSV2_RAMP_UP_STEP_PREF = "pref_smartassv2_ramp_up_step";
-+    public static final String SMARTASSV2_RAMP_DOWN_STEP_PREF = "pref_smartassv2_ramp_down_step";
-+    public static final String SMARTASSV2_UP_RATE_US_PREF = "pref_smartassv2_up_rate_us";
-+    public static final String SMARTASSV2_DOWN_RATE_PREF = "pref_smartassv2_down_rate_us";
-+    public static final String SMARTASSV2_BOOST_ENABLED_PREF = "pref_smartassv2_boost_enabled";
-+    public static final String SMARTASSV2_BOOST_PULSE_PREF = "pref_smartassv2_boost_pulse";
++    public static final String SMARTASSV2_AWAKE_IDEAL_FREQ_PREF = "pref_smartass_awake_ideal_freq";
++    public static final String SMARTASSV2_SLEEP_IDEAL_FREQ_PREF = "pref_smartass_sleep_ideal_freq";
++    public static final String SMARTASSV2_SLEEP_WAKEUP_FREQ_PREF = "pref_smartass_sleep_wakeup_freq";
++    public static final String SMARTASSV2_MAX_CPU_LOAD_PREF = "pref_smartass_max_cpu_load";
++    public static final String SMARTASSV2_MIN_CPU_LOAD_PREF = "pref_smartass_min_cpu_load";
++    public static final String SMARTASSV2_RAMP_UP_STEP_PREF = "pref_smartass_ramp_up_step";
++    public static final String SMARTASSV2_RAMP_DOWN_STEP_PREF = "pref_smartass_ramp_down_step";
++    public static final String SMARTASSV2_UP_RATE_US_PREF = "pref_smartass_up_rate_us";
++    public static final String SMARTASSV2_DOWN_RATE_PREF = "pref_smartass_down_rate_us";
++    public static final String SMARTASSV2_BOOST_ENABLED_PREF = "pref_smartass_boost_enabled";
++    public static final String SMARTASSV2_BOOST_PULSE_PREF = "pref_smartass_boost_pulse";
 +
 +    public static final String SMARTASS_AWAKE_IDEAL_FREQ_FILE = "/sys/devices/system/cpu/cpufreq/%s/awake_ideal_freq";
 +    public static final String SMARTASS_SLEEP_IDEAL_FREQ_FILE = "/sys/devices/system/cpu/cpufreq/%s/sleep_ideal_freq";
