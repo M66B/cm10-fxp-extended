@@ -1,5 +1,5 @@
 diff --git a/res/values/strings.xml b/res/values/strings.xml
-index 5931dae..410be55 100644
+index 5931dae..60c908d 100644
 --- a/res/values/strings.xml
 +++ b/res/values/strings.xml
 @@ -4674,6 +4674,12 @@
@@ -57,7 +57,7 @@ index 5931dae..410be55 100644
      <string name="io_sched_title">I/O scheduler</string>
      <string name="io_sched_summary">%S</string>
 +    <string name="fsync_title">fsync</string>
-+    <string name="fsync_summary">synchronize a file\'s in-core state with storage device\nDo not disable unless you know what you are doing</string>
++    <string name="fsync_summary">Synchronize a file\'s in-core state with storage device.\nDo not disable unless you know what you are doing!</string>
      <string name="io_sched_set_on_boot">Set on boot</string>
      <string name="io_sched_set_on_boot_summary">Restore the I/O scheduler settings on boot</string>
  
@@ -1113,10 +1113,10 @@ index 8626b06..e0fd081 100644
 +    }
  }
 diff --git a/src/com/android/settings/cyanogenmod/Processor.java b/src/com/android/settings/cyanogenmod/Processor.java
-index ce2c404..1cad618 100644
+index ce2c404..555cd5f 100644
 --- a/src/com/android/settings/cyanogenmod/Processor.java
 +++ b/src/com/android/settings/cyanogenmod/Processor.java
-@@ -22,11 +22,20 @@ import android.os.Message;
+@@ -22,11 +22,22 @@ import android.os.Message;
  import android.preference.ListPreference;
  import android.preference.Preference;
  import android.preference.PreferenceScreen;
@@ -1133,11 +1133,13 @@ index ce2c404..1cad618 100644
  
 +import java.io.BufferedReader;
 +import java.io.FileReader;
++import java.util.Map;
++import java.util.HashMap;
 +
  //
  // CPU Related Settings
  //
-@@ -47,16 +56,75 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -47,16 +58,97 @@ public class Processor extends SettingsPreferenceFragment implements
      public static final String FREQ_MIN_FILE = "/sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq";
      public static final String SOB_PREF = "pref_cpu_set_on_boot";
  
@@ -1172,6 +1174,28 @@ index ce2c404..1cad618 100644
 +    private final static int VDD_MAX = 1500;
 +    private final static int VDD_STEP = 25;
 +    private final static int VDD_WARN = 1325;
++    private Map<String, String> mvDefault = new HashMap<String, String>() {{
++        put("24576", "900");
++        put("61440", "900");
++        put("134400", "900");
++        put("184320", "900");
++        put("192000", "900");
++        put("249600", "900");
++        put("364800", "900");
++        put("460800", "950");
++        put("576000", "1000");
++        put("652800", "1050");
++        put("768000", "1050");
++        put("806400", "1100");
++        put("921600", "1150");
++        put("1017600", "1200");
++        put("1113600", "1200");
++        put("1209600", "1200");
++        put("1305600", "1250");
++        put("1401600", "1250");
++        put("1516800", "1300");
++        put("1612800", "1300");
++    }};
 +
      private static final String TAG = "CPUSettings";
  
@@ -1213,7 +1237,7 @@ index ce2c404..1cad618 100644
  
      private class CurCPUThread extends Thread {
          private boolean mInterrupt = false;
-@@ -70,9 +138,17 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -70,9 +162,17 @@ public class Processor extends SettingsPreferenceFragment implements
              try {
                  while (!mInterrupt) {
                      sleep(500);
@@ -1233,7 +1257,7 @@ index ce2c404..1cad618 100644
                  }
              } catch (InterruptedException e) {
              }
-@@ -83,7 +159,11 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -83,7 +183,11 @@ public class Processor extends SettingsPreferenceFragment implements
  
      private Handler mCurCPUHandler = new Handler() {
          public void handleMessage(Message msg) {
@@ -1246,7 +1270,7 @@ index ce2c404..1cad618 100644
          }
      };
  
-@@ -95,6 +175,18 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -95,6 +199,18 @@ public class Processor extends SettingsPreferenceFragment implements
          mMinFrequencyFormat = getString(R.string.cpu_min_freq_summary);
          mMaxFrequencyFormat = getString(R.string.cpu_max_freq_summary);
  
@@ -1265,7 +1289,7 @@ index ce2c404..1cad618 100644
          String[] availableFrequencies = new String[0];
          String[] availableGovernors = new String[0];
          String[] frequencies;
-@@ -110,6 +202,66 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -110,6 +226,66 @@ public class Processor extends SettingsPreferenceFragment implements
          mCurFrequencyPref = (Preference) prefScreen.findPreference(FREQ_CUR_PREF);
          mMinFrequencyPref = (ListPreference) prefScreen.findPreference(FREQ_MIN_PREF);
          mMaxFrequencyPref = (ListPreference) prefScreen.findPreference(FREQ_MAX_PREF);
@@ -1315,7 +1339,7 @@ index ce2c404..1cad618 100644
 +                        pv.setEntryValues(availableVoltages);
 +                        pv.setEntries(voltages);
 +                        pv.setValue(mv);
-+                        pv.setSummary(String.format("%s mV", mv));
++                        pv.setSummary(String.format("%s mV (default %s mV)", mv, mvDefault.get(freq)));
 +                        pv.setOnPreferenceChangeListener(this);
 +
 +                        catVoltage.addPreference(pv);
@@ -1332,7 +1356,7 @@ index ce2c404..1cad618 100644
  
          /* Governor
          Some systems might not use governors */
-@@ -171,11 +323,189 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -171,11 +347,189 @@ public class Processor extends SettingsPreferenceFragment implements
  
          if (!Utils.fileExists(FREQ_CUR_FILE) || (temp = Utils.fileReadOneLine(FREQ_CUR_FILE)) == null) {
              mCurFrequencyPref.setEnabled(false);
@@ -1524,7 +1548,7 @@ index ce2c404..1cad618 100644
          }
      }
  
-@@ -196,8 +526,37 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -196,8 +550,37 @@ public class Processor extends SettingsPreferenceFragment implements
          }
  
          if (Utils.fileExists(GOV_FILE) && (temp = Utils.fileReadOneLine(GOV_FILE)) != null) {
@@ -1550,7 +1574,7 @@ index ce2c404..1cad618 100644
 +
 +                        ListPreference pv = (ListPreference) prefScreen.findPreference(VDD_LEVELS_PREF + freq);
 +                        pv.setValue(mv);
-+                        pv.setSummary(String.format("%s mV", mv));
++                        pv.setSummary(String.format("%s mV (default %s mV)", mv, mvDefault.get(freq)));
 +                    }
 +                } finally {
 +                    vddReader.close();
@@ -1562,7 +1586,7 @@ index ce2c404..1cad618 100644
      }
  
      @Override
-@@ -211,27 +570,77 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -211,27 +594,78 @@ public class Processor extends SettingsPreferenceFragment implements
      }
  
      public boolean onPreferenceChange(Preference preference, Object newValue) {
@@ -1633,7 +1657,8 @@ index ce2c404..1cad618 100644
                      mMaxFrequencyPref.setSummary(String.format(mMaxFrequencyFormat,
                              toMHz((String) newValue)));
 +                } else if (preference.getKey().startsWith(VDD_LEVELS_PREF)) {
-+                    preference.setSummary(String.format("%s mV", mv));
++                    String freq = preference.getKey().substring(VDD_LEVELS_PREF.length());
++                    preference.setSummary(String.format("%s mV (default %s mV)", mv, mvDefault.get(freq)));
                  }
 +                else {
 +                    smartassv2_values(preference);
@@ -1642,7 +1667,7 @@ index ce2c404..1cad618 100644
                  return true;
              } else {
                  return false;
-@@ -240,8 +649,42 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -240,8 +674,42 @@ public class Processor extends SettingsPreferenceFragment implements
          return false;
      }
  
