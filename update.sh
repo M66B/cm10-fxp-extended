@@ -80,6 +80,7 @@ noliblights=Y
 iw=Y
 fmrouting=Y
 fmspeaker=Y
+mmsfix=Y
 trebuchet_cm10_1=Y
 deskclock_cm10_1=Y
 superuser_cm10_1=N
@@ -919,6 +920,12 @@ if [ "${fmspeaker}" = "Y" ]; then
 	echo "*** FM speaker ***"
 	cd ${android}/hardware/ti/fmradio
 	do_patch fm_radio_speaker.patch
+fi
+
+if [ "${mmsfix}" = "Y" ]; then
+	echo "*** MMS fix ***"
+	cd ${android}/packages/apps/Mms
+	do_patch mms_cursor.patch
 fi
 
 #Trebuchet CM10.1

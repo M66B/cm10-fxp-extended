@@ -1,0 +1,43 @@
+diff --git a/src/com/android/mms/ui/ComposeMessageActivity.java b/src/com/android/mms/ui/ComposeMessageActivity.java
+index fb135d5..2ee4e7f 100644
+--- a/src/com/android/mms/ui/ComposeMessageActivity.java
++++ b/src/com/android/mms/ui/ComposeMessageActivity.java
+@@ -4118,12 +4118,14 @@ public class ComposeMessageActivity extends Activity
+                     int newSelectionPos = -1;
+                     long targetMsgId = getIntent().getLongExtra("select_id", -1);
+                     if (targetMsgId != -1) {
+-                        cursor.moveToPosition(-1);
+-                        while (cursor.moveToNext()) {
+-                            long msgId = cursor.getLong(COLUMN_ID);
+-                            if (msgId == targetMsgId) {
+-                                newSelectionPos = cursor.getPosition();
+-                                break;
++                        if (cursor != null) {
++                            cursor.moveToPosition(-1);
++                            while (cursor.moveToNext()) {
++                                long msgId = cursor.getLong(COLUMN_ID);
++                                if (msgId == targetMsgId) {
++                                    newSelectionPos = cursor.getPosition();
++                                    break;
++                                }
+                             }
+                         }
+                     } else if (mSavedScrollPosition != -1) {
+@@ -4171,7 +4173,7 @@ public class ComposeMessageActivity extends Activity
+                     // mSentMessage is true).
+                     // Show the recipients editor to give the user a chance to add
+                     // more people before the conversation begins.
+-                    if (cursor.getCount() == 0 && !isRecipientsEditorVisible() && !mSentMessage) {
++                    if (cursor != null && cursor.getCount() == 0 && !isRecipientsEditorVisible() && !mSentMessage) {
+                         initRecipientsEditor();
+                     }
+ 
+@@ -4207,7 +4209,7 @@ public class ComposeMessageActivity extends Activity
+                     if (cursor == null) {
+                         return;
+                     }
+-                    if (tid > 0 && cursor.getCount() == 0) {
++                    if (tid > 0 && cursor != null && cursor.getCount() == 0) {
+                         // We just deleted the last message and the thread will get deleted
+                         // by a trigger in the database. Clear the threadId so next time we
+                         // need the threadId a new thread will get created.
