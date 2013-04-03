@@ -79,6 +79,7 @@ qcomdispl=Y
 noliblights=Y
 iw=Y
 fmrouting=Y
+fmspeaker=Y
 trebuchet_cm10_1=Y
 deskclock_cm10_1=Y
 superuser_cm10_1=N
@@ -911,6 +912,13 @@ if [ "${fmrouting}" = "Y" ]; then
 	echo "*** FM routing ***"
 	cd ${android}/hardware/qcom/audio
 	do_patch fm_routing.patch
+fi
+
+#FM speaker
+if [ "${fmspeaker}" = "Y" ]; then
+	echo "*** FM speaker ***"
+	cd ${android}/hardware/ti/fmradio
+	do_patch fm_radio_speaker.patch
 fi
 
 #Trebuchet CM10.1

@@ -1,23 +1,38 @@
-From daeecaa04d77a0ca2ae704c3065ad3406ca24905 Mon Sep 17 00:00:00 2001
-From: Michael Bestas <mikeioannina@gmail.com>
-Date: Tue, 2 Apr 2013 16:46:32 +0300
-Subject: [PATCH] msm7x30: fix SEMC FM Radio routing after call
-
-Original patch by M66B, adapted to build only for SEMC
-Including some erroneous ifdef fixes
-
-Signed-off-by: Michael Bestas <mikeioannina@gmail.com>
-
-Change-Id: I57ce67bd90a8ed46079a3c4a8b37ca4fbb4e6223
----
- msm7x30/AudioHardware.cpp |   49 ++++++++++++++++++++++++++++++---------------
- 1 file changed, 33 insertions(+), 16 deletions(-)
-
 diff --git a/msm7x30/AudioHardware.cpp b/msm7x30/AudioHardware.cpp
-index 5756729..320dcbd 100644
+index 5756729..3ce92ad 100644
 --- a/msm7x30/AudioHardware.cpp
 +++ b/msm7x30/AudioHardware.cpp
-@@ -1402,6 +1402,14 @@ status_t AudioHardware::setVoiceVolume(float v)
+@@ -221,6 +221,7 @@ enum FM_STATE {
+ };
+ 
+ FM_STATE fmState = FM_INVALID;
++FM_STATE fmSpeaker = FM_OFF;
+ #endif
+ 
+ static uint32_t fmDevice = INVALID_DEVICE;
+@@ -1253,6 +1254,21 @@ status_t AudioHardware::setParameters(const String8& keyValuePairs)
+             doRouting(NULL);
+         }
+     }
++
++    const char FM_RADIO_SPEAKER_KEY[] = "fm_radio_speaker";
++    key = String8(FM_RADIO_SPEAKER_KEY);
++    if (param.get(key,value) == NO_ERROR) {
++        if (value == FM_VALUE_ON) {
++            ALOGI("FM radio speaker enabled");
++            fmSpeaker = FM_ON;
++            doRouting(NULL);
++        }
++        else if (value == FM_VALUE_OFF) {
++            fmSpeaker = FM_OFF;
++            ALOGI("FM radio speaker disabled");
++            doRouting(NULL);
++        }
++    }
+ #endif
+ 
+     return NO_ERROR;
+@@ -1402,6 +1418,14 @@ status_t AudioHardware::setVoiceVolume(float v)
      ALOGD("setVoiceVolume(%f)\n", v);
      ALOGI("Setting in-call volume to %d (available range is 0 to 100)\n", vol);
  
@@ -32,7 +47,7 @@ index 5756729..320dcbd 100644
      if(msm_set_voice_rx_vol(vol)) {
          ALOGE("msm_set_voice_rx_vol(%d) failed errno = %d",vol,errno);
          return -1;
-@@ -2354,16 +2362,31 @@ status_t AudioHardware::doRouting(AudioStreamInMSM7x30 *input)
+@@ -2354,16 +2378,37 @@ status_t AudioHardware::doRouting(AudioStreamInMSM7x30 *input)
              ALOGI("Routing audio to Wired Headset and Speaker\n");
              sndDevice = SND_DEVICE_HEADSET_AND_SPEAKER;
              audProcess = (ADRC_ENABLE | EQ_ENABLE | RX_IIR_ENABLE | MBADRC_ENABLE);
@@ -51,12 +66,18 @@ index 5756729..320dcbd 100644
 +        else if (outputDevices & AudioSystem::DEVICE_OUT_WIRED_HEADPHONE) {
 +#ifdef HAVE_SEMC_FM_RADIO
 +            if (fmState == FM_ON) {
-+                if (outputDevices & AudioSystem::DEVICE_OUT_WIRED_HEADPHONE) {
-+                    ALOGI("Routing FM audio to No microphone Wired Headset");
-+                    sndDevice = SND_DEVICE_NO_MIC_HEADSET;
-+                } else {
-+                    ALOGI("Routing FM audio to Wired Headset");
-+                    sndDevice = SND_DEVICE_HEADSET;
++                if (fmSpeaker == FM_ON) {
++                    ALOGI("Routing audio to Speakerphone\n");
++                    sndDevice = SND_DEVICE_SPEAKER;
++                }
++                else {
++                    if (outputDevices & AudioSystem::DEVICE_OUT_WIRED_HEADPHONE) {
++                        ALOGI("Routing FM audio to No microphone Wired Headset");
++                        sndDevice = SND_DEVICE_NO_MIC_HEADSET;
++                    } else {
++                        ALOGI("Routing FM audio to Wired Headset");
++                        sndDevice = SND_DEVICE_HEADSET;
++                    }
 +                }
 +                audProcess = (ADRC_ENABLE | EQ_ENABLE | RX_IIR_ENABLE | MBADRC_ENABLE);
 +            } else if (outputDevices & AudioSystem::DEVICE_OUT_SPEAKER) {
@@ -66,7 +87,7 @@ index 5756729..320dcbd 100644
                  ALOGI("Routing audio to No microphone Wired Headset and Speaker (%d,%x)\n", mMode, outputDevices);
                  sndDevice = SND_DEVICE_HEADPHONE_AND_SPEAKER;
                  audProcess = (ADRC_ENABLE | EQ_ENABLE | RX_IIR_ENABLE | MBADRC_ENABLE);
-@@ -2383,13 +2406,14 @@ status_t AudioHardware::doRouting(AudioStreamInMSM7x30 *input)
+@@ -2383,13 +2428,14 @@ status_t AudioHardware::doRouting(AudioStreamInMSM7x30 *input)
              ALOGI("Routing audio to Handset\n");
              sndDevice = SND_DEVICE_HANDSET;
              audProcess = (ADRC_ENABLE | EQ_ENABLE | RX_IIR_ENABLE | MBADRC_ENABLE);
@@ -83,7 +104,7 @@ index 5756729..320dcbd 100644
      }
  
      if (mDualMicEnabled && mMode == AudioSystem::MODE_IN_CALL) {
-@@ -2403,20 +2427,12 @@ status_t AudioHardware::doRouting(AudioStreamInMSM7x30 *input)
+@@ -2403,20 +2449,12 @@ status_t AudioHardware::doRouting(AudioStreamInMSM7x30 *input)
      }
  #ifdef QCOM_FM_ENABLED
  #ifdef HAVE_SEMC_FM_RADIO
@@ -107,7 +128,7 @@ index 5756729..320dcbd 100644
  #else
      if ((outputDevices & AudioSystem::DEVICE_OUT_FM) && (mFmFd == -1)){
          enableFM(sndDevice);
-@@ -4015,7 +4031,8 @@ ssize_t AudioHardware::AudioStreamInMSM7x30::read( void* buffer, ssize_t bytes)
+@@ -4015,7 +4053,8 @@ ssize_t AudioHardware::AudioStreamInMSM7x30::read( void* buffer, ssize_t bytes)
                  mFmRec = FM_FILE_REC;
              }
              hw->mLock.unlock();
@@ -117,6 +138,3 @@ index 5756729..320dcbd 100644
  #endif
          {
              hw->mLock.unlock();
--- 
-1.7.10.4
-

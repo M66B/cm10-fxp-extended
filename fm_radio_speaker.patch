@@ -1,0 +1,89 @@
+From 6fe788c8b5c24ae2e65ae575e22a7d48c39e5345 Mon Sep 17 00:00:00 2001
+From: nobodyAtall <tsogkas@ceid.upatras.gr>
+Date: Sat, 2 Mar 2013 21:24:03 +0200
+Subject: [PATCH] fmradio: Workaround for routing to speaker phone
+
+Change-Id: I773651873f16c03e8c5b1f9debf8e93524038e02
+---
+ Fmapplication/res/layout/fmrxmain.xml       |    4 ++--
+ Fmapplication/src/com/ti/fmapp/FmRxApp.java |   14 +++++++++-----
+ 2 files changed, 11 insertions(+), 7 deletions(-)
+
+diff --git a/Fmapplication/res/layout/fmrxmain.xml b/Fmapplication/res/layout/fmrxmain.xml
+index 4ae566b..b604fd4 100644
+--- a/Fmapplication/res/layout/fmrxmain.xml
++++ b/Fmapplication/res/layout/fmrxmain.xml
+@@ -106,7 +106,7 @@
+                 android:layout_marginRight="13dip"
+                 android:layout_alignParentRight="true"/>
+ 
+-        <!-- <ImageView
++        <ImageView
+                 android:id="@+id/imgLoudspeaker"
+                 android:src="@drawable/fm_loudspeaker_off"
+                 android:layout_width="wrap_content"
+@@ -114,7 +114,7 @@
+                 android:layout_gravity="left"
+                 android:layout_marginTop="88dip"
+                 android:layout_marginRight="13dip"
+-                android:layout_alignParentRight="true"/> -->
++                android:layout_alignParentRight="true"/>
+     </RelativeLayout>
+ 
+     <TextView
+diff --git a/Fmapplication/src/com/ti/fmapp/FmRxApp.java b/Fmapplication/src/com/ti/fmapp/FmRxApp.java
+index d7b3979..9e004cb 100644
+--- a/Fmapplication/src/com/ti/fmapp/FmRxApp.java
++++ b/Fmapplication/src/com/ti/fmapp/FmRxApp.java
+@@ -117,7 +117,7 @@ public class FmRxApp extends Activity implements View.OnClickListener,
+      * ******************************************
+      */
+ 
+-    private ImageView imgFmMode, imgFmVolume;//, imgFmLoudspeaker;
++    private ImageView imgFmMode, imgFmVolume, imgFmLoudspeaker;
+     private TextView txtStatusMsg, txtRadioText;
+     private TextView txtPsText;
+     private ProgressDialog pd = null, configPd;
+@@ -1161,14 +1161,14 @@ public class FmRxApp extends Activity implements View.OnClickListener,
+             imgFmVolume.setImageResource(R.drawable.fm_volume);
+         }
+ 
+-        /*imgFmLoudspeaker = (ImageView) findViewById(R.id.imgLoudspeaker);
++        imgFmLoudspeaker = (ImageView) findViewById(R.id.imgLoudspeaker);
+         imgFmLoudspeaker.setOnClickListener(this);
+         AudioManager audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
+         if (audioManager.isSpeakerphoneOn()) {
+             imgFmLoudspeaker.setImageResource(R.drawable.fm_loudspeaker);
+         } else {
+             imgFmLoudspeaker.setImageResource(R.drawable.fm_loudspeaker_off);
+-        } */
++        }
+ 
+ 
+         ImageButton imageButtonAux = (ImageButton) findViewById(R.id.imgseekup);
+@@ -1500,16 +1500,20 @@ public class FmRxApp extends Activity implements View.OnClickListener,
+                 seekDown();
+                 break;
+ 
+-            /*case R.id.imgLoudspeaker:
++            case R.id.imgLoudspeaker:
+                 AudioManager audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
+                 if (audioManager.isSpeakerphoneOn()) {
+                     audioManager.setSpeakerphoneOn(false);
++                    audioManager.setParameters("fm_radio_active=on");
++                    audioManager.setParameters("fm_radio_speaker=off");
+                     imgFmLoudspeaker.setImageResource(R.drawable.fm_loudspeaker_off);
+                 } else {
+                     audioManager.setSpeakerphoneOn(true);
++                    audioManager.setParameters("fm_radio_active=on");
++                    audioManager.setParameters("fm_radio_speaker=on");
+                     imgFmLoudspeaker.setImageResource(R.drawable.fm_loudspeaker);
+                 }
+-                break; */
++                break;
+ 
+             case R.id.imgseekup:
+                 seekUp();
+-- 
+1.7.10.4
+
