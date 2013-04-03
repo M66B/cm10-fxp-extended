@@ -620,7 +620,6 @@ if [ "${kernel_mods}" = "Y" ]; then
 			do_replace "# CONFIG_SLUB is not set" "CONFIG_SLUB=y" ${kconfig}
 		done
 	fi
-	do_patch kernel_fm_radio.patch
 
 	if [ "${kernel_optimize}" = "Y" ] && [ "${kernel_linaro}" != "Y" ]; then
 		echo "--- Optimized build"
