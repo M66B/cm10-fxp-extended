@@ -9,7 +9,7 @@ devices="anzu coconut haida hallon iyokan mango satsuma smultron urushi"
 debug=N
 cleanall=N
 updates=N
-if [ "`hostname`" = "ALGEIBA" ]; then
+if [ "`hostname`" = "ALGEIBA" ] || [ "`hostname`" = "HTPC" ]; then
 	updates=Y
 fi
 if [ "$1" = "clean" ]; then
