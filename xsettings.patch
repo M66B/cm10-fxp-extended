@@ -81,7 +81,7 @@ index 5931dae..60c908d 100644
 +    <string name="lowmem_content_provider_title">Content provider</string>
 +    <string name="lowmem_content_provider_summary">%s\nThis is a process with a content provider that does not have any clients attached to it. If it did have any clients, its adjustment would be the one for the highest-priority of those processes.</string>
 +    <string name="lowmem_empty_app_title">Empty app</string>
-+    <string name="lowmem_empty_app_summary">%s\nThis is a process without anything currently running in it.  Definitely the first to go!</string>
++    <string name="lowmem_empty_app_summary">%s\nThis is a process without anything currently running in it. Definitely the first to go!</string>
 +    <string name="lowmem_set_on_boot">Set on boot</string>
 +    <string name="lowmem_set_on_boot_summary">Restore the low memory settings on boot</string>
 +    <string name="lowmem_set_on_boot_disabled">Set on boot disabled</string>
