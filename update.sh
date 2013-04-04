@@ -77,7 +77,7 @@ ssh=Y
 layout=Y
 mvolume=Y
 qcomdispl=Y
-noliblights=Y
+noliblights=N
 iw=Y
 fmrouting=N			#merged into CM10
 fmspeaker=Y
@@ -624,6 +624,7 @@ if [ "${kernel_mods}" = "Y" ]; then
 		echo "-- Automatic brightness"
 		do_patch_reverse kernel_ALS1.patch
 		do_patch_reverse kernel_ALS2.patch
+		do_patch_reverse kernel_ALS_no_as3676.patch
 	fi
 
 	if [ "${kernel_misc}" = "Y" ] && [ "${kernel_naa}" != "Y" ]; then
@@ -817,7 +818,7 @@ fi
 #ALS
 if [ "${als}" = "Y" ]; then
 	echo "*** Automatic brightness ***"
-	do_append "BOARD_SYSFS_LIGHT_SENSOR := /sys/class/leds/lcd-backlight/als/enable" ${android}/device/semc/msm7x30-common/BoardConfigCommon.mk
+	#do_append "BOARD_SYSFS_LIGHT_SENSOR := /sys/class/leds/lcd-backlight/als/enable" ${android}/device/semc/msm7x30-common/BoardConfigCommon.mk
 	do_append "PRODUCT_PROPERTY_OVERRIDES += ro.hardware.respect_als=true" ${android}/device/semc/msm7x30-common/msm7x30.mk
 	cd ${android}/device/semc/mango
 	do_patch ALS_mango.patch
@@ -827,10 +828,11 @@ if [ "${als}" = "Y" ]; then
 	do_patch ALS_smultron.patch
 	cd ${android}/device/semc/coconut
 	do_patch ALS_coconut.patch
-	cd ${android}/frameworks/base
-	do_patch dummy_light_sensor.patch
+	#cd ${android}/frameworks/base
+	#do_patch dummy_light_sensor.patch
 	cd ${android}/device/semc/msm7x30-common
 	do_patch ALS_overlay.patch
+	do_patch_reverse ALS_no_as3676.patch
 fi
 
 #Xtended settings
