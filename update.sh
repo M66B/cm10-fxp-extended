@@ -46,7 +46,6 @@ kernel_binder60=Y
 kernel_whisper=N
 kernel_hdmi=N
 kernel_misc=Y
-kernel_optimize=N
 
 kernel_compress=Y
 
@@ -418,7 +417,6 @@ if [ "${kernel_mods}" = "Y" ]; then
 		echo "--- Linaro"
 		do_patch kernel_linaro_head.patch
 		do_patch kernel_linaro_boot.patch
-		#do_patch kernel_optimize.patch
 	fi
 
 	if [ "${kernel_cpugovernors}" = "Y" ]; then
@@ -617,17 +615,6 @@ if [ "${kernel_mods}" = "Y" ]; then
 			do_replace "# CONFIG_IKCONFIG_PROC is not set" "CONFIG_IKCONFIG_PROC=y" ${kconfig}
 			do_replace "CONFIG_SLAB=y" "# CONFIG_SLAB is not set" ${kconfig}
 			do_replace "# CONFIG_SLUB is not set" "CONFIG_SLUB=y" ${kconfig}
-		done
-	fi
-
-	if [ "${kernel_optimize}" = "Y" ] && [ "${kernel_linaro}" != "Y" ]; then
-		echo "--- Optimized build"
-		for device in ${devices}
-		do
-			kconfig=${android}/kernel/semc/msm7x30/arch/arm/configs/cyanogen_${device}_defconfig
-			if [ -f ${kconfig} ]; then
-				do_replace "CONFIG_CC_OPTIMIZE_FOR_SIZE" "CONFIG_CC_OPTIMIZE_ALOT" ${kconfig}
-			fi
 		done
 	fi
 fi
