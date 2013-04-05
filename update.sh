@@ -78,8 +78,6 @@ mvolume=Y
 qcomdispl=Y
 noliblights=N
 iw=Y
-fmrouting=N			#merged into CM10
-fmspeaker=Y
 mmsfix=Y
 trebuchet_cm10_1=Y
 deskclock_cm10_1=Y
@@ -899,20 +897,7 @@ if [ "${iw}" = "Y" ]; then
 	do_patch vendor_semc_iw.patch
 fi
 
-#FM routing patch
-if [ "${fmrouting}" = "Y" ]; then
-	echo "*** FM routing ***"
-	cd ${android}/hardware/qcom/audio
-	do_patch fm_routing.patch
-fi
-
-#FM speaker
-if [ "${fmspeaker}" = "Y" ]; then
-	echo "*** FM speaker ***"
-	cd ${android}/hardware/ti/fmradio
-	do_patch fm_radio_speaker.patch
-fi
-
+#MMS fix
 if [ "${mmsfix}" = "Y" ]; then
 	echo "*** MMS fix ***"
 	cd ${android}/packages/apps/Mms
