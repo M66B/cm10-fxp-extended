@@ -47,8 +47,6 @@ kernel_whisper=N
 kernel_hdmi=N
 kernel_misc=Y
 
-kernel_compress=Y
-
 bootlogo=Y
 bootlogoh=logo_H_extended.png
 bootlogom=logo_M_extended.png
@@ -617,12 +615,6 @@ if [ "${kernel_mods}" = "Y" ]; then
 			do_replace "# CONFIG_SLUB is not set" "CONFIG_SLUB=y" ${kconfig}
 		done
 	fi
-fi
-
-#Kernel compression
-if [ "${kernel_compress}" != "Y" ]; then
-	echo "*** No kernel compression ***"
-	do_append "BOARD_USES_UNCOMPRESSED_BOOT := true" ${android}/device/semc/msm7x30-common/BoardConfigCommon.mk
 fi
 
 #Boot logo
