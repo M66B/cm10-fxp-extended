@@ -44,7 +44,7 @@ kernel_displaylink=Y
 kernel_videodriver=Y
 kernel_binder60=Y
 kernel_whisper=N
-kernel_hdmi=N
+kernel_hdmi=N			#unfinished
 kernel_misc=Y
 
 bootlogo=Y
@@ -76,7 +76,7 @@ mmsfix=Y
 trebuchet_cm10_1=Y
 deskclock_cm10_1=Y
 superuser_koush=Y
-browser_cm10_1=N    #unfinished
+browser_cm10_1=N		#unfinished
 busybox_cm10_1=Y
 
 #Say hello
@@ -162,6 +162,8 @@ mkdir -p ~/Downloads
 
 #Cleanup
 echo "*** Cleanup ***"
+
+#OpenPDroid
 do_deldir ${android}/out/target/common/obj/JAVA_LIBRARIES/framework_intermediates
 do_deldir ${android}/out/target/common/obj/JAVA_LIBRARIES/framework2_intermediates
 do_deldir ${android}/out/target/common/obj/APPS/TelephonyProvider_intermediates
@@ -190,6 +192,7 @@ do
 	do_deldir ${android}/out/target/product/${device}/recovery/root
 done
 
+#Replaced projects
 if [ "${cleanall}" = "Y" ]; then
 	do_deldir ${android}/bootable/recovery
 	do_deldir ${android}/system/su
@@ -451,7 +454,9 @@ if [ "${kernel_mods}" = "Y" ]; then
 			do_patch kernel_smartass3_boost.patch
 		fi
 		if [ "${kernel_smartass2_boost}" = "Y" ] || [ "${kernel_smartass3_boost}" = "Y" ]; then
-			do_patch kernel_smartass_perm.patch
+			if [ "${xsettings}" = "Y" ]; then
+				do_patch kernel_smartass_perm.patch
+			fi
 		fi
 	fi
 
@@ -816,7 +821,7 @@ if [ "${qcomdispl}" = "Y" ]; then
 	do_patch qcom_display_ioctl.patch
 fi
 
-#SmartassV2 boost pulse
+#Smartass boost pulse
 if [ "${kernel_smartass2_boost}" = "Y" ] || [ "${kernel_smartass3_boost}" = "Y" ]; then
 	echo "*** Enable SmartassV2 boost pulse ***"
 	cd ${android}/device/semc/msm7x30-common
