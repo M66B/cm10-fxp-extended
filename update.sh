@@ -75,7 +75,6 @@ iw=Y
 mmsfix=Y
 trebuchet_cm10_1=Y
 deskclock_cm10_1=Y
-superuser_cm10_1=N
 superuser_koush=Y
 browser_cm10_1=N    #unfinished
 busybox_cm10_1=Y
@@ -255,21 +254,13 @@ else
 fi
 
 #su
-if [ "${superuser_cm10_1}" = "Y" ]; then
-	echo "--- Superuser CM10.1"
-else
-	if [ "${superuser_koush}" != "Y" ]; then
-		sed -i "/android_system_su/d" ${android}/.repo/local_manifests/cmxtended.xml
-		sed -i "/android_packages_apps_Superuser/d" ${android}/.repo/local_manifests/cmxtended.xml
-	fi
-fi
 if [ "${superuser_koush}" = "Y" ]; then
 	echo "--- Superuser koush"
-	sed -i "/system\/su/d" ${android}/.repo/local_manifests/cmxtended.xml
-	sed -i "/packages\/apps\/Superuser/d" ${android}/.repo/local_manifests/cmxtended.xml
 	do_append "SUPERUSER_PACKAGE := com.m66b.superuser" ${android}/device/semc/msm7x30-common/BoardConfigCommon.mk
 else
 	sed -i "/koush/d" ${android}/.repo/local_manifests/cmxtended.xml
+	sed -i "/android_system_su/d" ${android}/.repo/local_manifests/cmxtended.xml
+	sed -i "/android_packages_apps_Superuser/d" ${android}/.repo/local_manifests/cmxtended.xml
 fi
 
 #Trebuchet

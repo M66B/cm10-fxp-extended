@@ -24,11 +24,7 @@
   <project name="TeamWin/Team-Win-Recovery-Project" path="bootable/recovery" remote="github" revision="twrp2.4" />
 
   <remove-project name="CyanogenMod/android_system_su" />
-  <project name="CyanogenMod/android_system_su" path="system/su" remote="github" revision="cm-10.1" />
-
   <remove-project name="CyanogenMod/android_packages_apps_Superuser" />
-  <project name="CyanogenMod/android_packages_apps_Superuser" path="packages/apps/Superuser" remote="github" revision="cm-10.1" />
-
   <project name="koush/Superuser" path="external/koush/Superuser" remote="github" revision="master" />
   <project name="koush/Widgets" path="external/koush/Widgets" remote="github" revision="master" />
 
