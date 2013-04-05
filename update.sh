@@ -69,7 +69,6 @@ terminfo=Y
 emptydrawer=Y
 massstorage=Y
 enable720p=N
-als=Y
 xsettings=Y
 wifiautoconnect=Y
 eba=Y
@@ -407,8 +406,6 @@ fi
 if [ "${kernel_mods}" = "Y" ]; then
 	echo "*** Kernel ***"
 	cd ${android}/kernel/semc/msm7x30/
-	#TODO: nAa - xsettings patches
-
 	if [ "${kernel_naa}" = "Y" ]; then
 		echo "--- nobodyAtall"
 		if [ ! -f arch/arm/configs/nAa_iyokan_defconfig ]; then
@@ -418,7 +415,7 @@ if [ "${kernel_mods}" = "Y" ]; then
 		for device in ${devices}
 		do
 			if [ -f arch/arm/configs/nAa_${device}_defconfig ]; then
-				cp arch/arm/configs/nAa_${device}_defconfig arch/arm/configs/cyanogen_${device}_defconfig
+				cp arch/arm/configs/nAa_${device}_defconfig arch/arm/configs/cm_${device}_defconfig
 			else
 				echo "--- No kernel config for ${device}"
 			fi
@@ -620,13 +617,6 @@ if [ "${kernel_mods}" = "Y" ]; then
 		do_patch kernel_disable_720p.patch
 	fi
 
-	if [ "${als}" = "Y" ] && [ "${kernel_naa}" != "Y" ]; then
-		echo "-- Automatic brightness"
-		do_patch_reverse kernel_ALS1.patch
-		do_patch_reverse kernel_ALS2.patch
-		do_patch_reverse kernel_ALS_no_as3676.patch
-	fi
-
 	if [ "${kernel_misc}" = "Y" ] && [ "${kernel_naa}" != "Y" ]; then
 		echo "-- Misc"
 		do_patch kernel_lowmem.patch
@@ -813,26 +803,6 @@ if [ "${enable720p}" = "Y" ]; then
 	echo "*** Enable 720p ***"
 	cd ${android}/device/semc/msm7x30-common
 	do_patch enable_720p.patch
-fi
-
-#ALS
-if [ "${als}" = "Y" ]; then
-	echo "*** Automatic brightness ***"
-	#do_append "BOARD_SYSFS_LIGHT_SENSOR := /sys/class/leds/lcd-backlight/als/enable" ${android}/device/semc/msm7x30-common/BoardConfigCommon.mk
-	do_append "PRODUCT_PROPERTY_OVERRIDES += ro.hardware.respect_als=true" ${android}/device/semc/msm7x30-common/msm7x30.mk
-	cd ${android}/device/semc/mango
-	do_patch ALS_mango.patch
-	cd ${android}/device/semc/iyokan
-	do_patch ALS_iyokan.patch
-	cd ${android}/device/semc/smultron
-	do_patch ALS_smultron.patch
-	cd ${android}/device/semc/coconut
-	do_patch ALS_coconut.patch
-	#cd ${android}/frameworks/base
-	#do_patch dummy_light_sensor.patch
-	cd ${android}/device/semc/msm7x30-common
-	do_patch ALS_overlay.patch
-	do_patch_reverse ALS_no_as3676.patch
 fi
 
 #Xtended settings
