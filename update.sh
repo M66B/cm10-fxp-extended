@@ -59,7 +59,6 @@ twrp=N
 cellbroadcast=Y
 datallowed=Y
 openpdroid=Y
-oompriorities=N
 nano=Y
 terminfo=Y
 emptydrawer=Y
@@ -707,13 +706,6 @@ if [ "${openpdroid}" = "Y" ]; then
 	mkdir -p ${android}/privacy
 	cp ~/Downloads/OpenPDroidPatches/PDroid.jpeg ${android}/privacy
 	do_append "PRODUCT_COPY_FILES += privacy/PDroid.jpeg:system/media/PDroid.jpeg" ${android}/vendor/cm/config/common.mk
-fi
-
-#OOM priorities
-if [ "${oompriorities}" = "Y" ]; then
-	echo "*** OOM priorities ***"
-	cd ${android}/frameworks/base
-	do_patch supercharger.patch
 fi
 
 #nano
