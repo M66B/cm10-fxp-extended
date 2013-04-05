@@ -406,10 +406,6 @@ if [ "${kernel_mods}" = "Y" ]; then
 	cd ${android}/kernel/semc/msm7x30/
 	if [ "${kernel_naa}" = "Y" ]; then
 		echo "--- nobodyAtall"
-		if [ ! -f arch/arm/configs/nAa_iyokan_defconfig ]; then
-			echo "--- Adding iyokan kernel config"
-			cp ${patches}/nAa_iyokan_defconfig arch/arm/configs
-		fi
 		for device in ${devices}
 		do
 			if [ -f arch/arm/configs/nAa_${device}_defconfig ]; then
