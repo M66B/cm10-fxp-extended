@@ -76,7 +76,6 @@ ssh=Y
 layout=Y
 mvolume=Y
 qcomdispl=Y
-noliblights=N
 iw=Y
 mmsfix=Y
 trebuchet_cm10_1=Y
@@ -859,13 +858,6 @@ if [ "${qcomdispl}" = "Y" ]; then
 	do_patch qcom_display_glfinish.patch
 	do_patch qcom_display_heap.patch
 	do_patch qcom_display_ioctl.patch
-fi
-
-#No liblights update
-if [ "${noliblights}" = "Y" ]; then
-	echo "*** No liblights update ***"
-	cd ${android}/device/semc/msm7x30-common
-	do_patch_reverse liblights_update.patch
 fi
 
 #SmartassV2 boost pulse
