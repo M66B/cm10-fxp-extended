@@ -39,7 +39,6 @@ kernel_ioschedulers=Y
 kernel_voltage=Y
 kernel_autogroup=Y
 kernel_wifi_range=Y
-kernel_wifi_psoff=N
 kernel_rcutiny=Y
 kernel_displaylink=Y
 kernel_videodriver=Y
@@ -529,11 +528,6 @@ if [ "${kernel_mods}" = "Y" ]; then
 	if [ "${kernel_wifi_range}" = "Y" ]; then
 		echo "--- Wi-Fi range"
 		do_patch kernel_wifi_range.patch
-	fi
-
-	if [ "${kernel_wifi_psoff}" = "Y" ]; then
-		echo "-- Wi-Fi power save off"
-		do_patch kernel_wifi_psoff.patch
 	fi
 
 	if [ "${kernel_rcutiny}" = "Y" ] && [ "${kernel_naa}" != "Y" ]; then
