@@ -1,0 +1,26 @@
+diff --git a/BoardConfig.mk b/BoardConfig.mk
+index cdbc961..ecb24b3 100644
+--- a/BoardConfig.mk
++++ b/BoardConfig.mk
+@@ -4,7 +4,7 @@
+ # Kernel
+ TARGET_KERNEL_SOURCE := kernel/semc/msm7x30
+ TARGET_KERNEL_CONFIG := cm_iyokan_defconfig
+-TARGET_KERNEL_CUSTOM_TOOLCHAIN := arm-eabi-4.4.3
++TARGET_KERNEL_CUSTOM_TOOLCHAIN := arm-eabi-4.7-linaro
+ 
+ # Recovery
+ TARGET_RECOVERY_INITRC := device/semc/iyokan/recovery/init.rc
+diff --git a/prebuilt/hw_config.sh b/prebuilt/hw_config.sh
+index 3e5cedd..ecbc3c3 100644
+--- a/prebuilt/hw_config.sh
++++ b/prebuilt/hw_config.sh
+@@ -49,7 +49,7 @@ echo $val_filter > $dev/filter  # RFilter. Valid range is 0 - 3.
+ 
+ # LMU AS3676 Configuration
+ dev=/sys/devices/i2c-0/0-0040/leds
+-echo 4000 > $dev/button-backlight/max_current
++echo 1 > $dev/button-backlight/max_current
+ echo 38000 > $dev/keyboard-backlight/max_current
+ echo 10000 >$dev/tally-light/max_current
+ 
