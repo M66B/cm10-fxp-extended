@@ -65,7 +65,7 @@ trebuchet_cm10_1=Y
 deskclock_cm10_1=Y
 superuser_koush=Y
 busybox_cm10_1=Y
-cmfilemanager_cm10_1=N	#untested
+cmfilemanager_cm10_1=Y
 
 #Say hello
 echo ""
