@@ -38,6 +38,8 @@ bootlogo=Y
 bootlogoh=logo_H_extended.png
 bootlogom=logo_M_extended.png
 
+pin=N
+
 #TWRP known issues: http://forum.xda-developers.com/showpost.php?p=38834687&postcount=4
 twrp=N
 
@@ -403,6 +405,14 @@ if [ "${bootlogo}" = "Y" ]; then
 		exit
 	fi
 	/tmp/to565 -rle </tmp/logo_M_new.raw >${android}/device/semc/msm7x30-common/prebuilt/logo_M.rle
+fi
+
+#pincode
+if [ "${pin}" = "Y" ]; then
+	cd ${android}/bootable/recovery
+	do_patch recovery_check_pin.patch
+	cd ${android}/device/semc/msm7x30-common
+	do_patch ramdisk_check_pin.patch
 fi
 
 #twrp

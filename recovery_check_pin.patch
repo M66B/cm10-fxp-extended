@@ -1,0 +1,42 @@
+diff --git a/recovery.c b/recovery.c
+index 9e5ee94..140e283 100644
+--- a/recovery.c
++++ b/recovery.c
+@@ -751,6 +751,27 @@ print_property(const char *key, const char *name, void *cookie) {
+     printf("%s=%s\n", key, name);
+ }
+ 
++int get_pin() {
++    int i;
++    char pin[] = "????";
++    char item[] = "----";
++    const char* headers[] = { "Enter pincode:", "", item, "", NULL };
++    const char* digits[] = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", NULL };
++
++    for (i = 0; i < strlen(item); i++) {
++        int digit = get_menu_selection(prepend_title(headers), digits, 0, 0);
++        pin[i] = '0' + digit;
++        item[i] = '*';
++    }
++
++    if (strcmp(pin, "5678"))
++        return false;
++    else {
++        __system("touch /cache/recovery/pin");
++        return true;
++    }
++}
++
+ int
+ main(int argc, char **argv) {
+ 
+@@ -917,7 +938,8 @@ main(int argc, char **argv) {
+         ui_set_background(BACKGROUND_ICON_ERROR);
+     }
+     if (status != INSTALL_SUCCESS || ui_text_visible()) {
+-        prompt_and_wait();
++        if (get_pin())
++            prompt_and_wait();
+     }
+ 
+     verify_root_and_recovery();
