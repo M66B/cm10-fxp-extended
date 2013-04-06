@@ -61,6 +61,7 @@ boost_pulse=Y
 iw=Y
 mmsfix=Y
 iyokan_no_button_light=Y
+cmstats_android_id=Y
 trebuchet_cm10_1=Y
 deskclock_cm10_1=Y
 superuser_koush=Y
@@ -621,8 +622,16 @@ fi
 
 #Disable iyokan button backlight
 if [ "${iyokan_no_button_light}" = "Y" ]; then
+	echo "*** Disable iyokan button backlight"
 	cd ${android}/device/semc/iyokan
 	do_patch iyokan_no_button_light.patch
+fi
+
+#Use ANDROID_ID for cmstats
+if [ "${cmstats_android_id}" = "Y" ]; then
+	echo "*** Use ANDROID_ID for cmstats"
+	cd ${android}/packages/apps/Settings
+	do_patch cmstats_android_id.patch
 fi
 
 #Trebuchet CM10.1

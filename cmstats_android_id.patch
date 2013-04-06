@@ -1,0 +1,47 @@
+From 8bd9be55436f4295225ca24b127bb90197c74009 Mon Sep 17 00:00:00 2001
+From: Koushik Dutta <koushd@gmail.com>
+Date: Wed, 3 Apr 2013 11:48:45 -0700
+Subject: [PATCH] Use a hashed ANDROID_ID instead of IMEI for stats
+ collection.
+
+Change-Id: I7379c5b380273e35b5aab582f5268d6946e0a255
+---
+ src/com/android/settings/cmstats/Utilities.java |   18 ++----------------
+ 1 file changed, 2 insertions(+), 16 deletions(-)
+
+diff --git a/src/com/android/settings/cmstats/Utilities.java b/src/com/android/settings/cmstats/Utilities.java
+index 5e598db..4548ded 100644
+--- a/src/com/android/settings/cmstats/Utilities.java
++++ b/src/com/android/settings/cmstats/Utilities.java
+@@ -22,26 +22,12 @@ import java.security.MessageDigest;
+ 
+ import android.content.Context;
+ import android.os.SystemProperties;
++import android.provider.Settings;
+ import android.telephony.TelephonyManager;
+ 
+ public class Utilities {
+     public static String getUniqueID(Context ctx) {
+-        TelephonyManager tm = (TelephonyManager) ctx
+-                .getSystemService(Context.TELEPHONY_SERVICE);
+-
+-        String device_id = digest(tm.getDeviceId());
+-        if (device_id == null) {
+-            String wifiInterface = SystemProperties.get("wifi.interface");
+-            try {
+-                String wifiMac = new String(NetworkInterface.getByName(
+-                        wifiInterface).getHardwareAddress());
+-                device_id = digest(wifiMac);
+-            } catch (Exception e) {
+-                device_id = null;
+-            }
+-        }
+-
+-        return device_id;
++        return digest(ctx.getPackageName() + Settings.Secure.getString(ctx.getContentResolver(), Settings.Secure.ANDROID_ID));
+     }
+ 
+     public static String getCarrier(Context ctx) {
+-- 
+1.7.10.4
+
