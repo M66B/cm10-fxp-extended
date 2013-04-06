@@ -24,9 +24,6 @@ linaro_name=arm-eabi-4.7-linaro
 linaro_file=android-toolchain-eabi-4.7-daily-linux-x86.tar.bz2
 linaro_url=https://android-build.linaro.org/jenkins/view/Toolchain/job/linaro-android_toolchain-4.7-bzr/lastSuccessfulBuild/artifact/build/out/${linaro_file}
 
-#Building TWRP with 32 bits toolchain fails
-toolchain_32bit=N
-
 #--- bootimage ---
 
 kernel_mods=Y
@@ -246,13 +243,6 @@ if [ "${iw}" = "Y" ]; then
 	echo "--- iw"
 else
 	sed -i "/dickychiang/d" ${android}/.repo/local_manifests/cmxtended.xml
-fi
-
-#Toolchain
-if [ "${toolchain_32bit}" != "Y" ]; then
-	sed -i "/androideabi/d" ${android}/.repo/local_manifests/cmxtended.xml
-else
-	echo "--- 32 bit toolchain"
 fi
 
 #CMUpdater
