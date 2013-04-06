@@ -18,10 +18,6 @@
 	<project name="CyanogenMod/android_hardware_ti_fmradio" path="hardware/ti/fmradio" remote="github" revision="jellybean" />
 	<project name="CyanogenMod/android_hardware_sony_DASH" path="hardware/sony/DASH" remote="github" revision="jellybean" />
 
-	<!-- TWRP -->
-	<remove-project name="CyanogenMod/android_bootable_recovery" />
-	<project name="TeamWin/Team-Win-Recovery-Project" path="bootable/recovery" remote="github" revision="twrp2.4" />
-
 	<!-- koush superuser -->
 	<remove-project name="CyanogenMod/android_system_su" />
 	<remove-project name="CyanogenMod/android_packages_apps_Superuser" />

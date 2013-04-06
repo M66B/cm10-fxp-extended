@@ -40,9 +40,6 @@ bootlogom=logo_M_extended.png
 
 pin=N
 
-#TWRP known issues: http://forum.xda-developers.com/showpost.php?p=38834687&postcount=4
-twrp=N
-
 #--- ROM ---
 
 cellbroadcast=Y
@@ -205,13 +202,6 @@ fi
 echo "*** Local manifest ***"
 mkdir -p ${android}/.repo/local_manifests
 cp ${patches}/cmxtended.xml ${android}/.repo/local_manifests/cmxtended.xml
-
-#twrp
-if [ "${twrp}" = "Y" ]; then
-	echo "--- TWRP"
-else
-	sed -i "/bootable/d" ${android}/.repo/local_manifests/cmxtended.xml
-fi
 
 #su
 if [ "${superuser_koush}" = "Y" ]; then
@@ -409,39 +399,11 @@ fi
 
 #pincode
 if [ "${pin}" = "Y" ]; then
+	echo "*** Pincode"
 	cd ${android}/bootable/recovery
 	do_patch recovery_check_pin.patch
 	cd ${android}/device/semc/msm7x30-common
 	do_patch ramdisk_check_pin.patch
-fi
-
-#twrp
-if [ "${twrp}" = "Y" ]; then
-	echo "*** Team Win Recovery Project ***"
-	cd ${android}/bootable/recovery
-	do_patch twrp.patch
-
-	for device in ${devices}
-	do
-		resolution="320x480"
-		if [ "${device}" = "anzu" ] || [ "${device}" = "hallon" ] || [ "${device}" = "haida" ] || [ "${device}" = "iyokan" ] || [ "${device}" = "urushi" ]; then
-			resolution="480x854"
-		fi
-		echo "${device}: ${resolution}"
-
-		cd ${android}/device/semc/${device}
-		sed -i "s|export PATH /sbin|export PATH /sbin\n    export LD_LIBRARY_PATH .:/sbin|g" ${android}/device/semc/${device}/recovery/init.rc
-
-		do_append "DEVICE_RESOLUTION := ${resolution}" ${android}/device/semc/${device}/BoardConfig.mk
-		do_append "RECOVERY_GRAPHICS_USE_LINELENGTH := true" ${android}/device/semc/${device}/BoardConfig.mk
-		do_append "TARGET_RECOVERY_PIXEL_FORMAT := \"RGB_565\"" ${android}/device/semc/${device}/BoardConfig.mk
-
-		do_append "TW_HAS_NO_RECOVERY_PARTITION := true" ${android}/device/semc/${device}/BoardConfig.mk
-		do_append "TW_HAS_NO_BOOT_PARTITION := true" ${android}/device/semc/${device}/BoardConfig.mk
-		do_append "TW_NO_BATT_PERCENT := true" ${android}/device/semc/${device}/BoardConfig.mk
-		#do_append "TW_INCLUDE_JB_CRYPTO := true" ${android}/device/semc/${device}/BoardConfig.mk
-		#do_append "TW_NO_EXFAT_FUSE := true" ${android}/device/semc/${device}/BoardConfig.mk
-	done
 fi
 
 #--- ROM ---
