@@ -1,16 +1,3 @@
-diff --git a/BoardConfig.mk b/BoardConfig.mk
-index cdbc961..ecb24b3 100644
---- a/BoardConfig.mk
-+++ b/BoardConfig.mk
-@@ -4,7 +4,7 @@
- # Kernel
- TARGET_KERNEL_SOURCE := kernel/semc/msm7x30
- TARGET_KERNEL_CONFIG := cm_iyokan_defconfig
--TARGET_KERNEL_CUSTOM_TOOLCHAIN := arm-eabi-4.4.3
-+TARGET_KERNEL_CUSTOM_TOOLCHAIN := arm-eabi-4.7-linaro
- 
- # Recovery
- TARGET_RECOVERY_INITRC := device/semc/iyokan/recovery/init.rc
 diff --git a/prebuilt/hw_config.sh b/prebuilt/hw_config.sh
 index 3e5cedd..ecbc3c3 100644
 --- a/prebuilt/hw_config.sh
