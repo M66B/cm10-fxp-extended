@@ -1,0 +1,13 @@
+diff --git a/sensors/as3676_als.c b/sensors/as3676_als.c
+index 4910983..43c482a 100644
+--- a/sensors/as3676_als.c
++++ b/sensors/as3676_als.c
+@@ -106,7 +106,7 @@ static struct sensor_desc light_sensor = {
+ 		.version = sizeof(sensors_event_t),
+ 		.handle = SENSOR_LIGHTSENSOR_HANDLE,
+ 		.type = SENSOR_TYPE_LIGHT,
+-		.maxRange = 80,
++		.maxRange = 1080,
+ 		.resolution = 1.0,
+ 		.power = 1
+ 	},

@@ -38,7 +38,7 @@ bootlogo=Y
 bootlogoh=logo_H_extended.png
 bootlogom=logo_M_extended.png
 
-pin=N
+pin=Y
 
 #--- ROM ---
 
@@ -60,6 +60,7 @@ boost_pulse=Y
 iw=Y
 mmsfix=Y
 iyokan_no_button_light=Y
+light_sensor_range=Y
 cmstats_android_id=Y
 trebuchet_cm10_1=Y
 deskclock_cm10_1=Y
@@ -597,6 +598,13 @@ if [ "${iyokan_no_button_light}" = "Y" ]; then
 	echo "*** Disable iyokan button backlight"
 	cd ${android}/device/semc/iyokan
 	do_patch iyokan_no_button_light.patch
+fi
+
+#Light sensor range
+if [ "${light_sensor_range}" = "Y" ]; then
+	echo "*** Light sensor range"
+	cd ${android}/hardware/sony/DASH
+	do_patch light_sensor_range.patch
 fi
 
 #Use ANDROID_ID for cmstats
