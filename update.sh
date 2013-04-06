@@ -44,7 +44,6 @@ kernel_displaylink=Y
 kernel_videodriver=Y
 kernel_binder60=Y
 kernel_whisper=N
-kernel_hdmi=N			#unfinished
 kernel_misc=Y
 
 bootlogo=Y
@@ -566,23 +565,6 @@ if [ "${kernel_mods}" = "Y" ]; then
 				do_replace "# CONFIG_CRYPTO_XTS is not set" "CONFIG_CRYPTO_XTS=y" ${kconfig}
 			fi
 		done
-	fi
-
-	if [ "${kernel_hdmi}" = "Y" ]; then
-		echo "-- HDMI"
-		#do_patch kernel_hdmi.patch
-		#do_append "obj-\$(CONFIG_HDMI_SI9022) += hdmi/si9022/" ${android}/kernel/semc/msm7x30/drivers/video/Makefile
-		#do_append "obj-\$(CONFIG_HDMI_EP932) += hdmi/ep932/" ${android}/kernel/semc/msm7x30/drivers/video/Makefile
-		kconfig=${android}/kernel/semc/msm7x30/arch/arm/configs/cyanogen_iyokan_defconfig
-		do_replace "# CONFIG_FB_MSM_HDMI_COMMON is not set" "CONFIG_FB_MSM_HDMI_COMMON=y" ${kconfig}
-		do_replace "# CONFIG_FB_MSM_HDMI_MSM_PANEL is not set" "CONFIG_FB_MSM_HDMI_MSM_PANEL=y" ${kconfig}
-		do_replace "# CONFIG_FB_MSM_HDMI_SII9024A_PANEL is not set" "CONFIG_FB_MSM_HDMI_SII9024A_PANEL=y" ${kconfig}
-		do_replace "# CONFIG_FB_MSM_DTV is not set" "CONFIG_FB_MSM_DTV=y" ${kconfig}
-		#do_append "CONFIG_HDMI_SI9022=y" ${kconfig}
-		do_append "PRODUCT_PROPERTY_OVERRIDES += com.qc.hdmi_out=true" ${android}/device/semc/msm7x30-common/msm7x30.mk
-		#modified: drivers/video/msm/mdp4.h
-		#drivers/video/msm/external_common.h
-		#drivers/video/msm/hdmi_msm.h
 	fi
 
 	if [ "${kernel_naa}" != "Y" ]; then
