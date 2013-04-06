@@ -9,7 +9,7 @@ devices="coconut iyokan mango smultron"
 debug=N
 init=N
 updates=N
-if [ "`hostname`" = "ALGEIBA" ] || [ "`hostname`" = "HTPC" ]; then
+if [ "`hostname`" = "ALGEIBA" ] || [ "`hostname`" = "HTPC" ] || [ "`hostname`" = "iof303" ]; then
 	updates=Y
 fi
 if [ "$1" = "init" ]; then
