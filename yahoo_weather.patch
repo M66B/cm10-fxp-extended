@@ -41,7 +41,7 @@ index fb8efe4..fbc4017 100644
  
      public static String GeoCode(Context c, String location) {
 -        String url = String.format(YAHOO_API_BASE_URL, location).replace(' ', '+');
-+        String url = String.format(YAHOO_API_BASE_URL + Uri.encode(String.format("\"%s\"",location));
++        String url = String.format(YAHOO_API_BASE_URL + Uri.encode(String.format("\"%s\"",location)));
          String response = new HttpRetriever().retrieve(url);
          return new WeatherXmlParser(c).parsePlaceFinderResponse(response);
      }
