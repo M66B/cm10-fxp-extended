@@ -1,73 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest>
-  <project name="CyanogenMod/android_device_semc_anzu" path="device/semc/anzu" remote="github" revision="jellybean" />
-  <project name="CyanogenMod/android_device_semc_coconut" path="device/semc/coconut" remote="github" revision="jellybean" />
-  <project name="CyanogenMod/android_device_semc_haida" path="device/semc/haida" remote="github" revision="jellybean" />
-  <project name="CyanogenMod/android_device_semc_hallon" path="device/semc/hallon" remote="github" revision="jellybean" />
-  <project name="CyanogenMod/android_device_semc_iyokan" path="device/semc/iyokan" remote="github" revision="jellybean" />
-  <project name="CyanogenMod/android_device_semc_mango" path="device/semc/mango" remote="github" revision="jellybean" />
-  <project name="CyanogenMod/android_device_semc_satsuma" path="device/semc/satsuma" remote="github" revision="jellybean" />
-  <project name="CyanogenMod/android_device_semc_smultron" path="device/semc/smultron" remote="github" revision="jellybean" />
-  <project name="CyanogenMod/android_device_semc_urushi" path="device/semc/urushi" remote="github" revision="jellybean" />
-  <project name="CyanogenMod/android_device_semc_mogami-common" path="device/semc/mogami-common" remote="github" revision="jellybean" />
-  <project name="CyanogenMod/android_device_semc_msm7x30-common" path="device/semc/msm7x30-common" remote="github" revision="jellybean" />
+	<!-- Xperia 2011 -->
+	<project name="CyanogenMod/android_device_semc_anzu" path="device/semc/anzu" remote="github" revision="jellybean" />
+	<project name="CyanogenMod/android_device_semc_coconut" path="device/semc/coconut" remote="github" revision="jellybean" />
+	<project name="CyanogenMod/android_device_semc_haida" path="device/semc/haida" remote="github" revision="jellybean" />
+	<project name="CyanogenMod/android_device_semc_hallon" path="device/semc/hallon" remote="github" revision="jellybean" />
+	<project name="CyanogenMod/android_device_semc_iyokan" path="device/semc/iyokan" remote="github" revision="jellybean" />
+	<project name="CyanogenMod/android_device_semc_mango" path="device/semc/mango" remote="github" revision="jellybean" />
+	<project name="CyanogenMod/android_device_semc_satsuma" path="device/semc/satsuma" remote="github" revision="jellybean" />
+	<project name="CyanogenMod/android_device_semc_smultron" path="device/semc/smultron" remote="github" revision="jellybean" />
+	<project name="CyanogenMod/android_device_semc_urushi" path="device/semc/urushi" remote="github" revision="jellybean" />
+	<project name="CyanogenMod/android_device_semc_mogami-common" path="device/semc/mogami-common" remote="github" revision="jellybean" />
+	<project name="CyanogenMod/android_device_semc_msm7x30-common" path="device/semc/msm7x30-common" remote="github" revision="jellybean" />
 
-  <project name="CyanogenMod/semc-kernel-msm7x30" path="kernel/semc/msm7x30" remote="github" revision="jellybean" />
-  <project name="TheMuppets/proprietary_vendor_semc" path="vendor/semc" remote="github" revision="jellybean" />
-  <project name="CyanogenMod/android_hardware_ti_fmradio" path="hardware/ti/fmradio" remote="github" revision="jellybean" />
-  <project name="CyanogenMod/android_hardware_sony_DASH" path="hardware/sony/DASH" remote="github" revision="jellybean" />
+	<project name="nobodyAtall/msm7x30-2.6.32.x-nAa" path="kernel/semc/msm7x30" remote="github" revision="master" />
+	<project name="TheMuppets/proprietary_vendor_semc" path="vendor/semc" remote="github" revision="jellybean" />
+	<project name="CyanogenMod/android_hardware_ti_fmradio" path="hardware/ti/fmradio" remote="github" revision="jellybean" />
+	<project name="CyanogenMod/android_hardware_sony_DASH" path="hardware/sony/DASH" remote="github" revision="jellybean" />
 
-  <remove-project name="platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.6" />
-  <project name="yath/android_prebuilts_gcc_linux-x86-32_arm_arm-linux-androideabi-4.6" path="prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.6" remote="github" revision="jellybean" />
+	<remove-project name="platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.6" />
+	<project name="yath/android_prebuilts_gcc_linux-x86-32_arm_arm-linux-androideabi-4.6" path="prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.6" remote="github" revision="jellybean" />
 
-  <remove-project name="CyanogenMod/android_bootable_recovery" />
-  <project name="TeamWin/Team-Win-Recovery-Project" path="bootable/recovery" remote="github" revision="twrp2.4" />
+	<!-- TWRP -->
+	<remove-project name="CyanogenMod/android_bootable_recovery" />
+	<project name="TeamWin/Team-Win-Recovery-Project" path="bootable/recovery" remote="github" revision="twrp2.4" />
 
-  <remove-project name="CyanogenMod/android_system_su" />
-  <remove-project name="CyanogenMod/android_packages_apps_Superuser" />
-  <project name="koush/Superuser" path="external/koush/Superuser" remote="github" revision="master" />
-  <project name="koush/Widgets" path="external/koush/Widgets" remote="github" revision="master" />
+	<!-- koush superuser -->
+	<remove-project name="CyanogenMod/android_system_su" />
+	<remove-project name="CyanogenMod/android_packages_apps_Superuser" />
+	<project name="koush/Superuser" path="external/koush/Superuser" remote="github" revision="master" />
+	<project name="koush/Widgets" path="external/koush/Widgets" remote="github" revision="master" />
 
-  <remove-project name="CyanogenMod/android_packages_apps_Trebuchet" />
-  <project name="CyanogenMod/android_packages_apps_Trebuchet" path="packages/apps/Trebuchet" remote="github" revision="cm-10.1" />
+	<!-- CM10.1 Trebuchet -->
+	<remove-project name="CyanogenMod/android_packages_apps_Trebuchet" />
+	<project name="CyanogenMod/android_packages_apps_Trebuchet" path="packages/apps/Trebuchet" remote="github" revision="cm-10.1" />
 
-  <remove-project name="CyanogenMod/android_packages_apps_DeskClock" />
-  <project name="CyanogenMod/android_packages_apps_DeskClock" path="packages/apps/DeskClock" remote="github" revision="cm-10.1" />
+	<!-- CM10.1 DeskClock -->
+	<remove-project name="CyanogenMod/android_packages_apps_DeskClock" />
+	<project name="CyanogenMod/android_packages_apps_DeskClock" path="packages/apps/DeskClock" remote="github" revision="cm-10.1" />
 
-  <remove-project name="CyanogenMod/android_packages_apps_Browser" />
-  <project name="CyanogenMod/android_packages_apps_Browser" path="packages/apps/Browser" remote="github" revision="cm-10.1" />
+	<!-- CM10.1 busybox -->
+	<remove-project name="CyanogenMod/android_external_busybox" />
+	<project name="CyanogenMod/android_external_busybox" path="external/busybox" remote="github" revision="cm-10.1" />
 
-  <remove-project name="CyanogenMod/android_external_webkit" />
-  <project name="CyanogenMod/android_external_webkit" path="external/webkit" remote="github" revision="cm-10.1" />
+	<!-- Build iw from source -->
+	<project name="dickychiang/iw" path="external/iw" remote="github" revision="android" />
 
-  <remove-project name="CyanogenMod/android_external_skia" />
-  <project name="CyanogenMod/android_external_skia" path="external/skia" remote="github" revision="cm-10.1" />
-
-  <remove-project name="CyanogenMod/android_external_webp" />
-  <project name="CyanogenMod/android_external_webp" path="external/webp" remote="github" revision="cm-10.1" />
-
-  <remove-project name="CyanogenMod/android_external_webrtc" />
-  <project name="CyanogenMod/android_external_webrtc" path="external/webrtc" remote="github" revision="cm-10.1" />
-
-  <remove-project name="CyanogenMod/android_external_icu4c" />
-  <project name="CyanogenMod/android_external_icu4c" path="external/icu4c" remote="github" revision="cm-10.1" />
-
-  <remove-project name="CyanogenMod/android_external_chromium" />
-  <project name="CyanogenMod/android_external_chromium" path="external/chromium" remote="github" revision="cm-10.1" />
-
-  <remove-project name="CyanogenMod/android_external_chromium-trace" />
-  <project name="CyanogenMod/android_external_chromium-trace" path="external/chromium-trace" remote="github" revision="cm-10.1" />
-
-  <remove-project name="CyanogenMod/android_external_v8" />
-  <project name="CyanogenMod/android_external_v8" path="external/v8" remote="github" revision="cm-10.1" />
-
-  <remove-project name="CyanogenMod/android_external_busybox" />
-  <project name="CyanogenMod/android_external_busybox" path="external/busybox" remote="github" revision="cm-10.1" />
-
-  <project name="dickychiang/iw" path="external/iw" remote="github" revision="android" />
-
-  <remove-project name="CyanogenMod/android_packages_apps_CMUpdater" />
-
-  <remove-project name="CyanogenMod/semc-kernel-msm7x30" />
-  <project name="nobodyAtall/msm7x30-2.6.32.x-nAa" path="kernel/semc/msm7x30" remote="github" revision="master" />
+	<!-- Removes -->
+	<remove-project name="CyanogenMod/android_packages_apps_CMUpdater" />
 </manifest>

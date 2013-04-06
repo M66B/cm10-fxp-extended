@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 cd "`dirname \"$0\"`"
 patches=`pwd`
@@ -7,13 +7,13 @@ patches=`pwd`
 android=~/android/system
 devices="anzu coconut haida hallon iyokan mango satsuma smultron urushi"
 debug=N
-cleanall=N
+init=N
 updates=N
 if [ "`hostname`" = "ALGEIBA" ] || [ "`hostname`" = "HTPC" ]; then
 	updates=Y
 fi
-if [ "$1" = "clean" ]; then
-	cleanall=Y
+if [ "$1" = "init" ]; then
+	init=Y
 fi
 onecorebuild=N
 if [ "`hostname`" = "ALGEIBA" ]; then
@@ -31,20 +31,10 @@ toolchain_32bit=N
 
 kernel_mods=Y
 kernel_linaro=Y
-kernel_naa=Y
-kernel_cpugovernors=Y
-kernel_smartass2_boost=Y
-kernel_smartass3_boost=Y
-kernel_ioschedulers=Y
-kernel_voltage=Y
-kernel_autogroup=Y
+kernel_perm=Y
 kernel_wifi_range=Y
-kernel_rcutiny=Y
 kernel_displaylink=Y
-kernel_videodriver=Y
-kernel_binder60=Y
 kernel_whisper=N
-kernel_misc=Y
 
 bootlogo=Y
 bootlogoh=logo_H_extended.png
@@ -62,7 +52,6 @@ nano=Y
 terminfo=Y
 emptydrawer=Y
 massstorage=Y
-enable720p=N
 xsettings=Y
 wifiautoconnect=Y
 eba=Y
@@ -70,12 +59,12 @@ ssh=Y
 layout=Y
 mvolume=Y
 qcomdispl=Y
+boost_pulse=Y
 iw=Y
 mmsfix=Y
 trebuchet_cm10_1=Y
 deskclock_cm10_1=Y
 superuser_koush=Y
-browser_cm10_1=N		#unfinished
 busybox_cm10_1=Y
 
 #Say hello
@@ -89,7 +78,7 @@ echo ""
 echo "Patches: ${patches}"
 echo "Android: ${android}"
 echo "Devices: ${devices}"
-echo "Clean: ${cleanall}"
+echo "Init: ${init}"
 echo ""
 read -p "Press [ENTER] to continue" dummy
 echo ""
@@ -166,7 +155,6 @@ echo "*** Cleanup ***"
 do_deldir ${android}/out/target/common/obj/JAVA_LIBRARIES/framework_intermediates
 do_deldir ${android}/out/target/common/obj/JAVA_LIBRARIES/framework2_intermediates
 do_deldir ${android}/out/target/common/obj/APPS/TelephonyProvider_intermediates
-do_deldir ${android}/hardware/somc/dash
 
 for device in ${devices}
 do
@@ -181,7 +169,6 @@ do
 	if [ -d "${android}/out/target/product/${device}" ]; then
 		cd ${android}/out/target/product/${device}/
 		rm -f ./kernel ./*.img ./*.cpio ./*.fs
-		rm -f ./root/filler*
 	fi
 
 	#recovery
@@ -192,23 +179,13 @@ do
 done
 
 #Replaced projects
-if [ "${cleanall}" = "Y" ]; then
+if [ "${init}" = "Y" ]; then
 	do_deldir ${android}/bootable/recovery
 	do_deldir ${android}/system/su
 	do_deldir ${android}/packages/apps/Superuser
 	do_deldir ${android}/packages/apps/Trebuchet
 	do_deldir ${android}/packages/apps/DeskClock
-	do_deldir ${android}/packages/apps/Browser
 	do_deldir ${android}/packages/apps/CMUpdater
-	do_deldir ${android}/external/webkit
-	do_deldir ${android}/external/skia
-	do_deldir ${android}/external/webp
-	do_deldir ${android}/external/webrtc
-	do_deldir ${android}/external/icu4c
-	do_deldir ${android}/external/chromium
-	do_deldir ${android}/external/chromium-trace
-	do_deldir ${android}/external/v8
-	do_deldir ${android}/external/koush
 	do_deldir ${android}/external/busybox
 	do_deldir ${android}/kernel/semc/msm7x30
 
@@ -217,16 +194,7 @@ if [ "${cleanall}" = "Y" ]; then
 	do_deldir ${android}/.repo/projects/packages/apps/Superuser.git
 	do_deldir ${android}/.repo/projects/packages/apps/Trebuchet.git
 	do_deldir ${android}/.repo/projects/packages/apps/DeskClock.git
-	do_deldir ${android}/.repo/projects/packages/apps/Browser.git
 	do_deldir ${android}/.repo/projects/packages/apps/CMUpdater.git
-	do_deldir ${android}/.repo/projects/external/webkit.git
-	do_deldir ${android}/.repo/projects/external/skia.git
-	do_deldir ${android}/.repo/projects/external/webp.git
-	do_deldir ${android}/.repo/projects/external/webrtc.git
-	do_deldir ${android}/.repo/projects/external/icu4c.git
-	do_deldir ${android}/.repo/projects/external/chromium.git
-	do_deldir ${android}/.repo/projects/external/chromium-trace.git
-	do_deldir ${android}/.repo/projects/external/v8.git
 	do_deldir ${android}/.repo/projects/external/busybox.git
 	do_deldir ${android}/.repo/projects/kernel/semc/msm7x30.git
 fi
@@ -235,18 +203,6 @@ fi
 echo "*** Local manifest ***"
 mkdir -p ${android}/.repo/local_manifests
 cp ${patches}/cmxtended.xml ${android}/.repo/local_manifests/cmxtended.xml
-
-
-#Kernel nobodyAtall
-if [ "${kernel_naa}" = "Y" ]; then
-	echo "--- kernel nobodyAtall"
-	#svn checkout http://lz4.googlecode.com/svn/trunk/ lz4
-	#cd lz4 && make && cp lz4demo ~/bin/lz4
-	#caf: M7630AABBQMLZA41601050
-else
-	sed -i "/remove-project.*semc-kernel-msm7x30/d" ${android}/.repo/local_manifests/cmxtended.xml
-	sed -i "/nobodyAtall/d" ${android}/.repo/local_manifests/cmxtended.xml
-fi
 
 #twrp
 if [ "${twrp}" = "Y" ]; then
@@ -277,20 +233,6 @@ if [ "${deskclock_cm10_1}" = "Y" ]; then
 	echo "--- DeskClock CM10.1"
 else
 	sed -i "/android_packages_apps_DeskClock/d" ${android}/.repo/local_manifests/cmxtended.xml
-fi
-
-#Browser
-if [ "${browser_cm10_1}" = "Y" ]; then
-	echo "--- Browser/webkit CM10.1"
-else
-	sed -i "/android_packages_apps_Browser/d" ${android}/.repo/local_manifests/cmxtended.xml
-	sed -i "/android_external_webkit/d" ${android}/.repo/local_manifests/cmxtended.xml
-	sed -i "/android_external_skia/d" ${android}/.repo/local_manifests/cmxtended.xml
-	sed -i "/android_external_webp/d" ${android}/.repo/local_manifests/cmxtended.xml
-	sed -i "/android_external_webrtc/d" ${android}/.repo/local_manifests/cmxtended.xml
-	sed -i "/android_external_icu4c/d" ${android}/.repo/local_manifests/cmxtended.xml
-	sed -i "/android_external_chromium/d" ${android}/.repo/local_manifests/cmxtended.xml
-	sed -i "/android_external_v8/d" ${android}/.repo/local_manifests/cmxtended.xml
 fi
 
 #busybox
@@ -330,7 +272,7 @@ if [ $? -ne 0 ]; then
 fi
 
 #Linaro toolchain
-if [ "${linaro}" = "Y" ] || [ "${kernel_linaro}" = "Y" ]; then
+if [ "${kernel_linaro}" = "Y" ]; then
 	echo "*** Linaro toolchain: ${linaro_name} ***"
 	linaro_dir=${android}/prebuilt/linux-x86/toolchain/${linaro_name}/
 	if [ ! -d "${linaro_dir}" ]; then
@@ -344,6 +286,7 @@ if [ "${linaro}" = "Y" ] || [ "${kernel_linaro}" = "Y" ]; then
 		echo "--- Extracting"
 		cd /tmp
 		if [ -d "./android-toolchain-eabi/" ]; then
+			chmod 777 ./android-toolchain-eabi/
 			rm -R ./android-toolchain-eabi/
 		fi
 		tar -jxf ${linaro_dl}
@@ -391,144 +334,29 @@ fi
 if [ "${kernel_mods}" = "Y" ]; then
 	echo "*** Kernel ***"
 	cd ${android}/kernel/semc/msm7x30/
-	if [ "${kernel_naa}" = "Y" ]; then
-		echo "--- nobodyAtall"
-		for device in ${devices}
-		do
-			if [ -f arch/arm/configs/nAa_${device}_defconfig ]; then
-				cp arch/arm/configs/nAa_${device}_defconfig arch/arm/configs/cm_${device}_defconfig
-			else
-				echo "--- No kernel config for ${device}"
-			fi
-		done
-	fi
 
-	if [ "${kernel_linaro}" = "Y" ] && [ "${kernel_naa}" != "Y" ]; then
-		echo "--- Linaro"
-		do_patch kernel_linaro_head.patch
-		do_patch kernel_linaro_boot.patch
-	fi
+	#svn checkout http://lz4.googlecode.com/svn/trunk/ lz4
+	#cd lz4 && make && cp lz4demo ~/bin/lz4
+	#caf: M7630AABBQMLZA41601050
 
-	if [ "${kernel_cpugovernors}" = "Y" ]; then
-		echo "--- CPU governors"
-		if [ "${kernel_naa}" != "Y" ]; then
-			do_patch kernel_cpugovernor.patch
-			do_patch kernel_underclock.patch
-			do_patch kernel_cpuminmax.patch
-		fi
-
-		if [ "${kernel_naa}" != "Y" ]; then
-			for device in ${devices}
-			do
-				kconfig=${android}/kernel/semc/msm7x30/arch/arm/configs/cyanogen_${device}_defconfig
-
-				do_append "CONFIG_CPU_FREQ_GOV_SMARTASS=y" ${kconfig}
-				do_append "CONFIG_CPU_FREQ_GOV_SCARY=y" ${kconfig}
-				do_append "CONFIG_CPU_FREQ_GOV_MINMAX=y" ${kconfig}
-				do_append "CONFIG_CPU_FREQ_GOV_LAGFREE=y" ${kconfig}
-				do_append "CONFIG_CPU_FREQ_GOV_INTERACTIVEX=y" ${kconfig}
-				do_append "CONFIG_CPU_FREQ_GOV_SAVAGEDZEN=y" ${kconfig}
-				do_append "CONFIG_CPU_FREQ_GOV_SMARTASS2=y" ${kconfig}
-				do_append "CONFIG_CPU_FREQ_GOV_SMOOTHASS=y" ${kconfig}
-				do_append "CONFIG_CPU_FREQ_GOV_BRAZILIANWAX=y" ${kconfig}
-
-				do_append "CONFIG_CPU_FREQ_GOV_LAZY=y" ${kconfig}
-				do_append "CONFIG_CPU_FREQ_GOV_BADASS=y" ${kconfig}
-				do_append "CONFIG_CPU_FREQ_GOV_INTELLIDEMAND=y" ${kconfig}
-				do_append "CONFIG_CPU_FREQ_GOV_LULZACTIVE=y" ${kconfig}
-				do_append "CONFIG_CPU_FREQ_GOV_SUPERBAD=y" ${kconfig}
-				do_append "CONFIG_CPU_FREQ_GOV_VIRTUOUS=y" ${kconfig}
-				do_append "CONFIG_CPU_FREQ_GOV_DARKSIDE=y" ${kconfig}
-				do_append "CONFIG_CPU_FREQ_GOV_LIONHEART=y" ${kconfig}
-				do_append "CONFIG_CPU_FREQ_GOV_ONDEMANDX=y" ${kconfig}
-				do_append "CONFIG_CPU_FREQ_GOV_INTELLIDEMAND2=y" ${kconfig}
-
-				do_append "CONFIG_CPU_FREQ_GOV_SMARTASSH3=y" ${kconfig}
-			done
-		fi
-
-		if [ "${kernel_smartass2_boost}" = "Y" ] && [ "${kernel_naa}" != "Y" ]; then
-			echo "--- SmartassV2/H3 boost pulse"
-			do_patch kernel_smartass2_boost.patch
-			do_patch kernel_smartass3_boost.patch
-		fi
-		if [ "${kernel_smartass2_boost}" = "Y" ] || [ "${kernel_smartass3_boost}" = "Y" ]; then
-			if [ "${xsettings}" = "Y" ]; then
-				do_patch kernel_smartass_perm.patch
-			fi
-		fi
-	fi
-
-	if [ "${kernel_ioschedulers}" = "Y" ]; then
-		echo "--- I/O schedulers"
-		if [ "${kernel_naa}" != "Y" ]; then
-			do_patch kernel_iosched.patch
-		fi
-
-		do_patch kernel_sio_params.patch
-
-		if [ "${kernel_naa}" != "Y" ]; then
-			for device in ${devices}
-			do
-				kconfig=${android}/kernel/semc/msm7x30/arch/arm/configs/cyanogen_${device}_defconfig
-				do_replace "# CONFIG_IOSCHED_AS is not set" "CONFIG_IOSCHED_AS=y" ${kconfig}
-				do_replace "# CONFIG_IOSCHED_CFQ is not set" "CONFIG_IOSCHED_CFQ=y" ${kconfig}
-				do_append "CONFIG_IOSCHED_VR=y" ${kconfig}
-				do_append "CONFIG_IOSCHED_SIO=y" ${kconfig}
-			done
-		fi
-	fi
-
-	if [ "${kernel_voltage}" = "Y" ] && [ "${kernel_naa}" != "Y" ]; then
-		echo "--- Undervolt"
-		do_patch kernel_board_config.patch
-		for device in ${devices}
-		do
-			kconfig=${android}/kernel/semc/msm7x30/arch/arm/configs/cyanogen_${device}_defconfig
-			if [ -f ${kconfig} ]; then
-				do_append "CONFIG_CPU_FREQ_VDD_LEVELS=y" ${kconfig}
-				if [ "${device}" = "iyokan" ]; then
-					do_replace "CONFIG_MOGAMI_VIBRATOR_ON_VOLTAGE=2800" "CONFIG_MOGAMI_VIBRATOR_ON_VOLTAGE=2700" ${kconfig}
-				elif [ "${device}" = "mango" ]; then
-					do_replace "CONFIG_MOGAMI_VIBRATOR_ON_VOLTAGE=2700" "CONFIG_MOGAMI_VIBRATOR_ON_VOLTAGE=2600" ${kconfig}
-				elif [ "${device}" = "smultron" ]; then
-					do_replace "CONFIG_MOGAMI_VIBRATOR_ON_VOLTAGE=2900" "CONFIG_MOGAMI_VIBRATOR_ON_VOLTAGE=2800" ${kconfig}
-				fi
-			fi
-		done
-	fi
-
-	if [ "${kernel_autogroup}" = "Y" ]; then
-		echo "--- autogroup"
-		if [ "${kernel_naa}" = "Y" ]; then
-			do_patch kernel_autogroup_perm.patch
+	#Config
+	for device in ${devices}
+	do
+		if [ -f arch/arm/configs/nAa_${device}_defconfig ]; then
+			cp arch/arm/configs/nAa_${device}_defconfig arch/arm/configs/cm_${device}_defconfig
 		else
-			do_patch kernel_autogroup.patch
+			echo "--- No kernel config for ${device}"
 		fi
-		for device in ${devices}
-		do
-			kconfig=${android}/kernel/semc/msm7x30/arch/arm/configs/cyanogen_${device}_defconfig
-			if [ -f ${kconfig} ]; then
-				sed -i "/CONFIG_SCHED_AUTOGROUP/d" ${kconfig}
-				do_append "CONFIG_SCHED_AUTOGROUP=y" ${kconfig}
-			fi
-		done
+	done
+
+	if [ "${kernel_perm}" = "Y" ]; then
+		do_patch kernel_smartass_perm.patch
+		do_patch kernel_autogroup_perm.patch
 	fi
 
 	if [ "${kernel_wifi_range}" = "Y" ]; then
 		echo "--- Wi-Fi range"
 		do_patch kernel_wifi_range.patch
-	fi
-
-	if [ "${kernel_rcutiny}" = "Y" ] && [ "${kernel_naa}" != "Y" ]; then
-		echo "--- RCU tiny"
-		do_patch kernel_rcutiny.patch
-		for device in ${devices}
-		do
-			kconfig=${android}/kernel/semc/msm7x30/arch/arm/configs/cyanogen_${device}_defconfig
-			do_append "CONFIG_TINY_RCU=y" ${kconfig}
-			do_replace "CONFIG_TREE_RCU=y" "# CONFIG_TREE_RCU is not set" ${kconfig}
-		done
 	fi
 
 	if [ "${kernel_displaylink}" = "Y" ]; then
@@ -544,16 +372,6 @@ if [ "${kernel_mods}" = "Y" ]; then
 		done
 	fi
 
-	if [ "${kernel_videodriver}" = "Y" ] && [ "${kernel_naa}" != "Y" ]; then
-		echo "-- Video driver"
-		do_patch kernel_videodriver.patch
-	fi
-
-	if [ "${kernel_binder60}" = "Y" ] && [ "${kernel_naa}" != "Y" ]; then
-		echo "-- Android binder .60"
-		do_patch kernel_binder60.patch
-	fi
-
 	if [ "${kernel_whisper}" = "Y" ]; then
 		echo "-- Whisper yaffs"
 		do_patch kernel_whisper.patch
@@ -564,32 +382,6 @@ if [ "${kernel_mods}" = "Y" ]; then
 				do_replace "# CONFIG_CRYPTO_GF128MUL is not set" "CONFIG_CRYPTO_GF128MUL=y" ${kconfig}
 				do_replace "# CONFIG_CRYPTO_XTS is not set" "CONFIG_CRYPTO_XTS=y" ${kconfig}
 			fi
-		done
-	fi
-
-	if [ "${kernel_naa}" != "Y" ]; then
-		echo "-- iyokan touch precision"
-		do_patch kernel_iyokan_touch.patch
-	fi
-
-	if [ "${enable720p}" != "Y" ] && [ "${kernel_naa}" != "Y" ]; then
-		echo "-- 720p disabled: free memory"
-		do_patch kernel_disable_720p.patch
-	fi
-
-	if [ "${kernel_misc}" = "Y" ] && [ "${kernel_naa}" != "Y" ]; then
-		echo "-- Misc"
-		do_patch kernel_lowmem.patch
-		do_patch kernel_oom_nokill.patch
-		do_patch kernel_sysfs.patch
-		do_patch kernel_readahead.patch
-
-		for device in ${devices}
-		do
-			kconfig=${android}/kernel/semc/msm7x30/arch/arm/configs/cyanogen_${device}_defconfig
-			do_replace "# CONFIG_IKCONFIG_PROC is not set" "CONFIG_IKCONFIG_PROC=y" ${kconfig}
-			do_replace "CONFIG_SLAB=y" "# CONFIG_SLAB is not set" ${kconfig}
-			do_replace "# CONFIG_SLUB is not set" "CONFIG_SLUB=y" ${kconfig}
 		done
 	fi
 fi
@@ -734,13 +526,6 @@ if [ "${massstorage}" = "Y" ]; then
 	do_patch mass_storage.patch
 fi
 
-#720p
-if [ "${enable720p}" = "Y" ]; then
-	echo "*** Enable 720p ***"
-	cd ${android}/device/semc/msm7x30-common
-	do_patch enable_720p.patch
-fi
-
 #Xtended settings
 if [ "${xsettings}" = "Y" ]; then
 	echo "*** Xtended settings ***"
@@ -774,6 +559,7 @@ if [ "${ssh}" = "Y" ]; then
 	echo "*** sftp-server ***"
 	cd ${android}/external/openssh
 	do_patch sftp-server.patch
+	#needs extra 'mmm external/openssh'
 fi
 
 #Layout fixes
@@ -804,8 +590,8 @@ if [ "${qcomdispl}" = "Y" ]; then
 fi
 
 #Smartass boost pulse
-if [ "${kernel_smartass2_boost}" = "Y" ] || [ "${kernel_smartass3_boost}" = "Y" ]; then
-	echo "*** Enable SmartassV2 boost pulse ***"
+if [ "${boost_pulse}" = "Y" ]; then
+	echo "*** Enable Smartass boost pulse ***"
 	cd ${android}/device/semc/msm7x30-common
 	do_patch power_boost_pulse.patch
 fi
@@ -855,15 +641,6 @@ if [ "${deskclock_cm10_1}" = "Y" ]; then
 	do_patch deskclock_cm_10_1.patch
 fi
 
-#Browser CM10.1
-if [ "${browser_cm10_1}" = "Y" ]; then
-	echo "*** Browser CM10.1 ***"
-	cd ${android}/external/webkit
-	do_patch webkit.patch
-	cd ${android}/frameworks/base
-	do_patch framework_base_webkit_jni.patch
-fi
-
 #Superuser Koush
 if [ "${superuser_koush}" = "Y" ]; then
 	echo "*** Superuser Koush"
@@ -873,11 +650,12 @@ if [ "${superuser_koush}" = "Y" ]; then
 	do_patch superuser_koush_widgets.patch
 fi
 
+#Finish
+cd ${android}
+. build/envsetup.sh
+
 #Say whats next
 echo "*** Done ***"
-echo ""
-echo "cd ${android}"
-echo ". build/envsetup.sh"
 echo ""
 echo "brunch <device name>"
 echo ""
