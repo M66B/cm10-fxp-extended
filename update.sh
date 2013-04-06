@@ -62,6 +62,7 @@ mmsfix=Y
 iyokan_no_button_light=Y
 light_sensor_range=Y
 cmstats_android_id=Y
+yahoo_weather=Y
 trebuchet_cm10_1=Y
 deskclock_cm10_1=Y
 superuser_koush=Y
@@ -612,6 +613,13 @@ if [ "${cmstats_android_id}" = "Y" ]; then
 	echo "*** Use ANDROID_ID for cmstats"
 	cd ${android}/packages/apps/Settings
 	do_patch cmstats_android_id.patch
+fi
+
+#Yahoo weather
+if [ "${yahoo_weather}" = "Y" ]; then
+	echo "*** Yahoo weather"
+	cd ${android}/frameworks/base
+	do_patch yahoo_weather.patch
 fi
 
 #Trebuchet CM10.1
