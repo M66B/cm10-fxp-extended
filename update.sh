@@ -5,7 +5,7 @@ patches=`pwd`
 
 #Configuration
 android=~/android/system
-devices="anzu coconut haida hallon iyokan mango satsuma smultron urushi"
+devices="coconut iyokan mango smultron"
 debug=N
 init=N
 updates=N
@@ -28,7 +28,8 @@ linaro_url=https://android-build.linaro.org/jenkins/view/Toolchain/job/linaro-an
 
 kernel_mods=Y
 kernel_linaro=Y
-kernel_perm=Y
+kernel_xtended_perm=Y
+kernel_tune_smartass=y
 kernel_wifi_range=Y
 kernel_displaylink=Y
 kernel_whisper=N
@@ -320,14 +321,14 @@ if [ "${kernel_linaro}" = "Y" ]; then
 	done
 fi
 
-#msm7x30 kernel
+#nAa msm7x30 kernel
+#caf: M7630AABBQMLZA41601050
 if [ "${kernel_mods}" = "Y" ]; then
 	echo "*** Kernel ***"
 	cd ${android}/kernel/semc/msm7x30/
 
 	#svn checkout http://lz4.googlecode.com/svn/trunk/ lz4
 	#cd lz4 && make && cp lz4demo ~/bin/lz4
-	#caf: M7630AABBQMLZA41601050
 
 	#Config
 	for device in ${devices}
@@ -339,9 +340,13 @@ if [ "${kernel_mods}" = "Y" ]; then
 		fi
 	done
 
-	if [ "${kernel_perm}" = "Y" ]; then
+	if [ "${kernel_xtended_perm}" = "Y" ]; then
 		do_patch kernel_smartass_perm.patch
 		do_patch kernel_autogroup_perm.patch
+	fi
+
+	if [ "${kernel_tune_smartass}" = "Y" ]; then
+		do_patch kernel_tune_smartass.patch
 	fi
 
 	if [ "${kernel_wifi_range}" = "Y" ]; then
@@ -640,11 +645,13 @@ if [ "${superuser_koush}" = "Y" ]; then
 	do_patch superuser_koush_widgets.patch
 fi
 
-#Finish
+#Environment
+echo "*** Setup environment ***"
 cd ${android}
 . build/envsetup.sh
 
 #Say whats next
+echo ""
 echo "*** Done ***"
 echo ""
 echo "brunch <device name>"
