@@ -1,5 +1,5 @@
 diff --git a/recovery.c b/recovery.c
-index 9e5ee94..eb2d608 100644
+index 9e5ee94..fe88547 100644
 --- a/recovery.c
 +++ b/recovery.c
 @@ -751,6 +751,52 @@ print_property(const char *key, const char *name, void *cookie) {
@@ -32,7 +32,7 @@ index 9e5ee94..eb2d608 100644
 +        for (i = 0; i < strlen(item); i++) {
 +            int digit = get_menu_selection(prepend_title(headers), digits, 0, 0);
 +            if (digit == GO_BACK) {
-+                i = 0;
++                i = -1;
 +                memset(pin, '?', 4);
 +                memset(item, '-', 4);
 +            }
