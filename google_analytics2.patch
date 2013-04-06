@@ -1,0 +1,38 @@
+From 3e4aa56b81a8171cbd95c7c1475bf91827b1d849 Mon Sep 17 00:00:00 2001
+From: Koushik Dutta <koushd@gmail.com>
+Date: Mon, 1 Apr 2013 18:09:14 -0700
+Subject: [PATCH] FIx up analytics results by normalizing the version by
+ stripping the device info, which is redundant.
+
+Change-Id: If4fc97c28fff6a82206a5491c256b05444da1a34
+---
+ src/com/android/settings/cmstats/ReportingService.java |   13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/src/com/android/settings/cmstats/ReportingService.java b/src/com/android/settings/cmstats/ReportingService.java
+index 3c9cf33..76abdb4 100644
+--- a/src/com/android/settings/cmstats/ReportingService.java
++++ b/src/com/android/settings/cmstats/ReportingService.java
+@@ -89,6 +89,19 @@ public class ReportingService extends Service {
+         GoogleAnalytics ga = GoogleAnalytics.getInstance(this);
+         Tracker tracker = ga.getTracker(getString(R.string.ga_trackingId));
+         tracker.sendEvent(deviceName, deviceVersion, deviceCountry, null);
++        // this really should be set at build time...
++        // format of version should be:
++        // version[-date-type]-device
++        String[] parts = deviceVersion.split("-");
++        String deviceVersionNoDevice = null;
++        if (parts.length == 2) {
++            deviceVersionNoDevice = parts[0];
++        }
++        else if (parts.length == 4) {
++            deviceVersionNoDevice = parts[0] + "-" + parts[2];
++        }
++        if (deviceVersionNoDevice != null)
++            tracker.sendEvent("checkin", deviceName, deviceVersionNoDevice, null);
+         tracker.close();
+ 
+         // report to the cmstats service
+-- 
+1.7.10.4
+

@@ -61,7 +61,6 @@ iw=Y
 mmsfix=Y
 iyokan_no_button_light=Y
 light_sensor_range=Y
-cmstats_android_id=Y
 trebuchet_cm10_1=Y
 deskclock_cm10_1=Y
 superuser_koush=Y
@@ -502,6 +501,8 @@ fi
 if [ "${xsettings}" = "Y" ]; then
 	echo "*** Xtended settings ***"
 	cd ${android}/packages/apps/Settings
+	do_patch_reverse google_analytics2.patch
+	do_patch_reverse google_analytics1.patch
 	do_patch xsettings.patch
 	cd ${android}/device/semc/mogami-common
 	do_patch mogami_xtended.patch
@@ -605,13 +606,6 @@ if [ "${light_sensor_range}" = "Y" ]; then
 	echo "*** Light sensor range"
 	cd ${android}/hardware/sony/DASH
 	do_patch light_sensor_range.patch
-fi
-
-#Use ANDROID_ID for cmstats
-if [ "${cmstats_android_id}" = "Y" ]; then
-	echo "*** Use ANDROID_ID for cmstats"
-	cd ${android}/packages/apps/Settings
-	do_patch cmstats_android_id.patch
 fi
 
 #Trebuchet CM10.1
