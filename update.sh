@@ -38,7 +38,7 @@ bootlogo=Y
 bootlogoh=logo_H_extended.png
 bootlogom=logo_M_extended.png
 
-pin=Y
+pin=N
 
 #--- ROM ---
 
