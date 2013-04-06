@@ -7,7 +7,7 @@ index 4910983..43c482a 100644
  		.handle = SENSOR_LIGHTSENSOR_HANDLE,
  		.type = SENSOR_TYPE_LIGHT,
 -		.maxRange = 80,
-+		.maxRange = 1080,
++		.maxRange = 12276,
  		.resolution = 1.0,
  		.power = 1
  	},
