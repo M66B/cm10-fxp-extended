@@ -1,0 +1,40 @@
+diff --git a/libs/color-picker-view/src/afzkl/development/mColorPicker/views/ColorDialogView.java b/libs/color-picker-view/src/afzkl/development/mColorPicker/views/ColorDialogView.java
+index d35becf..b571fa4 100644
+--- a/libs/color-picker-view/src/afzkl/development/mColorPicker/views/ColorDialogView.java
++++ b/libs/color-picker-view/src/afzkl/development/mColorPicker/views/ColorDialogView.java
+@@ -170,7 +170,7 @@ public class ColorDialogView extends RelativeLayout
+         this.etColor.addTextChangedListener(this);
+ 
+         LinearLayout ll1 = new LinearLayout(getContext());
+-        ll1.setId(generateViewId());
++        ll1.setId(1966);
+         RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(
+                 android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                 android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+@@ -193,7 +193,7 @@ public class ColorDialogView extends RelativeLayout
+     private int createColorPicker(int belowOf) {
+         final int dlgMarging = (int)convertDpToPixel(DEFAULT_MARGIN_DP);
+         this.mPickerView = new ColorPickerView(getContext());
+-        this.mPickerView.setId(generateViewId());
++        this.mPickerView.setId(1967);
+         this.mPickerView.setOnColorChangedListener(this);
+         RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(
+                 android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+@@ -243,7 +243,7 @@ public class ColorDialogView extends RelativeLayout
+         sep1.setTextSize(TypedValue.COMPLEX_UNIT_SP, DEFAULT_TEXT_SIZE_SP);
+ 
+         LinearLayout ll1 = new LinearLayout(getContext());
+-        ll1.setId(generateViewId());
++        ll1.setId(1968);
+         RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(
+                 android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                 android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+@@ -275,7 +275,7 @@ public class ColorDialogView extends RelativeLayout
+         sep2.setTextSize(TypedValue.COMPLEX_UNIT_SP, DEFAULT_TEXT_SIZE_SP);
+ 
+         LinearLayout ll2 = new LinearLayout(getContext());
+-        ll2.setId(generateViewId());
++        ll2.setId(1969);
+         lp = new RelativeLayout.LayoutParams(
+                 android.view.ViewGroup.LayoutParams.MATCH_PARENT, panelHeight);
+         lp.setMargins(dlgMarging, 0, dlgMarging, dlgMarging/2);

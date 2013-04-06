@@ -65,6 +65,7 @@ trebuchet_cm10_1=Y
 deskclock_cm10_1=Y
 superuser_koush=Y
 busybox_cm10_1=Y
+cmfilemanager_cm10_1=N	#untested
 
 #Say hello
 echo ""
@@ -185,6 +186,7 @@ if [ "${init}" = "Y" ]; then
 	do_deldir ${android}/packages/apps/Trebuchet
 	do_deldir ${android}/packages/apps/DeskClock
 	do_deldir ${android}/packages/apps/CMUpdater
+	do_deldir ${android}/packages/apps/CMFileManager
 	do_deldir ${android}/external/busybox
 	do_deldir ${android}/kernel/semc/msm7x30
 
@@ -194,6 +196,7 @@ if [ "${init}" = "Y" ]; then
 	do_deldir ${android}/.repo/projects/packages/apps/Trebuchet.git
 	do_deldir ${android}/.repo/projects/packages/apps/DeskClock.git
 	do_deldir ${android}/.repo/projects/packages/apps/CMUpdater.git
+	do_deldir ${android}/.repo/projects/packages/apps/CMFileManager.git
 	do_deldir ${android}/.repo/projects/external/busybox.git
 	do_deldir ${android}/.repo/projects/kernel/semc/msm7x30.git
 fi
@@ -203,7 +206,7 @@ echo "*** Local manifest ***"
 mkdir -p ${android}/.repo/local_manifests
 cp ${patches}/cmxtended.xml ${android}/.repo/local_manifests/cmxtended.xml
 
-#su
+#su koush
 if [ "${superuser_koush}" = "Y" ]; then
 	echo "--- Superuser koush"
 	do_append "SUPERUSER_PACKAGE := com.m66b.superuser" ${android}/device/semc/msm7x30-common/BoardConfigCommon.mk
@@ -213,25 +216,32 @@ else
 	sed -i "/android_packages_apps_Superuser/d" ${android}/.repo/local_manifests/cmxtended.xml
 fi
 
-#Trebuchet
+#Trebuchet CM10.1
 if [ "${trebuchet_cm10_1}" = "Y" ]; then
 	echo "--- Trebuchet CM10.1"
 else
 	sed -i "/android_packages_apps_Trebuchet/d" ${android}/.repo/local_manifests/cmxtended.xml
 fi
 
-#DeskClock
+#DeskClock CM10.1
 if [ "${deskclock_cm10_1}" = "Y" ]; then
 	echo "--- DeskClock CM10.1"
 else
 	sed -i "/android_packages_apps_DeskClock/d" ${android}/.repo/local_manifests/cmxtended.xml
 fi
 
-#busybox
+#busybox CM10.1
 if [ "${busybox_cm10_1}" = "Y" ]; then
 	echo "--- busybox CM10.1"
 else
 	sed -i "/android_external_busybox/d" ${android}/.repo/local_manifests/cmxtended.xml
+fi
+
+#CMFileManager CM10.1
+if [ "${cmfilemanager_cm10_1}" = "Y" ]; then
+	echo "--- CMFileManager CM10.1"
+else
+	sed -i "/android_packages_apps_CMFileManager/d" ${android}/.repo/local_manifests/cmxtended.xml
 fi
 
 if [ "${iw}" = "Y" ]; then
@@ -635,6 +645,13 @@ if [ "${superuser_koush}" = "Y" ]; then
 	do_patch superuser_koush_superuser.patch
 	cd ${android}/external/koush/Widgets
 	do_patch superuser_koush_widgets.patch
+fi
+
+#CMFileManager CM10.1
+if [ "${cmfilemanager_cm10_1}" = "Y" ]; then
+	echo "*** CMFileManager CM10.1 ***"
+	cd ${android}/packages/apps/CMFileManager
+	do_patch cmfilemanager_cm10_1.patch
 fi
 
 #Environment
