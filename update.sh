@@ -32,7 +32,7 @@ kernel_xtended_perm=Y
 kernel_tune_smartass=y
 kernel_wifi_range=Y
 kernel_displaylink=Y
-kernel_whisper=N
+kernel_whisper=N	#untested for nAa kernel
 
 bootlogo=Y
 bootlogoh=logo_H_extended.png
@@ -341,11 +341,13 @@ if [ "${kernel_mods}" = "Y" ]; then
 	done
 
 	if [ "${kernel_xtended_perm}" = "Y" ]; then
+		echo "--- Xtended permissions"
 		do_patch kernel_smartass_perm.patch
 		do_patch kernel_autogroup_perm.patch
 	fi
 
 	if [ "${kernel_tune_smartass}" = "Y" ]; then
+		echo "--- Tune smartass"
 		do_patch kernel_tune_smartass.patch
 	fi
 
