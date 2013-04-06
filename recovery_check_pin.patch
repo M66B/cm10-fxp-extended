@@ -1,8 +1,8 @@
 diff --git a/recovery.c b/recovery.c
-index 9e5ee94..ffe870f 100644
+index 9e5ee94..fe88547 100644
 --- a/recovery.c
 +++ b/recovery.c
-@@ -751,6 +751,54 @@ print_property(const char *key, const char *name, void *cookie) {
+@@ -751,6 +751,52 @@ print_property(const char *key, const char *name, void *cookie) {
      printf("%s=%s\n", key, name);
  }
  
@@ -24,22 +24,20 @@ index 9e5ee94..ffe870f 100644
 +        *pin = 0;
 +    else {
 +        int i;
-+        int sel = 0;
 +        char item[] = "----";
 +        const char* headers[] = { "Enter pincode:", "", item, "", NULL };
 +        const char* digits[] = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", NULL };
 +
 +        // Get pincode
 +        for (i = 0; i < strlen(item); i++) {
-+            sel = get_menu_selection(prepend_title(headers), digits, 0, sel);
-+            if (sel == GO_BACK) {
++            int digit = get_menu_selection(prepend_title(headers), digits, 0, 0);
++            if (digit == GO_BACK) {
 +                i = -1;
-+                sel = 0;
 +                memset(pin, '?', 4);
 +                memset(item, '-', 4);
 +            }
 +            else {
-+                pin[i] = '0' + sel;
++                pin[i] = '0' + digit;
 +                item[i] = '*';
 +            }
 +        }
@@ -57,7 +55,7 @@ index 9e5ee94..ffe870f 100644
  int
  main(int argc, char **argv) {
  
-@@ -917,7 +965,8 @@ main(int argc, char **argv) {
+@@ -917,7 +963,8 @@ main(int argc, char **argv) {
          ui_set_background(BACKGROUND_ICON_ERROR);
      }
      if (status != INSTALL_SUCCESS || ui_text_visible()) {
