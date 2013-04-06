@@ -1,5 +1,5 @@
 diff --git a/recovery.c b/recovery.c
-index 9e5ee94..4b100fa 100644
+index 9e5ee94..eb2d608 100644
 --- a/recovery.c
 +++ b/recovery.c
 @@ -751,6 +751,52 @@ print_property(const char *key, const char *name, void *cookie) {
@@ -11,7 +11,7 @@ index 9e5ee94..4b100fa 100644
 +    char pin[] = "????";
 +
 +    // Read pin code
-+    FILE* fp = fopen("/cache/recovery/pincode", "r");
++    FILE* fp = fopen("/cache/pin/code", "r");
 +    if (fp != NULL) {
 +        if (fgets(code, sizeof(code), fp)) {
 +            char *n = strchr(code, '\n');
@@ -47,7 +47,7 @@ index 9e5ee94..4b100fa 100644
 +    if (strcmp(pin, code))
 +        return false;
 +    else {
-+        __system("touch /cache/recovery/pinok");
++        __system("touch /cache/pin/ok");
 +        return true;
 +    }
 +}
