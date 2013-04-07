@@ -11,6 +11,7 @@ fi
 
 patches=`pwd`
 repo=repo
+tmp=/tmp
 android=~/android/system
 devices="coconut iyokan mango smultron"
 init=N
@@ -293,7 +294,7 @@ if [ "${kernel_linaro}" = "Y" ]; then
 			fi
 		fi
 		echo "--- Extracting"
-		cd /tmp
+		cd ${tmp}
 		if [ -d "./android-toolchain-eabi/" ]; then
 			chmod 777 ./android-toolchain-eabi/
 			rm -R ./android-toolchain-eabi/
@@ -391,21 +392,25 @@ fi
 #Boot logo
 if [ "${bootlogo}" = "Y" ]; then
 	echo "*** Boot logo ***"
-	gcc -O2 -Wall -Wno-unused-parameter -Wno-unused-result -o /tmp/to565 ${android}/build/tools/rgb2565/to565.c
+	gcc -O2 -Wall -Wno-unused-parameter -Wno-unused-result -o ${tmp}/to565 ${android}/build/tools/rgb2565/to565.c
 
-	convert -depth 8 ${patches}/bootlogo/${bootlogoh} -fill grey -gravity south -draw "text 0,10 '`date -R`'" rgb:/tmp/logo_H_new.raw
-	if [ $? -ne 0 ]; then
-		echo "imagemagick not installed?"
-		exit
+	if [ ! -f ${tmp}/logo_H_new.raw ]; then
+		convert -depth 8 ${patches}/bootlogo/${bootlogoh} -fill grey -gravity south -draw "text 0,10 '`date -R`'" rgb:${tmp}/logo_H_new.raw
+		if [ $? -ne 0 ]; then
+			echo "imagemagick not installed?"
+			exit
+		fi
 	fi
-	/tmp/to565 -rle </tmp/logo_H_new.raw >${android}/device/semc/msm7x30-common/prebuilt/logo_H.rle
+	${tmp}/to565 -rle <${tmp}/logo_H_new.raw >${android}/device/semc/msm7x30-common/prebuilt/logo_H.rle
 
-	convert -depth 8 ${patches}/bootlogo/${bootlogom} -fill grey -gravity south -draw "text 0,10 '`date -R`'" rgb:/tmp/logo_M_new.raw
-	if [ $? -ne 0 ]; then
-		echo "imagemagick not installed?"
-		exit
+	convert -depth 8 ${patches}/bootlogo/${bootlogom} -fill grey -gravity south -draw "text 0,10 '`date -R`'" rgb:${tmp}/logo_M_new.raw
+	if [ ! -f ${tmp}/logo_M_new.raw ]; then
+		if [ $? -ne 0 ]; then
+			echo "imagemagick not installed?"
+			exit
+		fi
 	fi
-	/tmp/to565 -rle </tmp/logo_M_new.raw >${android}/device/semc/msm7x30-common/prebuilt/logo_M.rle
+	${tmp}/to565 -rle <${tmp}/logo_M_new.raw >${android}/device/semc/msm7x30-common/prebuilt/logo_M.rle
 fi
 
 #pincode
@@ -479,9 +484,9 @@ if [ "${terminfo}" = "Y" ]; then
 	fi
 
 	echo "--- Extracting"
-	gunzip <${terminfo_dl} >/tmp/termtypes.master
+	gunzip <${terminfo_dl} >${tmp}/termtypes.master
 	echo "--- Converting"
-	tic -o ${android}/vendor/cm/prebuilt/common/etc/terminfo/ /tmp/termtypes.master
+	tic -o ${android}/vendor/cm/prebuilt/common/etc/terminfo/ ${tmp}/termtypes.master
 	if [ $? -ne 0 ]; then
 		exit
 	fi
