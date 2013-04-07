@@ -32,7 +32,6 @@ kernel_xtended_perm=Y
 kernel_tune_smartass=y
 kernel_wifi_range=Y
 kernel_displaylink=Y
-kernel_whisper=N	#untested for nAa kernel
 
 bootlogo=Y
 bootlogoh=logo_H_extended.png
@@ -79,6 +78,7 @@ echo "Patches: ${patches}"
 echo "Android: ${android}"
 echo "Devices: ${devices}"
 echo "Init: ${init}"
+echo "Updates: ${updates}"
 echo ""
 read -p "Press [ENTER] to continue" dummy
 echo ""
@@ -369,19 +369,6 @@ if [ "${kernel_mods}" = "Y" ]; then
 			if [ -f ${kconfig} ]; then
 				do_replace "# CONFIG_FB_UDL is not set" "CONFIG_FB_UDL=m" ${kconfig}
 				#do_replace "CONFIG_USB_OTG_WHITELIST=y" "CONFIG_USB_OTG_WHITELIST=n" ${kconfig}
-			fi
-		done
-	fi
-
-	if [ "${kernel_whisper}" = "Y" ]; then
-		echo "-- Whisper yaffs"
-		do_patch kernel_whisper.patch
-		for device in ${devices}
-		do
-			kconfig=${android}/kernel/semc/msm7x30/arch/arm/configs/cyanogen_${device}_defconfig
-			if [ -f ${kconfig} ]; then
-				do_replace "# CONFIG_CRYPTO_GF128MUL is not set" "CONFIG_CRYPTO_GF128MUL=y" ${kconfig}
-				do_replace "# CONFIG_CRYPTO_XTS is not set" "CONFIG_CRYPTO_XTS=y" ${kconfig}
 			fi
 		done
 	fi
