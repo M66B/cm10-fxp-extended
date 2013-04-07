@@ -1,31 +1,29 @@
 #!/bin/bash
 
 cd "`dirname \"$0\"`"
-patches=`pwd`
 
 #Configuration
-repo=~/bin/repo
+
+patches=`pwd`
+repo=repo
 android=~/android/system
 devices="coconut iyokan mango smultron"
-debug=N
 init=N
 updates=N
-if [ "`hostname`" = "ALGEIBA" ] || [ "`hostname`" = "HTPC" ] || [ "`hostname`" = "iof303" ]; then
-	updates=Y
-fi
+onecorebuild=N
+debug=N
+
 if [ "$1" = "init" ]; then
 	init=Y
 fi
-onecorebuild=N
-if [ "`hostname`" = "ALGEIBA" ]; then
-	onecorebuild=Y
-fi
+
+#Linaro
 
 linaro_name=arm-eabi-4.7-linaro
 linaro_file=android-toolchain-eabi-4.7-daily-linux-x86.tar.bz2
 linaro_url=https://android-build.linaro.org/jenkins/view/Toolchain/job/linaro-android_toolchain-4.7-bzr/lastSuccessfulBuild/artifact/build/out/${linaro_file}
 
-#--- bootimage ---
+#bootimage
 
 kernel_mods=Y
 kernel_linaro=Y
@@ -40,7 +38,7 @@ bootlogom=logo_M_extended.png
 
 pin=Y
 
-#--- ROM ---
+#ROM
 
 cellbroadcast=Y
 datallowed=Y
@@ -67,6 +65,11 @@ superuser_koush=Y
 busybox_cm10_1=Y
 cmfilemanager_cm10_1=Y
 
+#Local configuration
+if [ -f ~/.cm10xtended ]; then
+	. ~/.cm10xtended
+fi
+
 #Say hello
 echo ""
 echo "CM/FXP extended ROM/kernel"
@@ -76,6 +79,7 @@ echo ""
 echo "GNU GENERAL PUBLIC LICENSE Version 3"
 echo ""
 echo "Patches: ${patches}"
+echo "Repo: ${repo}"
 echo "Android: ${android}"
 echo "Devices: ${devices}"
 echo "Init: ${init}"
@@ -84,7 +88,7 @@ echo ""
 read -p "Press [ENTER] to continue" dummy
 echo ""
 
-#Define helper functions
+#Helper functions
 do_replace() {
 	sed -i "s/$1/$2/g" $3
 	grep -q "$2" $3
@@ -256,6 +260,7 @@ if [ "${updates}" != "Y" ]; then
 	sed -i "/android_packages_apps_CMUpdater/d" ${android}/.repo/local_manifests/cmxtended.xml
 fi
 
+#Synchronize
 echo "*** Repo sync ***"
 cd ${android}
 ${repo} forall -c "git reset --hard && git clean -df"
