@@ -4,6 +4,7 @@ cd "`dirname \"$0\"`"
 patches=`pwd`
 
 #Configuration
+repo=~/bin/repo
 android=~/android/system
 devices="coconut iyokan mango smultron"
 debug=N
@@ -257,11 +258,11 @@ fi
 
 echo "*** Repo sync ***"
 cd ${android}
-repo forall -c "git reset --hard && git clean -df"
+${repo} forall -c "git reset --hard && git clean -df"
 if [ $? -ne 0 ]; then
 	exit
 fi
-repo sync
+${repo} sync
 if [ $? -ne 0 ]; then
 	exit
 fi
