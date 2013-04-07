@@ -1,6 +1,10 @@
 #!/bin/bash
 
-cd "`dirname \"$0\"`"
+if [ "$0" = "-bash" ]; then
+	cd ~/Downloads/cm10-fxp-extended
+else
+	cd "`dirname \"$0\"`"
+fi
 
 #Configuration
 
