@@ -430,6 +430,11 @@ if [ "${pin}" = "Y" ]; then
 	do_patch recovery_check_pin.patch
 	cd ${android}/device/semc/msm7x30-common
 	do_patch ramdisk_check_pin.patch
+	for device in ${devices}
+	do
+		initrc=${android}/device/semc/${device}/recovery/init.rc
+		do_replace "    restart adbd" "    #restart adbd" ${initrc}
+	done
 fi
 
 #--- ROM ---
