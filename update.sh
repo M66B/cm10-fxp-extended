@@ -364,6 +364,7 @@ if [ "${kernel_mods}" = "Y" ]; then
 	do
 		if [ -f arch/arm/configs/nAa_${device}_defconfig ]; then
 			cp arch/arm/configs/nAa_${device}_defconfig arch/arm/configs/cm_${device}_defconfig
+			do_replace "# CONFIG_SCHED_AUTOGROUP is not set" "CONFIG_SCHED_AUTOGROUP=y" arch/arm/configs/cm_${device}_defconfig
 		else
 			echo "--- No kernel config for ${device}"
 		fi
