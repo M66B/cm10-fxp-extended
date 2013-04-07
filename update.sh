@@ -1,7 +1,7 @@
 #!/bin/bash
 
-echo "$0"
-if [ "$0" = "bash" ] || [ "$0" = "-bash" ]; then
+echo "$0" | grep -q bash
+if [ $? -eq 0 ]; then
 	cd ~/Downloads/cm10-fxp-extended
 else
 	cd "`dirname \"$0\"`"
