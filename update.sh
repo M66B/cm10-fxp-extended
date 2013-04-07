@@ -7,6 +7,18 @@ else
 	cd "`dirname \"$0\"`"
 fi
 
+#Prerequisites
+which lz4
+if [ $? -ne 0 ]; then
+	echo "Execute:"
+	echo ""
+	echo "cd ~/Downloads"
+	echo "svn checkout http://lz4.googlecode.com/svn/trunk/ lz4"
+	echo "cd lz4 && make && cp lz4demo ~/bin/lz4"
+	echo ""
+	return
+fi
+
 #Configuration
 
 patches=`pwd`
@@ -346,9 +358,6 @@ fi
 if [ "${kernel_mods}" = "Y" ]; then
 	echo "*** Kernel ***"
 	cd ${android}/kernel/semc/msm7x30/
-
-	#svn checkout http://lz4.googlecode.com/svn/trunk/ lz4
-	#cd lz4 && make && cp lz4demo ~/bin/lz4
 
 	#Config
 	for device in ${devices}
