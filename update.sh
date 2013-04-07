@@ -210,6 +210,9 @@ fi
 echo "*** Local manifest ***"
 mkdir -p ${android}/.repo/local_manifests
 cp ${patches}/cmxtended.xml ${android}/.repo/local_manifests/cmxtended.xml
+if [ "${init}" = "Y" ]; then
+	${repo} sync
+fi
 
 #su koush
 if [ "${superuser_koush}" = "Y" ]; then
