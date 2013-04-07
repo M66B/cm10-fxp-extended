@@ -392,14 +392,14 @@ if [ "${bootlogo}" = "Y" ]; then
 	echo "*** Boot logo ***"
 	gcc -O2 -Wall -Wno-unused-parameter -Wno-unused-result -o /tmp/to565 ${android}/build/tools/rgb2565/to565.c
 
-	convert -depth 8 ${patches}/bootlogo/${bootlogoh} rgb:/tmp/logo_H_new.raw
+	convert -depth 8 ${patches}/bootlogo/${bootlogoh} -fill grey -gravity south -draw "text 0,10 '`date -R`'" rgb:/tmp/logo_H_new.raw
 	if [ $? -ne 0 ]; then
 		echo "imagemagick not installed?"
 		exit
 	fi
 	/tmp/to565 -rle </tmp/logo_H_new.raw >${android}/device/semc/msm7x30-common/prebuilt/logo_H.rle
 
-	convert -depth 8 ${patches}/bootlogo/${bootlogom} rgb:/tmp/logo_M_new.raw
+	convert -depth 8 ${patches}/bootlogo/${bootlogom} -fill grey -gravity south -draw "text 0,10 '`date -R`'" rgb:/tmp/logo_M_new.raw
 	if [ $? -ne 0 ]; then
 		echo "imagemagick not installed?"
 		exit
