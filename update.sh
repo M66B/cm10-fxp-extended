@@ -76,6 +76,7 @@ boost_pulse=Y
 iw=Y
 mmsfix=Y
 backlight=Y
+light_sensor_range=Y
 trebuchet_cm10_1=Y
 deskclock_cm10_1=Y
 superuser_koush=Y
@@ -636,6 +637,15 @@ if [ "${backlight}" = "Y" ]; then
 	do_patch backlight_mango.patch
 	cd ${android}/device/semc/smultron
 	do_patch backlight_smultron.patch
+fi
+
+#Light sensor range
+if [ "${light_sensor_range}" = "Y" ]; then
+	echo "*** Light sensor range"
+	cd ${android}/hardware/sony/DASH
+	do_patch light_sensor_range.patch
+	cd ${android}/device/semc/msm7x30-common
+	do_patch als_overlay_range.patch
 fi
 
 #Trebuchet CM10.1
