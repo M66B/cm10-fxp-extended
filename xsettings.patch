@@ -1,8 +1,19 @@
 diff --git a/res/values/strings.xml b/res/values/strings.xml
-index 5931dae..60c908d 100644
+index 5931dae..12b194b 100644
 --- a/res/values/strings.xml
 +++ b/res/values/strings.xml
-@@ -4674,6 +4674,12 @@
+@@ -2387,6 +2389,10 @@
+  from unknown sources. You agree that you are solely responsible for any
+  damage to your phone or loss of data that may result from using
+  these apps.</string>
++
++    <string name="boot_pincode_title">Pincode at boot</string>
++    <string name="boot_pincode_summary">Enter exactly four digits</string>
++
+     <!-- Applications settings screen, setting check box title. If checked, applications show more settings options. -->
+     <string name="advanced_settings">Advanced settings</string>
+     <!-- Applications settings screen, setting check box summary.  This is the summary for "Advanced settings" checkbox  -->
+@@ -4674,6 +4680,12 @@
      <string name="performance_settings_warning">These settings are included for experimentation and any changes made to them have the potential to cause instability, crashes, data loss or hardware failures.\n\nWe request you do not file bug reports if any of these settings have been changed from the defaults.</string>
  
      <!-- Performance Settings : Processor Settings -->
@@ -15,7 +26,7 @@ index 5931dae..60c908d 100644
      <!-- Performance Settings : Processor settings title -->
      <string name="processor_title">Processor</string>
      <!-- Performance Settings : Processor settings summary. -->
-@@ -4688,7 +4694,35 @@
+@@ -4688,7 +4700,35 @@
      <string name="cpu_max_freq_title">Maximum CPU frequency</string>
      <string name="cpu_max_freq_summary">%s</string>
      <string name="cpu_set_on_boot">Set on boot</string>
@@ -52,7 +63,7 @@ index 5931dae..60c908d 100644
  
      <!-- Performance Settings : I/O scheduler settings title -->
      <string name="io_scheds_title">I/O scheduler</string>
-@@ -4698,6 +4732,8 @@
+@@ -4698,6 +4738,8 @@
      <!-- Performance Settings : I/O scheduler settings sub items -->
      <string name="io_sched_title">I/O scheduler</string>
      <string name="io_sched_summary">%S</string>
@@ -61,7 +72,7 @@ index 5931dae..60c908d 100644
      <string name="io_sched_set_on_boot">Set on boot</string>
      <string name="io_sched_set_on_boot_summary">Restore the I/O scheduler settings on boot</string>
  
-@@ -4713,6 +4749,26 @@
+@@ -4713,6 +4755,26 @@
      <!-- Purgeable Assets -->
      <string name="pref_purgeable_assets_title">Allow purging of assets</string>
      <string name="pref_purgeable_assets_summary">Purging of bitmap memory assets allows the freeing of more RAM when needed (requires reboot)</string>
@@ -282,6 +293,84 @@ index 7d0b0ee..ad267c7 100644
 +        android:key="pref_vdd_levels" />
  
  </PreferenceScreen>
+diff --git a/res/xml/security_settings_misc.xml b/res/xml/security_settings_misc.xml
+index 9f78820..2df0a7e 100644
+--- a/res/xml/security_settings_misc.xml
++++ b/res/xml/security_settings_misc.xml
+@@ -52,6 +52,14 @@
+                 android:summaryOn="@string/install_unknown_applications"
+                 android:persistent="false" />
+ 
++        <EditTextPreference
++            android:key="boot_pincode"
++            android:dialogTitle="@string/boot_pincode_title"
++            android:title="@string/boot_pincode_title"
++            android:summary="@string/boot_pincode_summary"
++            android:inputType="number"
++            android:password="true" />
++
+     </PreferenceCategory>
+ 
+     <PreferenceCategory android:title="@string/credentials_title"
+diff --git a/src/com/android/settings/SecuritySettings.java b/src/com/android/settings/SecuritySettings.java
+index 47cbfe0..a2abb91 100644
+--- a/src/com/android/settings/SecuritySettings.java
++++ b/src/com/android/settings/SecuritySettings.java
+@@ -32,6 +32,7 @@ import android.os.UserId;
+ import android.os.Vibrator;
+ import android.preference.CheckBoxPreference;
+ import android.preference.ListPreference;
++import android.preference.EditTextPreference;
+ import android.preference.Preference;
+ import android.preference.Preference.OnPreferenceChangeListener;
+ import android.preference.PreferenceGroup;
+@@ -72,6 +73,7 @@ public class SecuritySettings extends SettingsPreferenceFragment
+     private static final String KEY_SHOW_PASSWORD = "show_password";
+     private static final String KEY_RESET_CREDENTIALS = "reset_credentials";
+     private static final String KEY_TOGGLE_INSTALL_APPLICATIONS = "toggle_install_applications";
++    private static final String KEY_BOOT_PINCODE = "boot_pincode";
+     private static final String KEY_POWER_INSTANTLY_LOCKS = "power_button_instantly_locks";
+     private static final String SLIDE_LOCK_DELAY_TOGGLE = "slide_lock_delay_toggle";
+     private static final String SLIDE_LOCK_TIMEOUT_DELAY = "slide_lock_timeout_delay";
+@@ -83,6 +85,8 @@ public class SecuritySettings extends SettingsPreferenceFragment
+     private static final String KEY_SMS_SECURITY_CHECK_PREF = "sms_security_check_limit";
+     public static final String KEY_VIBRATE_PREF = "lockscreen_vibrate";
+ 
++    private static final String BOOT_PINCODE_FILE = "/cache/pin/code";
++
+     DevicePolicyManager mDPM;
+ 
+     private ChooseLockSettingsHelper mChooseLockSettingsHelper;
+@@ -108,6 +112,7 @@ public class SecuritySettings extends SettingsPreferenceFragment
+     private Preference mResetCredentials;
+ 
+     private CheckBoxPreference mToggleAppInstallation;
++    private EditTextPreference mBootPincode;
+     private DialogInterface mWarnInstallApps;
+     private CheckBoxPreference mPowerButtonInstantlyLocks;
+ 
+@@ -359,6 +364,9 @@ public class SecuritySettings extends SettingsPreferenceFragment
+             mToggleAppInstallation = (CheckBoxPreference) findPreference(
+                     KEY_TOGGLE_INSTALL_APPLICATIONS);
+             mToggleAppInstallation.setChecked(isNonMarketAppsAllowed());
++            mBootPincode = (EditTextPreference) findPreference(
++                    KEY_BOOT_PINCODE);
++            mBootPincode.setOnPreferenceChangeListener(this);
+         }
+ 
+         boolean isTelephony = pm.hasSystemFeature(PackageManager.FEATURE_TELEPHONY);
+@@ -702,6 +710,11 @@ public class SecuritySettings extends SettingsPreferenceFragment
+             Settings.Secure.putInt(getContentResolver(), Settings.Secure.SMS_OUTGOING_CHECK_MAX_COUNT,
+                      smsSecurityCheck);
+             updateSmsSecuritySummary(smsSecurityCheck);
++        } else if (preference == mBootPincode) {
++            String pincode = (String)value;
++            if (pincode.length() != 4)
++                pincode = "";
++            Utils.fileWriteOneLine(BOOT_PINCODE_FILE, pincode);
+         }
+         return true;
+     }
 diff --git a/src/com/android/settings/cmstats/ReportingService.java b/src/com/android/settings/cmstats/ReportingService.java
 index 2a034e3..57554cf 100644
 --- a/src/com/android/settings/cmstats/ReportingService.java
