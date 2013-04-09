@@ -75,7 +75,6 @@ qcomdispl=Y
 boost_pulse=Y
 iw=Y
 mmsfix=Y
-iyokan_no_button_light=N
 backlight=Y
 trebuchet_cm10_1=Y
 deskclock_cm10_1=Y
@@ -624,13 +623,6 @@ if [ "${mmsfix}" = "Y" ]; then
 	echo "*** MMS fix ***"
 	cd ${android}/packages/apps/Mms
 	do_patch mms_cursor.patch
-fi
-
-#Disable iyokan button backlight
-if [ "${iyokan_no_button_light}" = "Y" ]; then
-	echo "*** Disable iyokan button backlight"
-	cd ${android}/device/semc/iyokan
-	do_patch iyokan_no_button_light.patch
 fi
 
 #Button/keyboard backlight fix
