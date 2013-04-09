@@ -75,7 +75,8 @@ qcomdispl=Y
 boost_pulse=Y
 iw=Y
 mmsfix=Y
-iyokan_no_button_light=Y
+iyokan_no_button_light=N
+backlight=Y
 trebuchet_cm10_1=Y
 deskclock_cm10_1=Y
 superuser_koush=Y
@@ -630,6 +631,19 @@ if [ "${iyokan_no_button_light}" = "Y" ]; then
 	echo "*** Disable iyokan button backlight"
 	cd ${android}/device/semc/iyokan
 	do_patch iyokan_no_button_light.patch
+fi
+
+#Button/keyboard backlight fix
+if [ "${backlight}" = "Y" ]; then
+	echo "*** Button/keyboard backlight fix"
+	cd ${android}/device/semc/coconut
+	do_patch backlight_coconut.patch
+	cd ${android}/device/semc/iyokan
+	do_patch backlight_iyokan.patch
+	cd ${android}/device/semc/mango
+	do_patch backlight_mango.patch
+	cd ${android}/device/semc/smultron
+	do_patch backlight_smultron.patch
 fi
 
 #Trebuchet CM10.1
