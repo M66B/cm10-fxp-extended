@@ -118,8 +118,6 @@ if [[ $- == *i* ]]
 then
 	read -p "Press [ENTER] to continue" dummy
 	echo ""
-else
-	echo $-
 fi
 
 #Helper functions
@@ -429,8 +427,8 @@ if [ "${bootlogo}" = "Y" ]; then
 	fi
 	${tmp}/to565 -rle <${tmp}/logo_H_new.raw >${android}/device/semc/msm7x30-common/prebuilt/logo_H.rle
 
-	convert -depth 8 ${patches}/bootlogo/${bootlogom} -fill grey -gravity south -draw "text 0,10 '`date -R`'" rgb:${tmp}/logo_M_new.raw
 	if [ ! -f ${tmp}/logo_M_new.raw ]; then
+		convert -depth 8 ${patches}/bootlogo/${bootlogom} -fill grey -gravity south -draw "text 0,10 '`date -R`'" rgb:${tmp}/logo_M_new.raw
 		if [ $? -ne 0 ]; then
 			echo "imagemagick not installed?"
 			exit
