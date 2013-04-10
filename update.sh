@@ -8,9 +8,17 @@ else
 fi
 
 #Prerequisites
-which lz4
+
+#bash
+if [ ! -n "$BASH" ]; then
+	echo "Try again with a bash shell"
+	return
+fi
+
+#lz4
+which lz4 > /dev/null
 if [ $? -ne 0 ]; then
-	echo "Execute:"
+	echo "Install lz4:"
 	echo ""
 	echo "cd ~/Downloads"
 	echo "svn checkout http://lz4.googlecode.com/svn/trunk/ lz4"
@@ -22,7 +30,7 @@ fi
 #Configuration
 
 patches=`pwd`
-repo=repo
+repo=`which repo`
 tmp=/tmp
 android=~/android/system
 devices="coconut iyokan mango smultron"
@@ -76,7 +84,7 @@ boost_pulse=Y
 iw=Y
 mmsfix=Y
 backlight=Y
-light_sensor_range=Y
+light_sensor_range=N
 trebuchet_cm10_1=Y
 deskclock_cm10_1=Y
 superuser_koush=Y
@@ -104,8 +112,15 @@ echo "Devices: ${devices}"
 echo "Init: ${init}"
 echo "Updates: ${updates}"
 echo ""
-read -p "Press [ENTER] to continue" dummy
-echo ""
+
+#Prompt
+if [[ $- == *i* ]]
+then
+	read -p "Press [ENTER] to continue" dummy
+	echo ""
+else
+	echo $-
+fi
 
 #Helper functions
 do_replace() {
