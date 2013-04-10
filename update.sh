@@ -84,6 +84,7 @@ boost_pulse=Y
 iw=Y
 mmsfix=Y
 backlight=Y
+backlight_fix=N
 light_sensor_range=N
 trebuchet_cm10_1=Y
 deskclock_cm10_1=Y
@@ -650,6 +651,13 @@ if [ "${backlight}" = "Y" ]; then
 	do_patch backlight_mango.patch
 	cd ${android}/device/semc/smultron
 	do_patch backlight_smultron.patch
+fi
+
+#Button/keyboard backlight fix
+if [ "${backlight_fix}" = "Y" ]; then
+	echo "*** Button/keyboard backlight fix"
+	cd ${android}/kernel/semc/msm7x30
+	do_patch leds.patch
 fi
 
 #Light sensor range
