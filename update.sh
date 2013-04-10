@@ -657,6 +657,7 @@ if [ "${light_sensor_range}" = "Y" ]; then
 	echo "*** Light sensor range"
 	cd ${android}/hardware/sony/DASH
 	do_patch light_sensor_range.patch
+	do_patch light_sensor_minimum.patch
 	cd ${android}/device/semc/msm7x30-common
 	do_patch als_overlay_range.patch
 fi
