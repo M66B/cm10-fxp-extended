@@ -18,7 +18,7 @@
 	cd ~/Downloads/cm10-fxp-extended
 	git pull
 	cd ~/android/system
-	source update.sh
+	source ~/Downloads/cm10-fxp-extended/update.sh
 
 	echo "Environment"
 	. build/envsetup.sh
