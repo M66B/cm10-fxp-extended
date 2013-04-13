@@ -2,7 +2,7 @@
 {
 	full=N
 	devices="coconut iyokan mango smultron"
-	target=/home/M66B/public_html/test
+	goo=/home/M66B/public_html/test
 
 	echo "Cleanup"
 	cd ~/android/system
@@ -34,6 +34,6 @@
 		brunch cm_${device}-userdebug
 		rom="$(ls -t1 out/target/product/${device}/cm-10-*-UNOFFICIAL-${device}.zip | head -n1)"
 		echo "-- ${rom} --> ${target}/${device}"
-		scp -P 2222 ${rom} M66B@upload.goo.im:${target}/${device}/
+		scp -P 2222 ${rom} M66B@upload.goo.im:${goo}/${device}/
 	done
 } >~/xtended.log 2>&1
