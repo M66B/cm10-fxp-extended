@@ -603,7 +603,6 @@ fi
 if [ "${qcomdispl}" = "Y" ]; then
 	echo "*** qcom display ***"
 	cd ${android}/hardware/qcom/display
-	do_patch qcom_display_glfinish.patch
 	do_patch qcom_display_heap.patch
 	do_patch qcom_display_ioctl.patch
 fi
