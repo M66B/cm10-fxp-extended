@@ -17,10 +17,10 @@
 	echo "Xtended"
 	cd ~/Downloads/cm10-fxp-extended
 	git pull
+	cd ~/android/system
 	source update.sh
 
 	echo "Environment"
-	cd ~/android/system
 	. build/envsetup.sh
 
 	echo "Build"
