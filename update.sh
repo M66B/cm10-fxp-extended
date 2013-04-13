@@ -85,6 +85,7 @@ iw=Y
 mmsfix=Y
 backlight=N
 light_sensor_range=N
+undo_als_overlay=Y
 trebuchet_cm10_1=Y
 deskclock_cm10_1=Y
 superuser_koush=Y
@@ -662,6 +663,13 @@ if [ "${light_sensor_range}" = "Y" ]; then
 	echo "*** Light sensor range"
 	cd ${android}/hardware/sony/DASH
 	do_patch light_sensor_range.patch
+fi
+
+#Undo ALS overlay
+if [ "${undo_als_overlay}" = "Y" ]; then
+	echo "*** Undo ALS overlay"
+	cd ${android}/device/semc/msm7x30-common
+	do_patch_reverse ALS_overlay.patch
 fi
 
 #Trebuchet CM10.1

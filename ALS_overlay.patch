@@ -1,0 +1,72 @@
+From 07d3931514334719025d13c89be6f4237e608460 Mon Sep 17 00:00:00 2001
+From: Michael Bestas <mikeioannina@gmail.com>
+Date: Tue, 9 Apr 2013 20:16:15 +0300
+Subject: [PATCH] msm7x30: Adjust ALS values
+
+Most users reported max value of ~12276 lux from their sensor
+Adjust the array according to the max value
+Lower minimum brightness from 70 to 10 to solve the bug: screen very bright even on lowest setting when using manual brightness
+
+Change-Id: I83b2cd78bec4d0156cf5d804f775a0d5b60ab7f5
+Signed-off-by: Michael Bestas <mikeioannina@gmail.com>
+---
+ overlay/frameworks/base/core/res/res/values/config.xml |    8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/overlay/frameworks/base/core/res/res/values/config.xml b/overlay/frameworks/base/core/res/res/values/config.xml
+index 8bbeda7..fff7b5d 100644
+--- a/overlay/frameworks/base/core/res/res/values/config.xml
++++ b/overlay/frameworks/base/core/res/res/values/config.xml
+@@ -25,7 +25,7 @@
+     <bool name="config_autoBrightnessButtonKeyboard">false</bool>
+ 
+     <!-- Minimum screen brightness allowed by the power manager. -->
+-    <integer name="config_screenBrightnessDim">70</integer>
++    <integer name="config_screenBrightnessDim">10</integer>
+ 
+     <!-- Array of light sensor LUX values to define our levels for auto backlight brightness support.
+          The N entries of this array define N + 1 zones as follows:
+@@ -38,6 +38,7 @@
+ 
+          Must be overridden in platform specific overlays -->
+     <integer-array name="config_autoBrightnessLevels">
++        <item>2</item>
+         <item>75</item>
+         <item>100</item>
+         <item>420</item>
+@@ -45,8 +46,8 @@
+         <item>1248</item>
+         <item>2099</item>
+         <item>4422</item>
++        <item>7724</item>
+         <item>10724</item>
+-        <item>16724</item>
+     </integer-array>
+ 
+     <!-- Array of output values for LCD backlight corresponding to the LUX values
+@@ -54,6 +55,7 @@
+          than the size of the config_autoBrightnessLevels array.
+     -->
+     <integer-array name="config_autoBrightnessLcdBacklightValues">
++        <item>10</item>
+         <item>20</item>
+         <item>30</item>
+         <item>70</item>
+@@ -81,6 +83,7 @@
+         <item>0</item>
+         <item>0</item>
+         <item>0</item>
++        <item>0</item>
+     </integer-array>
+     <!-- Array of output values for keyboard backlight corresponding to the LUX values
+          in the config_autoBrightnessLevels array.  This array should have size one greater
+@@ -97,5 +100,6 @@
+         <item>0</item>
+         <item>0</item>
+         <item>0</item>
++        <item>0</item>
+     </integer-array>
+ </resources>
+-- 
+1.7.10.4
+
