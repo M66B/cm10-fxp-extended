@@ -57,7 +57,7 @@ kernel_xtended_perm=Y
 kernel_tune_smartass=y
 kernel_wifi_range=Y
 kernel_displaylink=Y
-kernel_pmem=Y
+kernel_pmem=N
 
 bootlogo=Y
 bootlogoh=logo_H_extended.png
