@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "$0" | grep -q bash
-if [ $? -eq 0 ]; then
+if [ $? -eq 0 ] || [ "{buildbot}" = "Y" ]; then
 	cd ~/Downloads/cm10-fxp-extended
 else
 	cd "`dirname \"$0\"`"

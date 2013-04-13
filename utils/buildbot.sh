@@ -17,7 +17,7 @@
 	echo "Xtended"
 	cd ~/Downloads/cm10-fxp-extended
 	git pull
-	cd ~/android/system
+	buildbot=Y
 	source ~/Downloads/cm10-fxp-extended/update.sh
 
 	echo "Environment"
