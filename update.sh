@@ -637,6 +637,7 @@ if [ "${mmsfix}" = "Y" ]; then
 	echo "*** MMS fix ***"
 	cd ${android}/packages/apps/Mms
 	do_patch mms_cursor.patch
+	do_patch mms_cursor2.patch
 fi
 
 #Button/keyboard backlight fix
