@@ -83,7 +83,7 @@ qcomdispl=Y
 boost_pulse=Y
 iw=Y
 mmsfix=Y
-backlight=N
+backlight=Y
 light_sensor_range=N
 undo_als_overlay=Y
 trebuchet_cm10_1=Y
@@ -643,7 +643,7 @@ fi
 
 #Button/keyboard backlight fix
 if [ "${backlight}" = "Y" ]; then
-	echo "*** Button/keyboard backlight fix"
+	echo "*** Button/keyboard backlight fix (M66B)"
 	cd ${android}/device/semc/coconut
 	do_patch backlight_coconut.patch
 	cd ${android}/device/semc/iyokan
