@@ -57,6 +57,7 @@ kernel_xtended_perm=Y
 kernel_tune_smartass=y
 kernel_wifi_range=Y
 kernel_displaylink=Y
+kernel_pmem=Y
 
 bootlogo=Y
 bootlogoh=logo_H_extended.png
@@ -411,6 +412,11 @@ if [ "${kernel_mods}" = "Y" ]; then
 				#do_replace "CONFIG_USB_OTG_WHITELIST=y" "CONFIG_USB_OTG_WHITELIST=n" ${kconfig}
 			fi
 		done
+	fi
+
+	if [ "${kernel_pmem}" = "Y" ]; then
+		echo "--- pmem size adjust"
+		do_patch pmem_size.patch
 	fi
 fi
 
