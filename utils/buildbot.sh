@@ -33,7 +33,7 @@
 		fi
 		brunch cm_${device}-userdebug
 		rom="$(ls -t1 out/target/product/${device}/cm-10-*-UNOFFICIAL-${device}.zip | head -n1)"
-		echo "-- ${rom} --> ${target}/${device}"
+		echo "-- ${rom} --> ${goo}/${device}"
 		scp -P 2222 ${rom} M66B@upload.goo.im:${goo}/${device}/
 	done
 } >~/xtended.log 2>&1
