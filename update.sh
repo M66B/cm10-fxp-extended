@@ -57,7 +57,7 @@ kernel_xtended_perm=Y
 kernel_tune_smartass=y
 kernel_wifi_range=Y
 kernel_displaylink=Y
-kernel_pmem=N
+kernel_pmem=Y
 
 bootlogo=Y
 bootlogoh=logo_H_extended.png
@@ -372,17 +372,6 @@ if [ "${kernel_mods}" = "Y" ]; then
 	echo "*** Kernel ***"
 	cd ${android}/kernel/semc/msm7x30/
 
-	#Config
-	for device in ${devices}
-	do
-		if [ -f arch/arm/configs/nAa_${device}_defconfig ]; then
-			cp arch/arm/configs/nAa_${device}_defconfig arch/arm/configs/cm_${device}_defconfig
-			do_replace "# CONFIG_SCHED_AUTOGROUP is not set" "CONFIG_SCHED_AUTOGROUP=y" arch/arm/configs/cm_${device}_defconfig
-		else
-			echo "--- No kernel config for ${device}"
-		fi
-	done
-
 	if [ "${kernel_xtended_perm}" = "Y" ]; then
 		echo "--- Xtended permissions"
 		do_patch kernel_smartass_perm.patch
@@ -416,6 +405,17 @@ if [ "${kernel_mods}" = "Y" ]; then
 		echo "--- pmem size adjust"
 		do_patch pmem_size.patch
 	fi
+
+	for device in ${devices}
+	do
+		if [ -f arch/arm/configs/nAa_${device}_defconfig ]; then
+			echo "--- Config ${device}"
+			cp arch/arm/configs/nAa_${device}_defconfig arch/arm/configs/cm_${device}_defconfig
+			do_replace "# CONFIG_SCHED_AUTOGROUP is not set" "CONFIG_SCHED_AUTOGROUP=y" arch/arm/configs/cm_${device}_defconfig
+		else
+			echo "--- No kernel config for ${device}"
+		fi
+	done
 fi
 
 #Boot logo

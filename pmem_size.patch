@@ -1,22 +1,28 @@
 diff --git a/arch/arm/mach-msm/board-semc_mogami.c b/arch/arm/mach-msm/board-semc_mogami.c
-index 4143995..06ce28a 100644
+index 4143995..0a22280 100644
 --- a/arch/arm/mach-msm/board-semc_mogami.c
 +++ b/arch/arm/mach-msm/board-semc_mogami.c
-@@ -179,7 +179,7 @@
+@@ -179,7 +179,11 @@
  #define MSM_RAM_CONSOLE_SIZE    (128 * SZ_1K)
  #endif
  
--#define MSM_PMEM_SF_SIZE	0x1600000
-+#define MSM_PMEM_SF_SIZE	0x1C00000
++#ifdef CONFIG_FB_MSM_HDPI
++#define MSM_PMEM_SF_SIZE	0x1800000
++#else
+ #define MSM_PMEM_SF_SIZE	0x1600000
++#endif
  
  #ifdef CONFIG_FB_MSM_HDMI_SII9024A_PANEL
  #define MSM_HDMI_SIZE           0x30000
-@@ -194,7 +194,7 @@
- #endif /*CONFIG_FB_MSM_TRIPLE_BUFFER*/
- 
- #define MSM_PMEM_CAMERA_SIZE    0x0000000
--#define MSM_PMEM_ADSP_SIZE      0x1C00000
-+#define MSM_PMEM_ADSP_SIZE      0x1B00000
- #define PMEM_KERNEL_EBI1_SIZE   0x600000
- 
- #define PMIC_GPIO_INT		27
+diff --git a/arch/arm/configs/nAa_iyokan_defconfig b/arch/arm/configs/nAa_iyokan_defconfig
+index ad84a38..72ae2b3 100644
+--- a/arch/arm/configs/nAa_iyokan_defconfig
++++ b/arch/arm/configs/nAa_iyokan_defconfig
+@@ -1766,6 +1766,7 @@ CONFIG_FB_MSM=y
+ # CONFIG_FB_MSM_BACKLIGHT is not set
+ CONFIG_FB_MSM_LOGO=y
+ CONFIG_FB_MSM_LCDC_HW=y
++CONFIG_FB_MSM_HDPI=y
+ CONFIG_FB_MSM_TRIPLE_BUFFER=y
+ # CONFIG_FB_MSM_MDP22 is not set
+ # CONFIG_FB_MSM_MDP30 is not set
