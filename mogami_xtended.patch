@@ -1,12 +1,14 @@
 diff --git a/prebuilt/init.semc.rc b/prebuilt/init.semc.rc
-index d0d1e98..b630798 100644
+index 96f1d45..8f87acd 100644
 --- a/prebuilt/init.semc.rc
 +++ b/prebuilt/init.semc.rc
-@@ -117,6 +117,22 @@ on boot
+@@ -115,6 +115,24 @@ on boot
      write /sys/devices/system/cpu/cpufreq/ondemand/sampling_down_factor 4
      write /sys/devices/system/cpu/cpufreq/ondemand/down_differential 10
  
 +    # Xtended
++    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq 1017600
++    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq 134400
 +    write /sys/block/mmcblk0/queue/scheduler sio
 +    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor smartassV2
 +
