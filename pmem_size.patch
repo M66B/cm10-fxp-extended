@@ -118,3 +118,18 @@ index 3ca4993..4444341 100644
  	select SUPPORT_ALIEN_USB_CHARGER
  	default y
  	bool "SonyEricsson Haida"
+diff --git a/drivers/video/Kconfig b/drivers/video/Kconfig
+index 7c4d5ec..f29f550 100755
+--- a/drivers/video/Kconfig
++++ b/drivers/video/Kconfig
+@@ -2161,6 +2161,10 @@ config FB_MSM_TRIPLE_BUFFER
+ 	bool "Support for triple frame buffer"
+ 	default n
+ 
++config FB_MSM_HDPI
++	bool "Increased pmem size"
++	default n
++
+ choice
+ 	prompt "MDP HW version"
+ 	default FB_MSM_MDP22
