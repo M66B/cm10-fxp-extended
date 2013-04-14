@@ -127,7 +127,7 @@ index 7c4d5ec..f29f550 100755
  	default n
  
 +config FB_MSM_HDPI
-+	bool "Increased pmem size"
++	bool "Increased pmem size needed for HDPI devices"
 +	default n
 +
  choice
