@@ -85,6 +85,7 @@ boost_pulse=Y
 iw=Y
 mmsfix=Y
 backlight=Y
+symbols=Y
 trebuchet_cm10_1=Y
 deskclock_cm10_1=Y
 superuser_koush=Y
@@ -659,6 +660,13 @@ else
 	echo "*** Button/keyboard backlight fix"
 	cd ${android}/kernel/semc/msm7x30
 	do_patch backlight.patch
+fi
+
+#Symbol picker
+if [ "${symbols}" = "Y" ]; then
+	echo "*** Symbol picker ***"
+	cd ${android}/device/semc/mogami-common
+	do_patch symbol_picker.patch
 fi
 
 #Trebuchet CM10.1
