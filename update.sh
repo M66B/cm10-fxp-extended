@@ -86,6 +86,7 @@ iw=Y
 mmsfix=Y
 backlight=Y
 symbols=Y
+lsensor=Y
 trebuchet_cm10_1=Y
 deskclock_cm10_1=Y
 superuser_koush=Y
@@ -667,6 +668,13 @@ if [ "${symbols}" = "Y" ]; then
 	echo "*** Symbol picker ***"
 	cd ${android}/device/semc/mogami-common
 	do_patch symbol_picker.patch
+fi
+
+#Light sensor
+if [ "${lsensor}" = "Y" ]; then
+	echo "*** Light sensor range"
+	cd ${android}/hardware/sony/DASH
+	do_patch light_sensor_minimum.patch
 fi
 
 #Trebuchet CM10.1
