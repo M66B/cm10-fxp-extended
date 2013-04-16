@@ -649,14 +649,8 @@ fi
 #Button/keyboard backlight fix
 if [ "${backlight}" = "Y" ]; then
 	echo "*** Button/keyboard backlight fix (M66B)"
-	cd ${android}/device/semc/coconut
-	do_patch backlight_coconut.patch
-	cd ${android}/device/semc/iyokan
-	do_patch backlight_iyokan.patch
 	cd ${android}/device/semc/mango
 	do_patch backlight_mango.patch
-	cd ${android}/device/semc/smultron
-	do_patch backlight_smultron.patch
 else
 	echo "*** Button/keyboard backlight fix"
 	cd ${android}/kernel/semc/msm7x30
