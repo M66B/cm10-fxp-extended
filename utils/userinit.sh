@@ -16,10 +16,7 @@ log -p i -t userinit.sh "Disabled aGPS"
 setprop wifi.supplicant_scan_interval 180
 log -p i -t userinit.sh "Modified scan interval"
 
-#Disable button light
-dev=/sys/devices/i2c-0/0-0040/leds
-echo 1 > $dev/button-backlight/max_current
-log -p i -t userinit.sh "Disabled button light"
+#echo 512 >/sys/devices/virtual/bdi/179:0/read_ahead_kb
 
 #sshd
 /system/bin/sshd
