@@ -84,7 +84,6 @@ qcomdispl=Y
 boost_pulse=Y
 iw=Y
 mmsfix=Y
-backlight=Y
 trebuchet_cm10_1=Y
 deskclock_cm10_1=Y
 superuser_koush=Y
@@ -640,17 +639,6 @@ if [ "${mmsfix}" = "Y" ]; then
 	cd ${android}/packages/apps/Mms
 	do_patch mms_cursor.patch
 	do_patch mms_cursor2.patch
-fi
-
-#Button/keyboard backlight fix
-if [ "${backlight}" = "Y" ]; then
-	echo "*** Button/keyboard backlight fix (M66B)"
-	cd ${android}/device/semc/mango
-	do_patch backlight_mango.patch
-else
-	echo "*** Button/keyboard backlight fix"
-	cd ${android}/kernel/semc/msm7x30
-	do_patch backlight.patch
 fi
 
 #Trebuchet CM10.1
