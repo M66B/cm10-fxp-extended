@@ -54,10 +54,8 @@ linaro_url=https://android-build.linaro.org/jenkins/view/Toolchain/job/linaro-an
 kernel_mods=Y
 kernel_linaro=Y
 kernel_xtended_perm=Y
-kernel_tune_smartass=y
 kernel_wifi_range=Y
 kernel_displaylink=Y
-kernel_pmem=Y
 
 bootlogo=Y
 bootlogoh=logo_H_extended.png
@@ -377,11 +375,6 @@ if [ "${kernel_mods}" = "Y" ]; then
 		do_patch kernel_autogroup_perm.patch
 	fi
 
-	if [ "${kernel_tune_smartass}" = "Y" ]; then
-		echo "--- Tune smartass"
-		do_patch kernel_tune_smartass.patch
-	fi
-
 	if [ "${kernel_wifi_range}" = "Y" ]; then
 		echo "--- Wi-Fi range"
 		do_patch kernel_wifi_range.patch
@@ -398,11 +391,6 @@ if [ "${kernel_mods}" = "Y" ]; then
 				#do_replace "CONFIG_USB_OTG_WHITELIST=y" "CONFIG_USB_OTG_WHITELIST=n" ${kconfig}
 			fi
 		done
-	fi
-
-	if [ "${kernel_pmem}" = "Y" ]; then
-		echo "--- pmem size adjust"
-		do_patch pmem_size.patch
 	fi
 
 	for device in ${devices}
