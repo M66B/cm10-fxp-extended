@@ -551,8 +551,6 @@ fi
 if [ "${xsettings}" = "Y" ]; then
 	echo "*** Xtended settings ***"
 	cd ${android}/packages/apps/Settings
-	do_patch_reverse google_analytics2.patch
-	do_patch_reverse google_analytics1.patch
 	do_patch xsettings.patch
 	cd ${android}/device/semc/mogami-common
 	do_patch mogami_xtended.patch
