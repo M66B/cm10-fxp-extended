@@ -66,7 +66,6 @@ pin=Y
 #ROM
 
 cellbroadcast=Y
-datallowed=Y
 openpdroid=Y
 nano=Y
 terminfo=Y
@@ -451,13 +450,6 @@ if [ "${cellbroadcast}" = "Y" ]; then
 	do_append "PRODUCT_PACKAGES += CellBroadcastReceiver" ${android}/build/target/product/core.mk
 	cd ${android}/device/semc/mogami-common
 	do_patch cb_settings.patch
-fi
-
-#Data allowed
-if [ "${datallowed}" = "Y" ]; then
-	echo "*** Data allowed ***";
-	cd ${android}/frameworks/base
-	do_patch data_allowed.patch
 fi
 
 #OpenPDroid
