@@ -677,6 +677,11 @@ if [ "${cmfilemanager_cm10_1}" = "Y" ]; then
 	do_patch cmfilemanager_cm10_1.patch
 fi
 
+#Custom patches
+if [ -f ~/.cm10xtended.sh ]; then
+	. ~/.cm10xtended.sh
+fi
+
 #Environment
 echo "*** Setup environment ***"
 cd ${android}
