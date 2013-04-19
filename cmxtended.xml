@@ -32,6 +32,10 @@
 	<remove-project name="CyanogenMod/android_packages_apps_DeskClock" />
 	<project name="CyanogenMod/android_packages_apps_DeskClock" path="packages/apps/DeskClock" remote="github" revision="cm-10.1" />
 
+	<!-- CM10.1 Apollo -->
+	<remove-project name="CyanogenMod/android_packages_apps_Apollo" />
+	<project name="CyanogenMod/android_packages_apps_Apollo" path="packages/apps/Apollo" remote="github" revision="cm-10.1" />
+
 	<!-- CM10.1 busybox -->
 	<remove-project name="CyanogenMod/android_external_busybox" />
 	<project name="CyanogenMod/android_external_busybox" path="external/busybox" remote="github" revision="cm-10.1" />
