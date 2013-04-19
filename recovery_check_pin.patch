@@ -1,5 +1,5 @@
 diff --git a/recovery.c b/recovery.c
-index 9e5ee94..917ce4f 100644
+index 9e5ee94..7130d0f 100644
 --- a/recovery.c
 +++ b/recovery.c
 @@ -751,6 +751,53 @@ print_property(const char *key, const char *name, void *cookie) {
@@ -56,13 +56,15 @@ index 9e5ee94..917ce4f 100644
  int
  main(int argc, char **argv) {
  
-@@ -917,7 +964,8 @@ main(int argc, char **argv) {
+@@ -917,7 +964,10 @@ main(int argc, char **argv) {
          ui_set_background(BACKGROUND_ICON_ERROR);
      }
      if (status != INSTALL_SUCCESS || ui_text_visible()) {
 -        prompt_and_wait();
 +        if (get_pin())
 +            prompt_and_wait();
++        else
++            poweroff = 1;
      }
  
      verify_root_and_recovery();
