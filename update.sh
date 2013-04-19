@@ -81,12 +81,13 @@ qcomdispl=Y
 boost_pulse=Y
 iw=Y
 mmsfix=Y
+apn_cm10_1=Y
 trebuchet_cm10_1=Y
 deskclock_cm10_1=Y
-apollo_cm10_1=Y
 superuser_koush=Y
 busybox_cm10_1=Y
 cmfilemanager_cm10_1=Y
+apollo_cm10_1=Y
 
 #Local configuration
 if [ -f ~/.cm10xtended ]; then
@@ -269,13 +270,6 @@ else
 	sed -i "/android_packages_apps_DeskClock/d" ${android}/.repo/local_manifests/cmxtended.xml
 fi
 
-#Apollo CM10.1
-if [ "${apollo_cm10_1}" = "Y" ]; then
-	echo "--- Apollo CM10.1"
-else
-	sed -i "/android_packages_apps_Apollo/d" ${android}/.repo/local_manifests/cmxtended.xml
-fi
-
 #busybox CM10.1
 if [ "${busybox_cm10_1}" = "Y" ]; then
 	echo "--- busybox CM10.1"
@@ -294,6 +288,13 @@ if [ "${iw}" = "Y" ]; then
 	echo "--- iw"
 else
 	sed -i "/dickychiang/d" ${android}/.repo/local_manifests/cmxtended.xml
+fi
+
+#Apollo CM10.1
+if [ "${apollo_cm10_1}" = "Y" ]; then
+	echo "--- Apollo CM10.1"
+else
+	sed -i "/android_packages_apps_Apollo/d" ${android}/.repo/local_manifests/cmxtended.xml
 fi
 
 #CMUpdater
@@ -350,6 +351,12 @@ fi
 ${android}/vendor/cm/get-prebuilts
 if [ $? -ne 0 ]; then
 	exit
+fi
+
+#APN's CM10.1
+if [ "${apn_cm10_1}" = "Y" ]; then
+	cd ${android}/vendor/cm/prebuilt/common/etc
+	wget -N https://raw.github.com/CyanogenMod/android_vendor_cm/cm-10.1/prebuilt/common/etc/apns-conf.xml
 fi
 
 #One core build
@@ -651,13 +658,6 @@ if [ "${deskclock_cm10_1}" = "Y" ]; then
 	do_patch deskclock_cm_10_1.patch
 fi
 
-#Apollo CM10.1
-if [ "${apollo_cm10_1}" = "Y" ]; then
-	echo "*** Apollo CM10.1 ***"
-	cd ${android}/packages/apps/Apollo
-	do_patch apollo_cm_10_1.patch
-fi
-
 #Superuser Koush
 if [ "${superuser_koush}" = "Y" ]; then
 	echo "*** Superuser Koush"
@@ -672,6 +672,13 @@ if [ "${cmfilemanager_cm10_1}" = "Y" ]; then
 	echo "*** CMFileManager CM10.1 ***"
 	cd ${android}/packages/apps/CMFileManager
 	do_patch cmfilemanager_cm10_1.patch
+fi
+
+#Apollo CM10.1
+if [ "${apollo_cm10_1}" = "Y" ]; then
+	echo "*** Apollo CM10.1 ***"
+	cd ${android}/packages/apps/Apollo
+	do_patch apollo_cm_10_1.patch
 fi
 
 #Custom patches
