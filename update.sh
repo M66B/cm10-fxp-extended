@@ -83,6 +83,7 @@ iw=Y
 mmsfix=Y
 trebuchet_cm10_1=Y
 deskclock_cm10_1=Y
+apollo_cm10_1=Y
 superuser_koush=Y
 busybox_cm10_1=Y
 cmfilemanager_cm10_1=Y
@@ -218,6 +219,7 @@ if [ "${init}" = "Y" ]; then
 	do_deldir ${android}/packages/apps/Superuser
 	do_deldir ${android}/packages/apps/Trebuchet
 	do_deldir ${android}/packages/apps/DeskClock
+	do_deldir ${android}/packages/apps/Apollo
 	do_deldir ${android}/packages/apps/CMUpdater
 	do_deldir ${android}/packages/apps/CMFileManager
 	do_deldir ${android}/external/busybox
@@ -228,6 +230,7 @@ if [ "${init}" = "Y" ]; then
 	do_deldir ${android}/.repo/projects/packages/apps/Superuser.git
 	do_deldir ${android}/.repo/projects/packages/apps/Trebuchet.git
 	do_deldir ${android}/.repo/projects/packages/apps/DeskClock.git
+	do_deldir ${android}/.repo/projects/packages/apps/Apollo.git
 	do_deldir ${android}/.repo/projects/packages/apps/CMUpdater.git
 	do_deldir ${android}/.repo/projects/packages/apps/CMFileManager.git
 	do_deldir ${android}/.repo/projects/external/busybox.git
@@ -264,6 +267,13 @@ if [ "${deskclock_cm10_1}" = "Y" ]; then
 	echo "--- DeskClock CM10.1"
 else
 	sed -i "/android_packages_apps_DeskClock/d" ${android}/.repo/local_manifests/cmxtended.xml
+fi
+
+#Apollo CM10.1
+if [ "${apollo_cm10_1}" = "Y" ]; then
+	echo "--- Apollo CM10.1"
+else
+	sed -i "/android_packages_apps_Apollo/d" ${android}/.repo/local_manifests/cmxtended.xml
 fi
 
 #busybox CM10.1
@@ -639,6 +649,13 @@ if [ "${deskclock_cm10_1}" = "Y" ]; then
 	echo "*** DeskClock CM10.1 ***"
 	cd ${android}/packages/apps/DeskClock
 	do_patch deskclock_cm_10_1.patch
+fi
+
+#Apollo CM10.1
+if [ "${apollo_cm10_1}" = "Y" ]; then
+	echo "*** Apollo CM10.1 ***"
+	cd ${android}/packages/apps/Apollo
+	do_patch apollo_cm_10_1.patch
 fi
 
 #Superuser Koush
