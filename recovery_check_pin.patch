@@ -1,5 +1,5 @@
 diff --git a/recovery.c b/recovery.c
-index 0f56d0e..5321c96 100644
+index 0f56d0e..9e30136 100644
 --- a/recovery.c
 +++ b/recovery.c
 @@ -783,6 +783,53 @@ setup_adbd() {
@@ -48,7 +48,7 @@ index 0f56d0e..5321c96 100644
 +        return false;
 +    else {
 +        __system("touch /cache/pin/ok");
-+        setup_adbd();
++        __system("/sbin/adbd &");
 +        return true;
 +    }
 +}
