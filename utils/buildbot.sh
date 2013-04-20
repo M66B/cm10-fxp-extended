@@ -36,4 +36,6 @@
 		echo "-- ${rom} --> ${gootarget}/${goodevice}"
 		scp -P 2222 ${rom} M66B@upload.goo.im:${gootarget}/${goodevice}/
 	done
+
+	echo "Done"
 } >~/xtended.log 2>&1
