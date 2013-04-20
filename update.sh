@@ -694,7 +694,7 @@ fi
 if [ "${cwm_cm10_1}" = "Y" ]; then
 	echo "*** CWM CM10.1 ***"
 	cd ${android}/bootable/recovery
-	do_patch recovery_cm_10_1.patch
+	do_patch recovery_cm10_1.patch
 	cd ${android}/system/core
 	do_patch system_core_libsparse.patch
 fi
