@@ -1,9 +1,9 @@
 diff --git a/recovery.c b/recovery.c
-index 9e5ee94..7130d0f 100644
+index 0f56d0e..5321c96 100644
 --- a/recovery.c
 +++ b/recovery.c
-@@ -751,6 +751,53 @@ print_property(const char *key, const char *name, void *cookie) {
-     printf("%s=%s\n", key, name);
+@@ -783,6 +783,53 @@ setup_adbd() {
+     property_set("service.adb.root", "1");
  }
  
 +int get_pin() {
@@ -48,7 +48,7 @@ index 9e5ee94..7130d0f 100644
 +        return false;
 +    else {
 +        __system("touch /cache/pin/ok");
-+        __system("/sbin/adbd &");
++        setup_adbd();
 +        return true;
 +    }
 +}
@@ -56,7 +56,14 @@ index 9e5ee94..7130d0f 100644
  int
  main(int argc, char **argv) {
  
-@@ -917,7 +964,10 @@ main(int argc, char **argv) {
+@@ -964,14 +1011,15 @@ main(int argc, char **argv) {
+         }
+     }
+ 
+-    setup_adbd();
+-
+     if (status != INSTALL_SUCCESS && !is_user_initiated_recovery) {
+         ui_set_show_text(1);
          ui_set_background(BACKGROUND_ICON_ERROR);
      }
      if (status != INSTALL_SUCCESS || ui_text_visible()) {

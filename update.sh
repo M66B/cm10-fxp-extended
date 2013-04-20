@@ -88,6 +88,7 @@ superuser_koush=Y
 busybox_cm10_1=Y
 cmfilemanager_cm10_1=Y
 apollo_cm10_1=Y
+cwm_cm10_1=Y
 
 #Local configuration
 if [ -f ~/.cm10xtended ]; then
@@ -215,25 +216,25 @@ done
 
 #Replaced projects
 if [ "${init}" = "Y" ]; then
-	do_deldir ${android}/bootable/recovery
 	do_deldir ${android}/system/su
 	do_deldir ${android}/packages/apps/Superuser
 	do_deldir ${android}/packages/apps/Trebuchet
 	do_deldir ${android}/packages/apps/DeskClock
-	do_deldir ${android}/packages/apps/Apollo
 	do_deldir ${android}/packages/apps/CMUpdater
 	do_deldir ${android}/packages/apps/CMFileManager
+	do_deldir ${android}/packages/apps/Apollo
+	do_deldir ${android}/bootable/recovery
 	do_deldir ${android}/external/busybox
 	do_deldir ${android}/kernel/semc/msm7x30
 
-	do_deldir ${android}/.repo/projects/bootable/recovery.git
 	do_deldir ${android}/.repo/projects/system/su.git
 	do_deldir ${android}/.repo/projects/packages/apps/Superuser.git
 	do_deldir ${android}/.repo/projects/packages/apps/Trebuchet.git
 	do_deldir ${android}/.repo/projects/packages/apps/DeskClock.git
-	do_deldir ${android}/.repo/projects/packages/apps/Apollo.git
 	do_deldir ${android}/.repo/projects/packages/apps/CMUpdater.git
 	do_deldir ${android}/.repo/projects/packages/apps/CMFileManager.git
+	do_deldir ${android}/.repo/projects/packages/apps/Apollo.git
+	do_deldir ${android}/.repo/projects/bootable/recovery.git
 	do_deldir ${android}/.repo/projects/external/busybox.git
 	do_deldir ${android}/.repo/projects/kernel/semc/msm7x30.git
 fi
@@ -295,6 +296,13 @@ if [ "${apollo_cm10_1}" = "Y" ]; then
 	echo "--- Apollo CM10.1"
 else
 	sed -i "/android_packages_apps_Apollo/d" ${android}/.repo/local_manifests/cmxtended.xml
+fi
+
+#CWM CM10.1
+if [ "${cwm_cm10_1}" = "Y" ]; then
+	echo "--- CWM CM10.1"
+else
+	sed -i "/android_bootable_recovery/d" ${android}/.repo/local_manifests/cmxtended.xml
 fi
 
 #CMUpdater
@@ -680,6 +688,15 @@ if [ "${apollo_cm10_1}" = "Y" ]; then
 	echo "*** Apollo CM10.1 ***"
 	cd ${android}/packages/apps/Apollo
 	do_patch apollo_cm_10_1.patch
+fi
+
+#CWM CM10.1
+if [ "${cwm_cm10_1}" = "Y" ]; then
+	echo "*** CWM CM10.1 ***"
+	cd ${android}/bootable/recovery
+	do_patch recovery_cm_10_1.patch
+	cd ${android}/system/core
+	do_patch system_core_libsparse.patch
 fi
 
 #Custom patches

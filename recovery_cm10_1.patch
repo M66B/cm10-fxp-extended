@@ -1,0 +1,133 @@
+diff --git a/Android.mk b/Android.mk
+index 20e4e86..c45f2db 100644
+--- a/Android.mk
++++ b/Android.mk
+@@ -70,7 +70,7 @@ LOCAL_STATIC_LIBRARIES :=
+ 
+ LOCAL_CFLAGS += -DUSE_EXT4
+ LOCAL_C_INCLUDES += system/extras/ext4_utils
+-LOCAL_STATIC_LIBRARIES += libext4_utils_static libz libsparse_static
++LOCAL_STATIC_LIBRARIES += libext4_utils libz libsparse_static
+ 
+ # This binary is in the recovery ramdisk, which is otherwise a copy of root.
+ # It gets copied there in config/Makefile.  LOCAL_MODULE_TAGS suppresses
+@@ -85,7 +85,7 @@ else
+   LOCAL_SRC_FILES += $(BOARD_CUSTOM_RECOVERY_KEYMAPPING)
+ endif
+ 
+-LOCAL_STATIC_LIBRARIES += libext4_utils_static libz libsparse_static
++LOCAL_STATIC_LIBRARIES += libext4_utils libz libsparse_static
+ LOCAL_STATIC_LIBRARIES += libminzip libunz libmincrypt
+ 
+ LOCAL_STATIC_LIBRARIES += libminizip libminadbd libedify libbusybox libmkyaffs2image libunyaffs liberase_image libdump_image libflash_image
+diff --git a/applypatch/Android.mk b/applypatch/Android.mk
+index ef57f24..0e529d4 100644
+--- a/applypatch/Android.mk
++++ b/applypatch/Android.mk
+@@ -50,6 +50,7 @@ include $(CLEAR_VARS)
+ LOCAL_SRC_FILES := imgdiff.c utils.c bsdiff.c
+ LOCAL_MODULE := imgdiff
+ LOCAL_FORCE_STATIC_EXECUTABLE := true
++LOCAL_MODULE_TAGS := eng
+ LOCAL_C_INCLUDES += external/zlib external/bzip2
+ LOCAL_STATIC_LIBRARIES += libz libbz
+ 
+diff --git a/dedupe/Android.mk b/dedupe/Android.mk
+index 4f2f926..22abe5c 100644
+--- a/dedupe/Android.mk
++++ b/dedupe/Android.mk
+@@ -4,6 +4,7 @@ include $(CLEAR_VARS)
+ 
+ LOCAL_SRC_FILES := dedupe.c driver.c
+ LOCAL_FORCE_STATIC_EXECUTABLE := true
++LOCAL_MODULE_TAGS := eng
+ LOCAL_MODULE := dedupe
+ LOCAL_STATIC_LIBRARIES := libcrypto_static
+ LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../../external/openssl/include
+diff --git a/install.c b/install.c
+index 8b07b16..5b76bd9 100644
+--- a/install.c
++++ b/install.c
+@@ -285,48 +285,31 @@ load_keys(const char* filename, int* numKeys) {
+         goto exit;
+     }
+ 
+-    {
+-        int i;
+-        bool done = false;
+-        while (!done) {
+-            ++*numKeys;
+-            out = (RSAPublicKey*)realloc(out, *numKeys * sizeof(RSAPublicKey));
+-            RSAPublicKey* key = out + (*numKeys - 1);
+-
+-            char start_char;
+-            if (fscanf(f, " %c", &start_char) != 1) goto exit;
+-            if (start_char == '{') {
+-                // a version 1 key has no version specifier.
+-                key->exponent = 3;
+-            } else if (start_char == 'v') {
+-                int version;
+-                if (fscanf(f, "%d {", &version) != 1) goto exit;
+-                if (version == 2) {
+-                    key->exponent = 65537;
+-                } else {
+-                    goto exit;
+-                }
+-            }
+-
+-            if (fscanf(f, " %i , 0x%x , { %u",
+-                       &(key->len), &(key->n0inv), &(key->n[0])) != 3) {
+-                goto exit;
+-            }
+-            if (key->len != RSANUMWORDS) {
+-                LOGE("key length (%d) does not match expected size\n", key->len);
+-                goto exit;
+-            }
+-            for (i = 1; i < key->len; ++i) {
+-                if (fscanf(f, " , %u", &(key->n[i])) != 1) goto exit;
+-            }
+-            if (fscanf(f, " } , { %u", &(key->rr[0])) != 1) goto exit;
+-            for (i = 1; i < key->len; ++i) {
+-                if (fscanf(f, " , %u", &(key->rr[i])) != 1) goto exit;
+-            }
+-            fscanf(f, " } } ");
++    int i;
++    bool done = false;
++    while (!done) {
++        ++*numKeys;
++        out = realloc(out, *numKeys * sizeof(RSAPublicKey));
++        RSAPublicKey* key = out + (*numKeys - 1);
++        if (fscanf(f, " { %i , 0x%x , { %u",
++                   &(key->len), &(key->n0inv), &(key->n[0])) != 3) {
++            goto exit;
++        }
++        if (key->len != RSANUMWORDS) {
++            LOGE("key length (%d) does not match expected size\n", key->len);
++            goto exit;
++        }
++        for (i = 1; i < key->len; ++i) {
++            if (fscanf(f, " , %u", &(key->n[i])) != 1) goto exit;
++        }
++        if (fscanf(f, " } , { %u", &(key->rr[0])) != 1) goto exit;
++        for (i = 1; i < key->len; ++i) {
++            if (fscanf(f, " , %u", &(key->rr[i])) != 1) goto exit;
++        }
++        fscanf(f, " } } ");
+ 
+-            // if the line ends in a comma, this file has more keys.
+-            switch (fgetc(f)) {
++        // if the line ends in a comma, this file has more keys.
++        switch (fgetc(f)) {
+             case ',':
+                 // more keys to come.
+                 break;
+@@ -338,9 +321,6 @@ load_keys(const char* filename, int* numKeys) {
+             default:
+                 LOGE("unexpected character between keys\n");
+                 goto exit;
+-            }
+-
+-            LOGI("read key e=%d\n", key->exponent);
+         }
+     }
+ 
