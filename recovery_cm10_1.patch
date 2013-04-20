@@ -21,7 +21,7 @@ index 20e4e86..c45f2db 100644
  
  LOCAL_STATIC_LIBRARIES += libminizip libminadbd libedify libbusybox libmkyaffs2image libunyaffs liberase_image libdump_image libflash_image
 diff --git a/adb_install.c b/adb_install.c
-index 00c3cc0..5e7235f 100644
+index 00c3cc0..1b8ac31 100644
 --- a/adb_install.c
 +++ b/adb_install.c
 @@ -60,7 +60,7 @@ set_usb_driver(int enabled) {
@@ -42,6 +42,15 @@ index 00c3cc0..5e7235f 100644
      }
  }
  
+@@ -129,7 +129,7 @@ apply_from_adb() {
+ 
+     // kill the child
+     kill(data.child, SIGTERM);
+-    pthread_join(&sideload_thread, NULL);
++    pthread_join(sideload_thread, NULL);
+     ui_clear_key_queue();
+ 
+     struct stat st;
 diff --git a/applypatch/Android.mk b/applypatch/Android.mk
 index ef57f24..0e529d4 100644
 --- a/applypatch/Android.mk
