@@ -22,7 +22,7 @@ if [ $? -ne 0 ]; then
 	echo ""
 	echo "cd ~/Downloads"
 	echo "svn checkout http://lz4.googlecode.com/svn/trunk/ lz4"
-	echo "cd lz4 && make && cp lz4demo ~/bin/lz4"
+	echo "cd lz4 && make && cp lz4c ~/bin/lz4"
 	echo ""
 	return
 fi
