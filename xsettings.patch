@@ -313,7 +313,7 @@ index 9f78820..2df0a7e 100644
  
      <PreferenceCategory android:title="@string/credentials_title"
 diff --git a/src/com/android/settings/SecuritySettings.java b/src/com/android/settings/SecuritySettings.java
-index 47cbfe0..37f37a6 100644
+index 47cbfe0..c922343 100644
 --- a/src/com/android/settings/SecuritySettings.java
 +++ b/src/com/android/settings/SecuritySettings.java
 @@ -32,6 +32,7 @@ import android.os.UserId;
@@ -359,20 +359,19 @@ index 47cbfe0..37f37a6 100644
          }
  
          boolean isTelephony = pm.hasSystemFeature(PackageManager.FEATURE_TELEPHONY);
-@@ -702,6 +710,11 @@ public class SecuritySettings extends SettingsPreferenceFragment
+@@ -702,6 +710,10 @@ public class SecuritySettings extends SettingsPreferenceFragment
              Settings.Secure.putInt(getContentResolver(), Settings.Secure.SMS_OUTGOING_CHECK_MAX_COUNT,
                       smsSecurityCheck);
              updateSmsSecuritySummary(smsSecurityCheck);
 +        } else if (preference == mBootPincode) {
 +            String pincode = (String)value;
-+            if (pincode.length() != 4)
-+                pincode = "";
-+            Utils.fileWriteOneLine(BOOT_PINCODE_FILE, pincode);
++            if (pincode != null && pincode.length() == 4)
++                Utils.fileWriteOneLine(BOOT_PINCODE_FILE, pincode);
          }
          return true;
      }
 diff --git a/src/com/android/settings/cyanogenmod/BootReceiver.java b/src/com/android/settings/cyanogenmod/BootReceiver.java
-index 0704a66..e4227ab 100644
+index 0704a66..4815395 100644
 --- a/src/com/android/settings/cyanogenmod/BootReceiver.java
 +++ b/src/com/android/settings/cyanogenmod/BootReceiver.java
 @@ -22,12 +22,19 @@ import android.content.Intent;
@@ -403,7 +402,7 @@ index 0704a66..e4227ab 100644
  
      @Override
      public void onReceive(Context ctx, Intent intent) {
-@@ -64,45 +72,150 @@ public class BootReceiver extends BroadcastReceiver {
+@@ -64,45 +72,151 @@ public class BootReceiver extends BroadcastReceiver {
                  SystemProperties.set(KSM_SETTINGS_PROP, "false");
              }
          }
@@ -419,7 +418,8 @@ index 0704a66..e4227ab 100644
 +        // Restore pin code
 +        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
 +        String pincode = prefs.getString(SecuritySettings.KEY_BOOT_PINCODE, null);
-+        Utils.fileWriteOneLine(SecuritySettings.BOOT_PINCODE_FILE, pincode);
++        if (pincode != null && pincode.length() == 4)
++            Utils.fileWriteOneLine(SecuritySettings.BOOT_PINCODE_FILE, pincode);
      }
  
      private void configureCPU(Context ctx) {
@@ -581,7 +581,7 @@ index 0704a66..e4227ab 100644
          }
      }
  
-@@ -114,21 +227,40 @@ public class BootReceiver extends BroadcastReceiver {
+@@ -114,21 +228,40 @@ public class BootReceiver extends BroadcastReceiver {
              return;
          }
  
@@ -634,7 +634,7 @@ index 0704a66..e4227ab 100644
          }
      }
  
-@@ -140,4 +272,51 @@ public class BootReceiver extends BroadcastReceiver {
+@@ -140,4 +273,51 @@ public class BootReceiver extends BroadcastReceiver {
          Utils.fileWriteOneLine(MemoryManagement.KSM_RUN_FILE, ksm ? "1" : "0");
          Log.d(TAG, "KSM settings restored.");
      }
