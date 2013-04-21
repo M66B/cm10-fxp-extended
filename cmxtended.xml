@@ -21,8 +21,6 @@
 	<!-- koush superuser -->
 	<remove-project name="CyanogenMod/android_system_su" />
 	<remove-project name="CyanogenMod/android_packages_apps_Superuser" />
-	<project name="koush/Superuser" path="external/koush/Superuser" remote="github" revision="master" />
-	<project name="koush/Widgets" path="external/koush/Widgets" remote="github" revision="master" />
 
 	<!-- CM10.1 Trebuchet -->
 	<remove-project name="CyanogenMod/android_packages_apps_Trebuchet" />
