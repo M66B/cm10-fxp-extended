@@ -252,7 +252,7 @@ fi
 if [ "${superuser_koush}" = "Y" ]; then
 	echo "--- Superuser koush"
 	if [ "${superuser_embed}" = "Y" ]; then
-		do_append "SUPERUSER_EMBEDDED := true" ${android}/device/semc/msm7x30-common/BoardConfigCommon.mk
+		do_append "SUPERUSER_EMBEDDED := true" ${android}/vendor/cm/config/common.mk
 	else
 		do_append "SUPERUSER_PACKAGE := com.m66b.superuser" ${android}/device/semc/msm7x30-common/BoardConfigCommon.mk
 	fi
