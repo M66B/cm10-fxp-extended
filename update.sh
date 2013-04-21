@@ -85,6 +85,7 @@ apn_cm10_1=Y
 trebuchet_cm10_1=Y
 deskclock_cm10_1=Y
 superuser_koush=Y
+superuser_embed=Y
 busybox_cm10_1=Y
 cmfilemanager_cm10_1=Y
 apollo_cm10_1=Y
@@ -250,7 +251,11 @@ fi
 #su koush
 if [ "${superuser_koush}" = "Y" ]; then
 	echo "--- Superuser koush"
-	do_append "SUPERUSER_PACKAGE := com.m66b.superuser" ${android}/device/semc/msm7x30-common/BoardConfigCommon.mk
+	if [ "${superuser_embed}" = "Y" ]; then
+		do_append "SUPERUSER_EMBEDDED := true" ${android}/device/semc/msm7x30-common/BoardConfigCommon.mk
+	else
+		do_append "SUPERUSER_PACKAGE := com.m66b.superuser" ${android}/device/semc/msm7x30-common/BoardConfigCommon.mk
+	fi
 else
 	sed -i "/koush/d" ${android}/.repo/local_manifests/cmxtended.xml
 	sed -i "/android_system_su/d" ${android}/.repo/local_manifests/cmxtended.xml
@@ -355,6 +360,10 @@ fi
 if [ "${updates}" = "Y" ]; then
 	do_append "curl -L -o ${android}/vendor/cm/proprietary/GooManager.apk -O -L https://github.com/solarnz/GooManager_prebuilt/blob/master/GooManager.apk?raw=true" ${android}/vendor/cm/get-prebuilts
 	do_append "PRODUCT_COPY_FILES += vendor/cm/proprietary/GooManager.apk:system/app/GooManager.apk" ${android}/vendor/cm/config/common.mk
+fi
+if [ "${superuser_embed}" = "Y" ]; then
+	do_append "curl -L -o ${android}/vendor/cm/proprietary/Superuser.apk -O -L http://download.clockworkmod.com/apks/Superuser.apk" ${android}/vendor/cm/get-prebuilts
+	do_append "PRODUCT_COPY_FILES += vendor/cm/proprietary/Superuser.apk:system/app/Superuser.apk" ${android}/vendor/cm/config/common.mk
 fi
 ${android}/vendor/cm/get-prebuilts
 if [ $? -ne 0 ]; then
@@ -668,7 +677,7 @@ if [ "${deskclock_cm10_1}" = "Y" ]; then
 fi
 
 #Superuser Koush
-if [ "${superuser_koush}" = "Y" ]; then
+if [ "${superuser_koush}" = "Y" ] && [ "${superuser_embed}" != "Y" ]; then
 	echo "*** Superuser Koush"
 	cd ${android}/external/koush/Superuser
 	do_patch superuser_koush_superuser.patch
