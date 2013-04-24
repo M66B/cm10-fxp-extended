@@ -486,6 +486,16 @@ if [ "${pin}" = "Y" ]; then
 fi
 
 if [ "${kernel3}" = "Y" ]; then
+	echo "*** Kernel 3.x ***"
+
+	#boot logo
+	do_replace "logo.rle" "initlogo.rle" ${android}/device/semc/msm7x30-common/custombootimg.mk
+	for device in ${devices}
+	do
+		do_replace "logo.rle" "initlogo.rle" ${android}/device/semc/${device}/${device}.mk
+	done
+
+	#Wi-Fi
 	cp /lib/firmware/ti-connectivity/wl127x-fw-5-sr.bin ${android}/device/semc/mogami-common/prebuilt/wl127x-fw-5-sr.bin
 	do_append "PRODUCT_COPY_FILES += device/semc/mogami-common/prebuilt/wl127x-fw-5-sr.bin:root/firmware/wl127x-fw-5-sr.bin" ${android}/device/semc/mogami-common/mogami.mk
 	do_replace "wl12xx_sdio.ko" "wlcore_sdio.ko" ${android}/device/semc/mogami-common/prebuilt/wifiload
