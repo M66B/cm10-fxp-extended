@@ -8,7 +8,7 @@ index 5ae1d99..8311307 100644
  
 +# Charging check
 +PRODUCT_COPY_FILES += \
-+    device/semc/mogami-common/prebuilt/charging.sh:system/etc/charging.sh
++    device/semc/mogami-common/prebuilt/charging.sh:root/charging.sh
 +
  # WiFi config & related files
  PRODUCT_COPY_FILES += \
@@ -21,7 +21,7 @@ index 96f1d45..1e5454e 100644
  on early-boot
      #offline charging
      exec /system/bin/chargemon
-+    exec /system/bin/sh /system/etc/charging.sh
++    exec /system/bin/sh /charging.sh
  
  on post-fs-data
      mkdir /data/misc/wifi 0770 wifi wifi
