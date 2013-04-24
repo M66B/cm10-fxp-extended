@@ -249,8 +249,11 @@ if [ "${init}" = "Y" ]; then
 fi
 
 #su koush
-if [ "${superuser_koush}" = "Y" ] && [ "${superuser_embed}" != "Y" ]; then
+if [ "${superuser_koush}" = "Y" ]; then
 	echo "--- Superuser koush"
+	if [ "${superuser_embed}" = "Y" ]; then
+		sed -i "/koush/d" ${android}/.repo/local_manifests/cmxtended.xml
+	fi
 else
 	sed -i "/koush/d" ${android}/.repo/local_manifests/cmxtended.xml
 	sed -i "/android_system_su/d" ${android}/.repo/local_manifests/cmxtended.xml
@@ -349,18 +352,18 @@ fi
 
 #Prebuilts
 if [ "${openpdroid}" = "Y" ]; then
-	do_append "curl -L -o $BASEDIR/proprietary/PDroid_Manager.apk -O -L https://github.com/wsot/pdroid_manager_build/blob/master/PDroid_Manager_latest.apk?raw=true" ${android}/vendor/cm/get-prebuilts
+	do_append "curl -L -o ${android}/vendor/cm/proprietary/PDroid_Manager.apk -O -L https://github.com/wsot/pdroid_manager_build/blob/master/PDroid_Manager_latest.apk?raw=true" ${android}/vendor/cm/get-prebuilts
 	do_append "PRODUCT_COPY_FILES += vendor/cm/proprietary/PDroid_Manager.apk:system/app/PDroid_Manager.apk" ${android}/vendor/cm/config/common.mk
 fi
 
 if [ "${updates}" = "Y" ]; then
-	do_append "curl -L -o $BASEDIR/proprietary/GooManager.apk -O -L https://github.com/solarnz/GooManager_prebuilt/blob/master/GooManager.apk?raw=true" ${android}/vendor/cm/get-prebuilts
+	do_append "curl -L -o ${android}/vendor/cm/proprietary/GooManager.apk -O -L https://github.com/solarnz/GooManager_prebuilt/blob/master/GooManager.apk?raw=true" ${android}/vendor/cm/get-prebuilts
 	do_append "PRODUCT_COPY_FILES += vendor/cm/proprietary/GooManager.apk:system/app/GooManager.apk" ${android}/vendor/cm/config/common.mk
 fi
 
 if [ "${superuser_embed}" = "Y" ]; then
-	do_append "curl -L -o $BASEDIR/proprietary/Superuser.apk -O -L http://download.clockworkmod.com/apks/Superuser.apk" ${android}/vendor/cm/get-prebuilts
-	do_append "unzip -o -d $BASEDIR/proprietary $BASEDIR/proprietary/Superuser.apk assets/armeabi/*" ${android}/vendor/cm/get-prebuilts
+	do_append "curl -L -o ${android}/vendor/cm/proprietary/Superuser.apk -O -L http://download.clockworkmod.com/apks/Superuser.apk" ${android}/vendor/cm/get-prebuilts
+	do_append "unzip -o -d ${android}/vendor/cm/proprietary ${android}/vendor/cm/proprietary/Superuser.apk assets/armeabi/*" ${android}/vendor/cm/get-prebuilts
 	do_append "PRODUCT_COPY_FILES += vendor/cm/proprietary/Superuser.apk:system/app/Superuser.apk" ${android}/vendor/cm/config/common.mk
 	do_append "PRODUCT_COPY_FILES += vendor/cm/proprietary/assets/armeabi/su:system/xbin/su" ${android}/vendor/cm/config/common.mk
 else
