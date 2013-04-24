@@ -473,10 +473,9 @@ if [ "${pin}" = "Y" ]; then
 	cd ${android}/bootable/recovery
 	do_patch recovery_check_pin.patch
 	cd ${android}/device/semc/msm7x30-common
-	do_patch ramdisk_check_pin.patch
-	#do_patch msm7x30_check_pin.patch
-	#cd ${android}/device/semc/mogami-common
-	#do_patch mogami_check_pin.patch
+	do_patch msm7x30_check_pin.patch
+	cd ${android}/device/semc/mogami-common
+	do_patch mogami_check_pin.patch
 	for device in ${devices}
 	do
 		initrc=${android}/device/semc/${device}/recovery/init.rc
