@@ -488,6 +488,10 @@ fi
 if [ "${kernel3}" = "Y" ]; then
 	echo "*** Kernel 3.x ***"
 
+	#recovery key check
+	cd ${android}/device/semc/msm7x30-common
+	do_patch msm7x30_kernel3.patch
+
 	#boot logo
 	do_replace "logo.rle" "initlogo.rle" ${android}/device/semc/msm7x30-common/custombootimg.mk
 	for device in ${devices}

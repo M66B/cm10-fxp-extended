@@ -1,0 +1,35 @@
+diff --git a/combinedroot/init.sh b/combinedroot/init.sh
+index e4dda96..aaae676 100644
+--- a/combinedroot/init.sh
++++ b/combinedroot/init.sh
+@@ -21,7 +21,11 @@ busybox mkdir -m 755 -p /sys
+ # create device nodes
+ busybox mknod -m 600 /dev/block/mmcblk0 b 179 0
+ busybox mknod -m 600 ${BOOTREC_CACHE_NODE}
+-busybox mknod -m 600 ${BOOTREC_EVENT_NODE}
++for i in 0 1 2 3 4 5 6 7 8 9
++do
++	num=`busybox expr 64 + $i`
++	busybox mknod -m 600 /dev/input/event${i} c 13 $num
++done
+ busybox mknod -m 666 /dev/null c 1 3
+ 
+ # mount filesystems
+@@ -46,7 +50,16 @@ busybox echo 255 > ${BOOTREC_LED_BUTTONS}/brightness
+ busybox echo 255 > ${BOOTREC_LED_BUTTONS2}/brightness
+ 
+ # keycheck
+-busybox cat ${BOOTREC_EVENT} > /dev/keycheck&
++keypad_input=''
++for input in `busybox ls -d /sys/class/input/input*`
++do
++	type=`busybox cat ${input}/name`
++	case "$type" in
++	(*keypad*) keypad_input=`busybox echo $input | busybox sed 's/^.*input//'`;;
++	(*) ;;
++	esac
++done
++busybox cat /dev/input/event${keypad_input} > /dev/keycheck&
+ busybox sleep 3
+ 
+ # android ramdisk
