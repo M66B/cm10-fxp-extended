@@ -1,8 +1,8 @@
 diff --git a/combinedroot/init.sh b/combinedroot/init.sh
-index e4dda96..9e76426 100644
+index e4dda96..7d86a25 100644
 --- a/combinedroot/init.sh
 +++ b/combinedroot/init.sh
-@@ -52,15 +52,36 @@ busybox sleep 3
+@@ -52,15 +52,35 @@ busybox sleep 3
  # android ramdisk
  load_image=/sbin/ramdisk.cpio
  
@@ -11,9 +11,8 @@ index e4dda96..9e76426 100644
 +busybox chmod -R 770 /cache/pin
 +busybox chown -R root:system /cache/pin
 +
-+charging=`cat /sys/devices/virtual/power_supply/hsusb_chg/online`
-+charging=0
-+echo "${charging}" >/cache/pin/charging
++charging=`busybox cat /sys/devices/virtual/power_supply/hsusb_chg/online`
++busybox echo "${charging}" >/cache/pin/charging
 +
 +checkpin=N
 +if [ -e /cache/pin/code -a ! -e /cache/pin/ok -a "${charging}" = "0" ]; then
@@ -44,7 +43,7 @@ index e4dda96..9e76426 100644
  	busybox echo 0 > ${BOOTREC_LED_BUTTONS}/brightness
  	busybox echo 0 > ${BOOTREC_LED_BUTTONS2}/brightness
  	# framebuffer fix
-@@ -69,6 +90,7 @@ then
+@@ -69,6 +89,7 @@ then
  	load_image=/sbin/ramdisk-recovery.cpio
  else
  	busybox echo 'ANDROID BOOT' >>boot.txt
