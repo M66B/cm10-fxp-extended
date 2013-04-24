@@ -199,6 +199,7 @@ do
 	if [ -d "${android}/out/target/product/${device}/system" ]; then
 		rm -f ${android}/out/target/product/${device}/system/build.prop
 		rm -f ${android}/out/target/product/${device}/system/lib/modules/*
+		rm -f ${android}/out/target/product/${device}/system/xbin/su
 	fi
 
 	#kernel
