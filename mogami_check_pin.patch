@@ -27,13 +27,14 @@ index 96f1d45..1e5454e 100644
      mkdir /data/misc/wifi 0770 wifi wifi
 diff --git a/prebuilt/charging.sh b/prebuilt/charging.sh
 new file mode 100644
-index 0000000..13678f1
+index 0000000..03a16c1
 --- /dev/null
 +++ b/prebuilt/charging.sh
-@@ -0,0 +1,6 @@
+@@ -0,0 +1,7 @@
 +#!/system/bin/sh
-+powered=`cat /sys/devices/virtual/power_supply/hsusb_chg/online`
-+echo "${powered}" >/cache/pin/charging
-+if [ "${powered}" = "1" ]; then
++charging=`cat /cache/pin/charging`
++echo "${charging}" >/cache/pin/charging1
++if [ "${charging}" = "1" ]; then
++	touch /cache/pin/reboot
 +	reboot
 +fi

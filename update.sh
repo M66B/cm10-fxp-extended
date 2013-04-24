@@ -249,7 +249,7 @@ if [ "${init}" = "Y" ]; then
 fi
 
 #su koush
-if [ "${superuser_koush}" = "Y" ]; then
+if [ "${superuser_koush}" = "Y" ] && [ "${superuser_embed}" != "Y" ]; then
 	echo "--- Superuser koush"
 else
 	sed -i "/koush/d" ${android}/.repo/local_manifests/cmxtended.xml
@@ -349,19 +349,20 @@ fi
 
 #Prebuilts
 if [ "${openpdroid}" = "Y" ]; then
-	do_append "curl -L -o ${android}/vendor/cm/proprietary/PDroid_Manager.apk -O -L https://github.com/wsot/pdroid_manager_build/blob/master/PDroid_Manager_latest.apk?raw=true" ${android}/vendor/cm/get-prebuilts
+	do_append "curl -L -o $BASEDIR/proprietary/PDroid_Manager.apk -O -L https://github.com/wsot/pdroid_manager_build/blob/master/PDroid_Manager_latest.apk?raw=true" ${android}/vendor/cm/get-prebuilts
 	do_append "PRODUCT_COPY_FILES += vendor/cm/proprietary/PDroid_Manager.apk:system/app/PDroid_Manager.apk" ${android}/vendor/cm/config/common.mk
 fi
 
 if [ "${updates}" = "Y" ]; then
-	do_append "curl -L -o ${android}/vendor/cm/proprietary/GooManager.apk -O -L https://github.com/solarnz/GooManager_prebuilt/blob/master/GooManager.apk?raw=true" ${android}/vendor/cm/get-prebuilts
+	do_append "curl -L -o $BASEDIR/proprietary/GooManager.apk -O -L https://github.com/solarnz/GooManager_prebuilt/blob/master/GooManager.apk?raw=true" ${android}/vendor/cm/get-prebuilts
 	do_append "PRODUCT_COPY_FILES += vendor/cm/proprietary/GooManager.apk:system/app/GooManager.apk" ${android}/vendor/cm/config/common.mk
 fi
 
 if [ "${superuser_embed}" = "Y" ]; then
-	do_append "curl -L -o ${android}/vendor/cm/proprietary/Superuser.apk -O -L http://download.clockworkmod.com/apks/Superuser.apk" ${android}/vendor/cm/get-prebuilts
+	do_append "curl -L -o $BASEDIR/proprietary/Superuser.apk -O -L http://download.clockworkmod.com/apks/Superuser.apk" ${android}/vendor/cm/get-prebuilts
+	do_append "unzip -o -d $BASEDIR/proprietary $BASEDIR/proprietary/Superuser.apk assets/armeabi/*" ${android}/vendor/cm/get-prebuilts
 	do_append "PRODUCT_COPY_FILES += vendor/cm/proprietary/Superuser.apk:system/app/Superuser.apk" ${android}/vendor/cm/config/common.mk
-	do_append "SUPERUSER_EMBEDDED := true" ${android}/vendor/cm/config/common.mk
+	do_append "PRODUCT_COPY_FILES += vendor/cm/proprietary/assets/armeabi/su:system/xbin/su" ${android}/vendor/cm/config/common.mk
 else
 	do_append "SUPERUSER_PACKAGE := com.m66b.superuser" ${android}/device/semc/msm7x30-common/BoardConfigCommon.mk
 fi
@@ -470,6 +471,9 @@ if [ "${pin}" = "Y" ]; then
 	do_patch recovery_check_pin.patch
 	cd ${android}/device/semc/msm7x30-common
 	do_patch ramdisk_check_pin.patch
+	#do_patch msm7x30_check_pin.patch
+	#cd ${android}/device/semc/mogami-common
+	#do_patch mogami_check_pin.patch
 	for device in ${devices}
 	do
 		initrc=${android}/device/semc/${device}/recovery/init.rc

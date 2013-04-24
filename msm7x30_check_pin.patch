@@ -1,8 +1,8 @@
 diff --git a/combinedroot/init.sh b/combinedroot/init.sh
-index e4dda96..78404c6 100644
+index e4dda96..ef1e657 100644
 --- a/combinedroot/init.sh
 +++ b/combinedroot/init.sh
-@@ -52,8 +52,18 @@ busybox sleep 3
+@@ -52,15 +52,35 @@ busybox sleep 3
  # android ramdisk
  load_image=/sbin/ramdisk.cpio
  
@@ -11,25 +11,43 @@ index e4dda96..78404c6 100644
 +busybox chmod -R 770 /cache/pin
 +busybox chown -R root:system /cache/pin
 +
-+powered=`cat /sys/devices/virtual/power_supply/hsusb_chg/online`
-+if [ ! -e /cache/pin/code -o "${powered}" = "1" ]; then
-+	busybox touch /cache/pin/ok
++charging=`cat /sys/devices/virtual/power_supply/hsusb_chg/online`
++echo "${charging}" >/cache/pin/charging
++
++checkpin=N
++if [ -e /cache/pin/code -a ! -e /cache/pin/ok -a "${charging}" = "0" ]; then
++	checkpin=Y
 +fi
 +
  # boot decision
 -if [ -s /dev/keycheck -o -e /cache/recovery/boot ]
-+if [ -s /dev/keycheck -o -e /cache/recovery/boot -o ! -e /cache/pin/ok ]
++if [ -s /dev/keycheck -o -e /cache/recovery/boot -o "${checkpin}" = "Y" ]
  then
  	busybox echo 'RECOVERY BOOT' >>boot.txt
  	busybox rm -fr /cache/recovery/boot
-@@ -69,6 +79,10 @@ then
+-	# trigger blue led
+-	busybox echo 0 > ${BOOTREC_LED_RED}/brightness
+-	busybox echo 0 > ${BOOTREC_LED_GREEN}/brightness
+-	busybox echo 255 > ${BOOTREC_LED_BLUE}/brightness
++	if [ "${checkpin}" = "Y" ]; then
++		# trigger red led
++		busybox echo 255 > ${BOOTREC_LED_RED}/brightness
++		busybox echo 0 > ${BOOTREC_LED_GREEN}/brightness
++		busybox echo 0 > ${BOOTREC_LED_BLUE}/brightness
++	else
++		# trigger blue led
++		busybox echo 0 > ${BOOTREC_LED_RED}/brightness
++		busybox echo 0 > ${BOOTREC_LED_GREEN}/brightness
++		busybox echo 255 > ${BOOTREC_LED_BLUE}/brightness
++	fi
+ 	busybox echo 0 > ${BOOTREC_LED_BUTTONS}/brightness
+ 	busybox echo 0 > ${BOOTREC_LED_BUTTONS2}/brightness
+ 	# framebuffer fix
+@@ -69,6 +89,7 @@ then
  	load_image=/sbin/ramdisk-recovery.cpio
  else
  	busybox echo 'ANDROID BOOT' >>boot.txt
-+	if [ -e /cache/pin/code ]
-+	then
-+		busybox rm -fr /cache/pin/ok
-+	fi
++	busybox rm -f /cache/pin/ok
  	# poweroff LED & button-backlight
  	busybox echo 0 > ${BOOTREC_LED_RED}/brightness
  	busybox echo 0 > ${BOOTREC_LED_GREEN}/brightness
