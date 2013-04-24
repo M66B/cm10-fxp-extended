@@ -250,6 +250,15 @@ if [ "${init}" = "Y" ]; then
 	${repo} sync
 fi
 
+#kernel
+if [ "${kernel3}" = "Y" ]; then
+	echo "--- Kernel 3.0"
+	sed -i "/msm7x30-2.6.32.x-nAa/d" ${android}/.repo/local_manifests/cmxtended.xml
+else
+	echo "--- Kernel 2.6.32"
+	sed -i "/msm7x30-3.0.x-nAa/d" ${android}/.repo/local_manifests/cmxtended.xml
+fi
+
 #su koush
 if [ "${superuser_koush}" = "Y" ]; then
 	echo "--- Superuser koush"
@@ -409,28 +418,34 @@ if [ "${kernel_mods}" = "Y" ]; then
 	echo "*** Kernel ***"
 	cd ${android}/kernel/semc/msm7x30/
 
-	if [ "${kernel_xtended_perm}" = "Y" ]; then
-		echo "--- Xtended permissions"
-		do_patch kernel_smartass_perm.patch
-		do_patch kernel_autogroup_perm.patch
+	if [ "${kernel3}" = "Y" ]; then
+		if [ "${kernel_xtended_perm}" = "Y" ]; then
+			echo "--- Xtended permissions"
+			do_patch kernel_smartass_perm.patch
+			do_patch kernel_autogroup_perm.patch
+		fi
+
+		if [ "${kernel_wifi_range}" = "Y" ]; then
+			echo "--- Wi-Fi range"
+			do_patch kernel_wifi_range.patch
+		fi
+
+		if [ "${kernel_displaylink}" = "Y" ]; then
+			echo "--- DisplayLink"
+			do_patch kernel_fbudl.patch
+			for device in ${devices}
+			do
+				kconfig=${android}/kernel/semc/msm7x30/arch/arm/configs/cyanogen_${device}_defconfig
+				if [ -f ${kconfig} ]; then
+					do_replace "# CONFIG_FB_UDL is not set" "CONFIG_FB_UDL=m" ${kconfig}
+					#do_replace "CONFIG_USB_OTG_WHITELIST=y" "CONFIG_USB_OTG_WHITELIST=n" ${kconfig}
+				fi
+			done
+		fi
 	fi
 
-	if [ "${kernel_wifi_range}" = "Y" ]; then
-		echo "--- Wi-Fi range"
-		do_patch kernel_wifi_range.patch
-	fi
-
-	if [ "${kernel_displaylink}" = "Y" ]; then
-		echo "--- DisplayLink"
-		do_patch kernel_fbudl.patch
-		for device in ${devices}
-		do
-			kconfig=${android}/kernel/semc/msm7x30/arch/arm/configs/cyanogen_${device}_defconfig
-			if [ -f ${kconfig} ]; then
-				do_replace "# CONFIG_FB_UDL is not set" "CONFIG_FB_UDL=m" ${kconfig}
-				#do_replace "CONFIG_USB_OTG_WHITELIST=y" "CONFIG_USB_OTG_WHITELIST=n" ${kconfig}
-			fi
-		done
+	if [ "${kernel3}" = "Y" ]; then
+		cp ${patches}/nAa3_iyokan_defconfig arch/arm/configs/nAa_iyokan_defconfig
 	fi
 
 	for device in ${devices}
