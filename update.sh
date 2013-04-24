@@ -51,6 +51,7 @@ linaro_url=https://android-build.linaro.org/jenkins/view/Toolchain/job/linaro-an
 
 #bootimage
 
+kernel3=N
 kernel_mods=Y
 kernel_linaro=Y
 kernel_xtended_perm=Y
@@ -482,6 +483,12 @@ if [ "${pin}" = "Y" ]; then
 		initrc=${android}/device/semc/${device}/recovery/init.rc
 		do_replace "    restart adbd" "    #restart adbd" ${initrc}
 	done
+fi
+
+if [ "${kernel3}" = "Y" ]; then
+	cp /lib/firmware/ti-connectivity ${android}/device/semc/mogami-common/prebuilt/wl127x-fw-5-sr.bin
+	do_append "PRODUCT_COPY_FILES += device/semc/mogami-common/prebuilt/wl127x-fw-5-sr.bin:root/firmware/wl127x-fw-5-sr.bin" ${android}/device/semc/mogami-common/mogami.mk
+	do_replace "wl12xx_sdio.ko" "wlcore_sdio.ko" ${android}/device/semc/mogami-common/prebuilt/wifiload
 fi
 
 #--- ROM ---
