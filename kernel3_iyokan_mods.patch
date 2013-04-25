@@ -32,6 +32,18 @@ index c2cff43..629e0d7 100644
  
  obj-$(CONFIG_MACH_SAPPHIRE) += board-sapphire.o board-sapphire-gpio.o
  obj-$(CONFIG_MACH_SAPPHIRE) += board-sapphire-keypad.o board-sapphire-panel.o
+diff --git a/arch/arm/mach-msm/board-semc_mogami.c b/arch/arm/mach-msm/board-semc_mogami.c
+index a0ec2b0..5275715 100644
+--- a/arch/arm/mach-msm/board-semc_mogami.c
++++ b/arch/arm/mach-msm/board-semc_mogami.c
+@@ -15,6 +15,7 @@
+ #include <linux/kernel.h>
+ #include <linux/irq.h>
+ #include <linux/gpio.h>
++#include <linux/gpio_event.h>
+ #include <linux/platform_device.h>
+ #include <linux/delay.h>
+ #include <linux/bootmem.h>
 diff --git a/arch/arm/mach-msm/leds-mango.c b/arch/arm/mach-msm/leds-mango.c
 index 7b96fc5..55350d5 100644
 --- a/arch/arm/mach-msm/leds-mango.c
@@ -52,3 +64,259 @@ index 7b96fc5..55350d5 100644
  		.max_current = 25000,
  	},	
  	{
+diff --git a/arch/arm/mm/alignment.c b/arch/arm/mm/alignment.c
+index 724ba3b..9687fed 100644
+--- a/arch/arm/mm/alignment.c
++++ b/arch/arm/mm/alignment.c
+@@ -717,7 +717,7 @@ do_alignment_t32_to_handler(unsigned long *pinstr, struct pt_regs *regs,
+ static int
+ do_alignment(unsigned long addr, unsigned int fsr, struct pt_regs *regs)
+ {
+-	union offset_union offset;
++	union offset_union uninitialized_var(offset);
+ 	unsigned long instr = 0, instrptr;
+ 	int (*handler)(unsigned long addr, unsigned long instr, struct pt_regs *regs);
+ 	unsigned int type;
+diff --git a/drivers/input/touchscreen/cyttsp_core.c b/drivers/input/touchscreen/cyttsp_core.c
+index 0515ed0..0627af9 100644
+--- a/drivers/input/touchscreen/cyttsp_core.c
++++ b/drivers/input/touchscreen/cyttsp_core.c
+@@ -1546,6 +1546,7 @@ static int cyttsp_power_on(struct cyttsp *ts)
+ {
+ 	int retval;
+ 	int counter = 5;
++	u8 gesture_setup;
+ 
+ again:
+ 	dev_vdbg(ts->pdev, "%s: trying ...\n", __func__);
+@@ -1589,8 +1590,6 @@ again:
+ 	#ifndef CONFIG_MACH_SEMC_IYOKAN
+ 	if (ts->platform_data->use_gestures) {
+ 	#endif
+-		u8 gesture_setup;
+-
+ 		DBG(printk(KERN_INFO"%s: Init gesture setup\n", __func__);)
+ 		retval = ttsp_read_block_data(ts, CY_REG_GEST_SET,
+ 				sizeof(gesture_setup), &gesture_setup);
+diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
+index ebdae6e..6297491 100644
+--- a/drivers/md/dm-table.c
++++ b/drivers/md/dm-table.c
+@@ -1179,13 +1179,14 @@ combine_limits:
+ static void dm_table_set_integrity(struct dm_table *t)
+ {
+ 	struct gendisk *template_disk = NULL;
++	int rc;
+ 
+ 	if (!blk_get_integrity(dm_disk(t->md)))
+ 		return;
+ 
+ 	template_disk = dm_table_get_integrity_disk(t, true);
+ 	if (template_disk)
+-		blk_integrity_register(dm_disk(t->md),
++		rc = blk_integrity_register(dm_disk(t->md),
+ 				       blk_get_integrity(template_disk));
+ 	else if (blk_integrity_is_initialized(dm_disk(t->md)))
+ 		DMWARN("%s: device no longer has a valid integrity profile",
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index 41abc6d..0c6fa9c 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -1042,6 +1042,7 @@ static struct bio *split_bvec(struct bio *bio, sector_t sector,
+ {
+ 	struct bio *clone;
+ 	struct bio_vec *bv = bio->bi_io_vec + idx;
++	int rc;
+ 
+ 	clone = bio_alloc_bioset(GFP_NOIO, 1, bs);
+ 	clone->bi_destructor = dm_bio_destructor;
+@@ -1057,7 +1058,7 @@ static struct bio *split_bvec(struct bio *bio, sector_t sector,
+ 	clone->bi_flags |= 1 << BIO_CLONED;
+ 
+ 	if (bio_integrity(bio)) {
+-		bio_integrity_clone(clone, bio, GFP_NOIO, bs);
++		rc = bio_integrity_clone(clone, bio, GFP_NOIO, bs);
+ 		bio_integrity_trim(clone,
+ 				   bio_sector_offset(bio, idx, offset), len);
+ 	}
+@@ -1073,6 +1074,7 @@ static struct bio *clone_bio(struct bio *bio, sector_t sector,
+ 			     unsigned int len, struct bio_set *bs)
+ {
+ 	struct bio *clone;
++	int rc;
+ 
+ 	clone = bio_alloc_bioset(GFP_NOIO, bio->bi_max_vecs, bs);
+ 	__bio_clone(clone, bio);
+@@ -1084,7 +1086,7 @@ static struct bio *clone_bio(struct bio *bio, sector_t sector,
+ 	clone->bi_flags &= ~(1 << BIO_SEG_VALID);
+ 
+ 	if (bio_integrity(bio)) {
+-		bio_integrity_clone(clone, bio, GFP_NOIO, bs);
++		rc = bio_integrity_clone(clone, bio, GFP_NOIO, bs);
+ 
+ 		if (idx != bio->bi_idx || clone->bi_size < bio->bi_size)
+ 			bio_integrity_trim(clone,
+diff --git a/drivers/misc/lm356x.c b/drivers/misc/lm356x.c
+index abbe970..e9cf8f4 100644
+--- a/drivers/misc/lm356x.c
++++ b/drivers/misc/lm356x.c
+@@ -1011,7 +1011,7 @@ static ssize_t attr_torch_current_show(struct device *dev,
+ {
+ 	struct lm356x_drv_data *data = dev_get_drvdata(dev);
+ 	int result;
+-	unsigned long torch_current;
++	unsigned long torch_current = 0;
+ 
+ 	result = lm356x_get_torch_current(data, &torch_current);
+ 
+@@ -1091,7 +1091,7 @@ static ssize_t attr_flash_current_show(struct device *dev,
+ 	struct lm356x_drv_data *data = dev_get_drvdata(dev);
+ 
+ 	int result;
+-	unsigned long flash_current;
++	unsigned long flash_current = 0;
+ 
+ 	result = lm356x_get_flash_current(data, &flash_current);
+ 
+diff --git a/drivers/video/msm/mdp4_overlay.c b/drivers/video/msm/mdp4_overlay.c
+index 950c517..2fe3827 100644
+--- a/drivers/video/msm/mdp4_overlay.c
++++ b/drivers/video/msm/mdp4_overlay.c
+@@ -2691,7 +2691,7 @@ int mdp4_overlay_play_wait(struct fb_info *info, struct msmfb_overlay_data *req)
+ 
+ 	mdp4_mixer_stage_commit(pipe->mixer_num);
+ 
+-	if (mfd->panel_info.pdest == MDP4_MIXER1) {
++	if (mfd->panel_info.pdest == DISPLAY_2) {
+ 		if (dbg_force_ov1_blt)
+ 			mfd->use_ov1_blt |= (0x1 << 8);
+ 		else
+@@ -2699,7 +2699,7 @@ int mdp4_overlay_play_wait(struct fb_info *info, struct msmfb_overlay_data *req)
+ 	}
+ 
+ 	if (mfd->use_ov1_blt &&
+-	    (mfd->panel_info.pdest == MDP4_MIXER1))
++	    (mfd->panel_info.pdest == DISPLAY_2))
+ 		mdp4_overlay1_update_blt_mode(mfd);
+ 
+ 	mdp4_overlay_dtv_wait_for_ov(mfd, pipe);
+@@ -2843,7 +2843,7 @@ int mdp4_overlay_play(struct fb_info *info, struct msmfb_overlay_data *req)
+ 		}
+ 	}
+ 
+-	if (mfd->panel_info.pdest == MDP4_MIXER0) {
++	if (mfd->panel_info.pdest == DISPLAY_1) {
+ 		if (dbg_force_ov0_blt)
+ 			mfd->use_ov0_blt |= (0x1 << 8);
+ 		else
+@@ -2851,10 +2851,10 @@ int mdp4_overlay_play(struct fb_info *info, struct msmfb_overlay_data *req)
+ 	}
+ 
+ 	if (mfd->use_ov0_blt &&
+-	    mfd->panel_info.pdest == MDP4_MIXER0)
++	    mfd->panel_info.pdest == DISPLAY_1)
+ 		mdp4_overlay_update_blt_mode(mfd);
+ 
+-	if (mfd->panel_info.pdest == MDP4_MIXER1) {
++	if (mfd->panel_info.pdest == DISPLAY_2) {
+ 		if (dbg_force_ov1_blt)
+ 			mfd->use_ov1_blt |= (0x1 << 8);
+ 		else
+@@ -2862,7 +2862,7 @@ int mdp4_overlay_play(struct fb_info *info, struct msmfb_overlay_data *req)
+ 	}
+ 
+ 	if (mfd->use_ov1_blt &&
+-	    (mfd->panel_info.pdest == MDP4_MIXER1))
++	    (mfd->panel_info.pdest == DISPLAY_2))
+ 		mdp4_overlay1_update_blt_mode(mfd);
+ 
+ 	if (pipe->pipe_type == OVERLAY_TYPE_VIDEO) {
+diff --git a/net/ipv4/netfilter/Makefile b/net/ipv4/netfilter/Makefile
+index 5757829..60b7722 100644
+--- a/net/ipv4/netfilter/Makefile
++++ b/net/ipv4/netfilter/Makefile
+@@ -13,6 +13,16 @@ endif
+ nf_nat-y		:= nf_nat_core.o nf_nat_helper.o nf_nat_proto_unknown.o nf_nat_proto_common.o nf_nat_proto_tcp.o nf_nat_proto_udp.o nf_nat_proto_icmp.o
+ iptable_nat-y	:= nf_nat_rule.o nf_nat_standalone.o
+ 
++CFLAGS_nf_nat_standalone.o = -Wno-address
++CFLAGS_nf_nat_core.o = -Wno-address
++CFLAGS_nf_nat_amanda.o = -Wno-address
++CFLAGS_nf_nat_ftp.o = -Wno-address
++CFLAGS_nf_nat_irc.o = -Wno-address
++CFLAGS_nf_nat_pptp.o = -Wno-address
++CFLAGS_nf_nat_h323.o = -Wno-address
++CFLAGS_nf_nat_sip.o = -Wno-address
++CFLAGS_nf_nat_tftp.o = -Wno-address
++
+ # connection tracking
+ obj-$(CONFIG_NF_CONNTRACK_IPV4) += nf_conntrack_ipv4.o
+ 
+diff --git a/net/netfilter/Makefile b/net/netfilter/Makefile
+index 6d91717..2febae2 100644
+--- a/net/netfilter/Makefile
++++ b/net/netfilter/Makefile
+@@ -4,6 +4,9 @@ nf_conntrack-y	:= nf_conntrack_core.o nf_conntrack_standalone.o nf_conntrack_exp
+ nf_conntrack-$(CONFIG_NF_CONNTRACK_TIMESTAMP) += nf_conntrack_timestamp.o
+ nf_conntrack-$(CONFIG_NF_CONNTRACK_EVENTS) += nf_conntrack_ecache.o
+ 
++CFLAGS_nf_conntrack_proto.o = -Wno-address
++CFLAGS_nf_conntrack_core.o = -Wno-address
++
+ obj-$(CONFIG_NETFILTER) = netfilter.o
+ 
+ obj-$(CONFIG_NETFILTER_NETLINK) += nfnetlink.o
+diff --git a/net/netfilter/xt_qtaguid.c b/net/netfilter/xt_qtaguid.c
+index 08086d6..244b613 100644
+--- a/net/netfilter/xt_qtaguid.c
++++ b/net/netfilter/xt_qtaguid.c
+@@ -1265,7 +1265,7 @@ static void if_tag_stat_update(const char *ifname, uid_t uid,
+ 	struct data_counters *uid_tag_counters;
+ 	struct sock_tag *sock_tag_entry;
+ 	struct iface_stat *iface_entry;
+-	struct tag_stat *new_tag_stat;
++	struct tag_stat *new_tag_stat = NULL;
+ 	MT_DEBUG("qtaguid: if_tag_stat_update(ifname=%s "
+ 		"uid=%u sk=%p dir=%d proto=%d bytes=%d)\n",
+ 		 ifname, uid, sk, direction, proto, bytes);
+diff --git a/net/netfilter/xt_socket.c b/net/netfilter/xt_socket.c
+index ddf5e05..848ce10 100644
+--- a/net/netfilter/xt_socket.c
++++ b/net/netfilter/xt_socket.c
+@@ -108,9 +108,9 @@ xt_socket_get4_sk(const struct sk_buff *skb, struct xt_action_param *par)
+ 	const struct iphdr *iph = ip_hdr(skb);
+ 	struct udphdr _hdr, *hp = NULL;
+ 	struct sock *sk;
+-	__be32 daddr, saddr;
+-	__be16 dport, sport;
+-	u8 protocol;
++	__be32 daddr = 0, saddr = 0;
++	__be16 dport = 0, sport = 0;
++	u8 protocol = 0;
+ #ifdef XT_SOCKET_HAVE_CONNTRACK
+ 	struct nf_conn const *ct;
+ 	enum ip_conntrack_info ctinfo;
+@@ -271,8 +271,8 @@ xt_socket_get6_sk(const struct sk_buff *skb, struct xt_action_param *par)
+ 	struct ipv6hdr *iph = ipv6_hdr(skb);
+ 	struct udphdr _hdr, *hp = NULL;
+ 	struct sock *sk;
+-	struct in6_addr *daddr, *saddr;
+-	__be16 dport, sport;
++	struct in6_addr *daddr = NULL, *saddr = NULL;
++	__be16 dport = 0, sport = 0;
+ 	int thoff, tproto;
+ 
+ 	tproto = ipv6_find_hdr(skb, &thoff, -1, NULL);
+diff --git a/net/sched/Makefile b/net/sched/Makefile
+index dc5889c..0fb1038 100644
+--- a/net/sched/Makefile
++++ b/net/sched/Makefile
+@@ -4,6 +4,8 @@
+ 
+ obj-y	:= sch_generic.o sch_mq.o
+ 
++CFLAGS_sch_generic.o = -Wno-address
++
+ obj-$(CONFIG_NET_SCHED)		+= sch_api.o sch_blackhole.o
+ obj-$(CONFIG_NET_CLS)		+= cls_api.o
+ obj-$(CONFIG_NET_CLS_ACT)	+= act_api.o
