@@ -418,7 +418,7 @@ if [ "${kernel_mods}" = "Y" ]; then
 	echo "*** Kernel ***"
 	cd ${android}/kernel/semc/msm7x30/
 
-	if [ "${kernel3}" = "Y" ]; then
+	if [ "${kernel3}" != "Y" ]; then
 		if [ "${kernel_xtended_perm}" = "Y" ]; then
 			echo "--- Xtended permissions"
 			do_patch kernel_smartass_perm.patch
