@@ -450,6 +450,7 @@ if [ "${kernel_mods}" = "Y" ]; then
 		#cp ${patches}/nAa3_iyokan_defconfig arch/arm/configs/nAa_iyokan_defconfig
 		do_patch kernel3_iyokan_adds.patch
 		do_patch kernel3_iyokan_mods.patch
+		do_patch kernel3_fixes.patch
 	fi
 
 	for device in ${devices}

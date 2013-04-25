@@ -1,0 +1,86 @@
+diff --git a/arch/arm/mach-msm/leds-mango.c b/arch/arm/mach-msm/leds-mango.c
+index 7b96fc5..55350d5 100644
+--- a/arch/arm/mach-msm/leds-mango.c
++++ b/arch/arm/mach-msm/leds-mango.c
+@@ -23,13 +23,14 @@ static struct as3676_platform_led as3676_leds_mapping[] = {
+ 	{
+ 		.name = "button-backlight",
+ 		.sinks = BIT(AS3676_SINK_RGB2) | BIT(AS3676_SINK_RGB3),
++		//.flags = AS3676_FLAG_ALS_GROUP2, // Shouldn't this be added?
+ 		.max_current = 25000,
+ 	},
+ 	{
+ 		.name = "keyboard-backlight",
+ 		.sinks = BIT(AS3676_SINK_30) | BIT(AS3676_SINK_31) |
+ 				BIT(AS3676_SINK_32) | BIT(AS3676_SINK_33),
+-		.flags = AS3676_FLAG_ALS_GROUP2,
++		.flags = AS3676_FLAG_ALS_GROUP2, // Is this correct?
+ 		.max_current = 25000,
+ 	},	
+ 	{
+diff --git a/drivers/mtd/devices/msm_nand.c b/drivers/mtd/devices/msm_nand.c
+index c3cc87d..b5c9d92 100644
+--- a/drivers/mtd/devices/msm_nand.c
++++ b/drivers/mtd/devices/msm_nand.c
+@@ -746,6 +746,8 @@ uint32_t flash_onfi_probe(struct msm_nand_chip *chip)
+ 				supported_flash.density  =
+ 					onfi_param_page_ptr->
+ 					number_of_blocks_per_logical_unit
++					* onfi_param_page_ptr->
++					number_of_logical_units
+ 					* supported_flash.blksize;
+ 				supported_flash.ecc_correctability =
+ 					onfi_param_page_ptr->
+diff --git a/drivers/video/msm/mdp4_overlay.c b/drivers/video/msm/mdp4_overlay.c
+index 950c517..2fe3827 100644
+--- a/drivers/video/msm/mdp4_overlay.c
++++ b/drivers/video/msm/mdp4_overlay.c
+@@ -2691,7 +2691,7 @@ int mdp4_overlay_play_wait(struct fb_info *info, struct msmfb_overlay_data *req)
+ 
+ 	mdp4_mixer_stage_commit(pipe->mixer_num);
+ 
+-	if (mfd->panel_info.pdest == MDP4_MIXER1) {
++	if (mfd->panel_info.pdest == DISPLAY_2) {
+ 		if (dbg_force_ov1_blt)
+ 			mfd->use_ov1_blt |= (0x1 << 8);
+ 		else
+@@ -2699,7 +2699,7 @@ int mdp4_overlay_play_wait(struct fb_info *info, struct msmfb_overlay_data *req)
+ 	}
+ 
+ 	if (mfd->use_ov1_blt &&
+-	    (mfd->panel_info.pdest == MDP4_MIXER1))
++	    (mfd->panel_info.pdest == DISPLAY_2))
+ 		mdp4_overlay1_update_blt_mode(mfd);
+ 
+ 	mdp4_overlay_dtv_wait_for_ov(mfd, pipe);
+@@ -2843,7 +2843,7 @@ int mdp4_overlay_play(struct fb_info *info, struct msmfb_overlay_data *req)
+ 		}
+ 	}
+ 
+-	if (mfd->panel_info.pdest == MDP4_MIXER0) {
++	if (mfd->panel_info.pdest == DISPLAY_1) {
+ 		if (dbg_force_ov0_blt)
+ 			mfd->use_ov0_blt |= (0x1 << 8);
+ 		else
+@@ -2851,10 +2851,10 @@ int mdp4_overlay_play(struct fb_info *info, struct msmfb_overlay_data *req)
+ 	}
+ 
+ 	if (mfd->use_ov0_blt &&
+-	    mfd->panel_info.pdest == MDP4_MIXER0)
++	    mfd->panel_info.pdest == DISPLAY_1)
+ 		mdp4_overlay_update_blt_mode(mfd);
+ 
+-	if (mfd->panel_info.pdest == MDP4_MIXER1) {
++	if (mfd->panel_info.pdest == DISPLAY_2) {
+ 		if (dbg_force_ov1_blt)
+ 			mfd->use_ov1_blt |= (0x1 << 8);
+ 		else
+@@ -2862,7 +2862,7 @@ int mdp4_overlay_play(struct fb_info *info, struct msmfb_overlay_data *req)
+ 	}
+ 
+ 	if (mfd->use_ov1_blt &&
+-	    (mfd->panel_info.pdest == MDP4_MIXER1))
++	    (mfd->panel_info.pdest == DISPLAY_2))
+ 		mdp4_overlay1_update_blt_mode(mfd);
+ 
+ 	if (pipe->pipe_type == OVERLAY_TYPE_VIDEO) {
