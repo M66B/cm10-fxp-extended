@@ -1,0 +1,54 @@
+diff --git a/arch/arm/mach-msm/Kconfig b/arch/arm/mach-msm/Kconfig
+index c7f2af7..3c3cafd 100644
+--- a/arch/arm/mach-msm/Kconfig
++++ b/arch/arm/mach-msm/Kconfig
+@@ -527,6 +527,17 @@ config MACH_SEMC_ANZU
+ 	help
+ 	  Support for the SonyEricsson Anzu devices.
+ 
++config MACH_SEMC_IYOKAN
++	depends on ARCH_MSM7X30
++	depends on !MSM_STACKED_MEMORY
++	select TI1271
++	#select FB_MSM_HDPI
++	select SUPPORT_ALIEN_USB_CHARGER
++	default y
++	bool "SonyEricsson Iyokan"
++	help
++	  Support for the SonyEricsson Iyokan devices.
++
+ config MACH_SAPPHIRE
+ 	depends on ARCH_MSM7X01A
+ 	default n
+diff --git a/arch/arm/mach-msm/Makefile b/arch/arm/mach-msm/Makefile
+index c2cff43..629e0d7 100644
+--- a/arch/arm/mach-msm/Makefile
++++ b/arch/arm/mach-msm/Makefile
+@@ -256,6 +256,7 @@ obj-$(CONFIG_MACH_SEMC_HAIDA) += board-semc_mogami.o leds-haida.o vibrator-mogam
+ obj-$(CONFIG_MACH_SEMC_URUSHI) += board-semc_mogami.o leds-urushi.o vibrator-mogami.o charger-urushi.o board-semc_mogami-wifi.o gpio-urushi.o keypad-urushi.o board-semc_mogami-rfkill.o
+ obj-$(CONFIG_MACH_SEMC_MANGO) += board-semc_mogami.o leds-mango.o vibrator-mogami.o charger-mango.o board-semc_mogami-wifi.o touch-mango.o gpio-mango.o keypad-mango.o board-semc_mogami-rfkill.o
+ obj-$(CONFIG_MACH_SEMC_ANZU) += board-semc_mogami.o board-semc_mogami-rfkill.o keypad-anzu.o leds-anzu.o  vibrator-mogami.o gpio-anzu.o charger-anzu.o board-semc_mogami-wifi.o
++obj-$(CONFIG_MACH_SEMC_IYOKAN) += board-semc_mogami.o leds-iyokan.o vibrator-mogami.o charger-iyokan.o board-semc_mogami-wifi.o touch-iyokan.o gpio-iyokan.o keypad-iyokan.o board-semc_mogami-rfkill.o
+ 
+ obj-$(CONFIG_MACH_SAPPHIRE) += board-sapphire.o board-sapphire-gpio.o
+ obj-$(CONFIG_MACH_SAPPHIRE) += board-sapphire-keypad.o board-sapphire-panel.o
+diff --git a/arch/arm/mach-msm/leds-mango.c b/arch/arm/mach-msm/leds-mango.c
+index 7b96fc5..55350d5 100644
+--- a/arch/arm/mach-msm/leds-mango.c
++++ b/arch/arm/mach-msm/leds-mango.c
+@@ -23,13 +23,14 @@ static struct as3676_platform_led as3676_leds_mapping[] = {
+ 	{
+ 		.name = "button-backlight",
+ 		.sinks = BIT(AS3676_SINK_RGB2) | BIT(AS3676_SINK_RGB3),
++		//.flags = AS3676_FLAG_ALS_GROUP2, // Shouldn't this be added?
+ 		.max_current = 25000,
+ 	},
+ 	{
+ 		.name = "keyboard-backlight",
+ 		.sinks = BIT(AS3676_SINK_30) | BIT(AS3676_SINK_31) |
+ 				BIT(AS3676_SINK_32) | BIT(AS3676_SINK_33),
+-		.flags = AS3676_FLAG_ALS_GROUP2,
++		.flags = AS3676_FLAG_ALS_GROUP2, // Is this correct?
+ 		.max_current = 25000,
+ 	},	
+ 	{

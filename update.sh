@@ -51,7 +51,7 @@ linaro_url=https://android-build.linaro.org/jenkins/view/Toolchain/job/linaro-an
 
 #bootimage
 
-kernel3=N
+kernel3=Y
 kernel_mods=Y
 kernel_linaro=Y
 kernel_xtended_perm=Y
@@ -413,7 +413,8 @@ if [ "${kernel_linaro}" = "Y" ]; then
 fi
 
 #nAa msm7x30 kernel
-#caf: M7630AABBQMLZA41601050
+#caf 2.6.32: M7630AABBQMLZA41601050
+#caf 3.0.8: M7630AABBQMLZA404033I
 if [ "${kernel_mods}" = "Y" ]; then
 	echo "*** Kernel ***"
 	cd ${android}/kernel/semc/msm7x30/
@@ -445,7 +446,9 @@ if [ "${kernel_mods}" = "Y" ]; then
 	fi
 
 	if [ "${kernel3}" = "Y" ]; then
-		cp ${patches}/nAa3_iyokan_defconfig arch/arm/configs/nAa_iyokan_defconfig
+		#cp ${patches}/nAa3_iyokan_defconfig arch/arm/configs/nAa_iyokan_defconfig
+		do_patch kernel3_iyokan_adds.patch
+		do_patch kernel3_iyokan_mods.patch
 	fi
 
 	for device in ${devices}
