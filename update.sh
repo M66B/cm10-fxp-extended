@@ -451,7 +451,7 @@ if [ "${kernel_mods}" = "Y" ]; then
 		#do_patch kernel3_iyokan_adds.patch
 		#do_patch kernel3_iyokan_mods.patch
 		#do_patch kernel3_fixes.patch
-		do_append "TARGET_RECOVERY_PIXEL_FORMAT := \"RGBX_8888\"" ${android}/devices/semc/msm7x30-common/BoardConfigCommon.mk
+		do_append "TARGET_RECOVERY_PIXEL_FORMAT := \"RGBX_8888\"" ${android}/device/semc/msm7x30-common/BoardConfigCommon.mk
 	fi
 
 	for device in ${devices}
