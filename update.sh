@@ -254,6 +254,7 @@ fi
 if [ "${kernel3}" = "Y" ]; then
 	echo "--- Kernel 3.0"
 	sed -i "/msm7x30-2.6.32.x-nAa/d" ${android}/.repo/local_manifests/cmxtended.xml
+	kernel_linaro=N
 else
 	echo "--- Kernel 2.6.32"
 	sed -i "/msm7x30-3.0.x-nAa/d" ${android}/.repo/local_manifests/cmxtended.xml
