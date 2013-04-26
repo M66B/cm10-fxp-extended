@@ -1011,7 +1011,7 @@ index 8626b06..8f41b7c 100644
 +    }
  }
 diff --git a/src/com/android/settings/cyanogenmod/Processor.java b/src/com/android/settings/cyanogenmod/Processor.java
-index ce2c404..f04b30e 100644
+index ce2c404..cba6285 100644
 --- a/src/com/android/settings/cyanogenmod/Processor.java
 +++ b/src/com/android/settings/cyanogenmod/Processor.java
 @@ -22,11 +22,22 @@ import android.os.Message;
@@ -1037,7 +1037,7 @@ index ce2c404..f04b30e 100644
  //
  // CPU Related Settings
  //
-@@ -47,16 +58,97 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -47,16 +58,102 @@ public class Processor extends SettingsPreferenceFragment implements
      public static final String FREQ_MIN_FILE = "/sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq";
      public static final String SOB_PREF = "pref_cpu_set_on_boot";
  
@@ -1075,11 +1075,14 @@ index ce2c404..f04b30e 100644
 +    private Map<String, String> mvDefault = new HashMap<String, String>() {{
 +        put("24576", "900");
 +        put("61440", "900");
++        put("122880", "900");
 +        put("134400", "900");
 +        put("184320", "900");
 +        put("192000", "900");
++        put("245760", "900");
 +        put("249600", "900");
 +        put("364800", "900");
++        put("368640", "900");
 +        put("460800", "950");
 +        put("576000", "1000");
 +        put("652800", "1050");
@@ -1087,7 +1090,9 @@ index ce2c404..f04b30e 100644
 +        put("806400", "1100");
 +        put("921600", "1150");
 +        put("1017600", "1200");
++        put("1024000", "1200");
 +        put("1113600", "1200");
++        put("1200000", "1200");
 +        put("1209600", "1200");
 +        put("1305600", "1250");
 +        put("1401600", "1250");
@@ -1135,7 +1140,7 @@ index ce2c404..f04b30e 100644
  
      private class CurCPUThread extends Thread {
          private boolean mInterrupt = false;
-@@ -70,9 +162,17 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -70,9 +167,17 @@ public class Processor extends SettingsPreferenceFragment implements
              try {
                  while (!mInterrupt) {
                      sleep(500);
@@ -1155,7 +1160,7 @@ index ce2c404..f04b30e 100644
                  }
              } catch (InterruptedException e) {
              }
-@@ -83,7 +183,11 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -83,7 +188,11 @@ public class Processor extends SettingsPreferenceFragment implements
  
      private Handler mCurCPUHandler = new Handler() {
          public void handleMessage(Message msg) {
@@ -1168,7 +1173,7 @@ index ce2c404..f04b30e 100644
          }
      };
  
-@@ -95,6 +199,18 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -95,6 +204,18 @@ public class Processor extends SettingsPreferenceFragment implements
          mMinFrequencyFormat = getString(R.string.cpu_min_freq_summary);
          mMaxFrequencyFormat = getString(R.string.cpu_max_freq_summary);
  
@@ -1187,7 +1192,7 @@ index ce2c404..f04b30e 100644
          String[] availableFrequencies = new String[0];
          String[] availableGovernors = new String[0];
          String[] frequencies;
-@@ -110,6 +226,66 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -110,6 +231,66 @@ public class Processor extends SettingsPreferenceFragment implements
          mCurFrequencyPref = (Preference) prefScreen.findPreference(FREQ_CUR_PREF);
          mMinFrequencyPref = (ListPreference) prefScreen.findPreference(FREQ_MIN_PREF);
          mMaxFrequencyPref = (ListPreference) prefScreen.findPreference(FREQ_MAX_PREF);
@@ -1254,7 +1259,7 @@ index ce2c404..f04b30e 100644
  
          /* Governor
          Some systems might not use governors */
-@@ -174,8 +350,187 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -174,8 +355,187 @@ public class Processor extends SettingsPreferenceFragment implements
  
          } else {
              mCurFrequencyPref.setSummary(toMHz(temp));
@@ -1443,7 +1448,7 @@ index ce2c404..f04b30e 100644
          }
      }
  
-@@ -196,8 +551,37 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -196,8 +556,37 @@ public class Processor extends SettingsPreferenceFragment implements
          }
  
          if (Utils.fileExists(GOV_FILE) && (temp = Utils.fileReadOneLine(GOV_FILE)) != null) {
@@ -1481,7 +1486,7 @@ index ce2c404..f04b30e 100644
      }
  
      @Override
-@@ -211,27 +595,78 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -211,27 +600,78 @@ public class Processor extends SettingsPreferenceFragment implements
      }
  
      public boolean onPreferenceChange(Preference preference, Object newValue) {
@@ -1562,7 +1567,7 @@ index ce2c404..f04b30e 100644
                  return true;
              } else {
                  return false;
-@@ -240,8 +675,42 @@ public class Processor extends SettingsPreferenceFragment implements
+@@ -240,8 +680,42 @@ public class Processor extends SettingsPreferenceFragment implements
          return false;
      }
  
