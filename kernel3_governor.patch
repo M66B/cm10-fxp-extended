@@ -196,7 +196,7 @@ index 0000000..24f9b9a
 + * that practically when sleep_ideal_freq==0 the awake_ideal_freq is used
 + * also when suspended).
 + */
-+#define DEFAULT_SLEEP_IDEAL_FREQ 134400
++#define DEFAULT_SLEEP_IDEAL_FREQ 122880
 +static unsigned int sleep_ideal_freq;
 +
 +/*
@@ -1178,7 +1178,7 @@ index 0000000..18d253c
 + * that practically when sleep_ideal_freq==0 the awake_ideal_freq is used
 + * also when suspended).
 + */
-+#define DEFAULT_SLEEP_IDEAL_FREQ 134400
++#define DEFAULT_SLEEP_IDEAL_FREQ 122880
 +static unsigned int sleep_ideal_freq;
 +
 +/*
