@@ -428,28 +428,8 @@ if [ "${kernel_mods}" = "Y" ]; then
 		do_append "TARGET_RECOVERY_PIXEL_FORMAT := \"RGBX_8888\"" ${android}/device/semc/msm7x30-common/BoardConfigCommon.mk
 
 		do_append "/proc/sys/kernel/sched_autogroup_enabled 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
-
-		do_append "/sys/devices/system/cpu/cpufreq/smartass/awake_ideal_freq 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
-		do_append "/sys/devices/system/cpu/cpufreq/smartass/sleep_ideal_freq 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
-		do_append "/sys/devices/system/cpu/cpufreq/smartass/sleep_wakeup_freq 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
-		do_append "/sys/devices/system/cpu/cpufreq/smartass/max_cpu_load 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
-		do_append "/sys/devices/system/cpu/cpufreq/smartass/min_cpu_load 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
-		do_append "/sys/devices/system/cpu/cpufreq/smartass/ramp_up_step 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
-		do_append "/sys/devices/system/cpu/cpufreq/smartass/ramp_down_step 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
-		do_append "/sys/devices/system/cpu/cpufreq/smartass/up_rate_us 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
-		do_append "/sys/devices/system/cpu/cpufreq/smartass/down_rate_us 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
-		do_append "/sys/devices/system/cpu/cpufreq/smartass/boost_pulse 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
-
-		do_append "/sys/devices/system/cpu/cpufreq/smartassH3/awake_ideal_freq 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
-		do_append "/sys/devices/system/cpu/cpufreq/smartassH3/sleep_ideal_freq 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
-		do_append "/sys/devices/system/cpu/cpufreq/smartassH3/sleep_wakeup_freq 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
-		do_append "/sys/devices/system/cpu/cpufreq/smartassH3/max_cpu_load 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
-		do_append "/sys/devices/system/cpu/cpufreq/smartassH3/min_cpu_load 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
-		do_append "/sys/devices/system/cpu/cpufreq/smartassH3/ramp_up_step 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
-		do_append "/sys/devices/system/cpu/cpufreq/smartassH3/ramp_down_step 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
-		do_append "/sys/devices/system/cpu/cpufreq/smartassH3/up_rate_us 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
-		do_append "/sys/devices/system/cpu/cpufreq/smartassH3/down_rate_us 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
-		do_append "/sys/devices/system/cpu/cpufreq/smartassH3/boost_pulse 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
+		do_append "/sys/devices/system/cpu/cpufreq/smartass/* 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
+		do_append "/sys/devices/system/cpu/cpufreq/smartassH3/* 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
 	else
 		if [ "${kernel_xtended_perm}" = "Y" ]; then
 			echo "--- Xtended permissions"
