@@ -54,7 +54,7 @@ index f29df8b..16c7cff 100644
  	return sprintf(buf, "%u\n", policy->cpuinfo.max_freq);
  }
  
-+ifdef CONFIG_CPU_FREQ_VDD_LEVELS
++#ifdef CONFIG_CPU_FREQ_VDD_LEVELS
 +
 +extern ssize_t acpuclk_get_vdd_levels_str(char *buf);
 +static ssize_t show_vdd_levels(struct cpufreq_policy *policy, char *buf)
@@ -138,7 +138,7 @@ index f29df8b..16c7cff 100644
  
 diff --git a/drivers/cpufreq/cpufreq_smartass2.c b/drivers/cpufreq/cpufreq_smartass2.c
 new file mode 100644
-index 0000000..b27ca27
+index 0000000..24f9b9a
 --- /dev/null
 +++ b/drivers/cpufreq/cpufreq_smartass2.c
 @@ -0,0 +1,974 @@
@@ -1086,8 +1086,8 @@ index 0000000..b27ca27
 +	}
 +
 +	// Scale up is high priority
-+	up_wq = create_rt_workqueue("ksmartass_up");
-+	down_wq = create_workqueue("ksmartass_down");
++	up_wq = alloc_workqueue("ksmartass_up", WQ_HIGHPRI, 1);
++	down_wq = alloc_workqueue("ksmartass_down", 0, 1);
 +	if (!up_wq || !down_wq)
 +		return -ENOMEM;
 +
@@ -1118,7 +1118,7 @@ index 0000000..b27ca27
 +MODULE_LICENSE ("GPL");
 diff --git a/drivers/cpufreq/cpufreq_smartassH3.c b/drivers/cpufreq/cpufreq_smartassH3.c
 new file mode 100644
-index 0000000..75c8163
+index 0000000..18d253c
 --- /dev/null
 +++ b/drivers/cpufreq/cpufreq_smartassH3.c
 @@ -0,0 +1,980 @@
@@ -2070,8 +2070,8 @@ index 0000000..75c8163
 +	}
 +
 +	// Scale up is high priority
-+	up_wq = create_rt_workqueue("ksmartass_up");
-+	down_wq = create_workqueue("ksmartass_down");
++	up_wq = alloc_workqueue("ksmartass_up", WQ_HIGHPRI, 1);
++	down_wq = alloc_workqueue("ksmartass_down", 0, 1);
 +	if (!up_wq || !down_wq)
 +		return -ENOMEM;
 +
