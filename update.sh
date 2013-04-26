@@ -420,7 +420,37 @@ if [ "${kernel_mods}" = "Y" ]; then
 	echo "*** Kernel ***"
 	cd ${android}/kernel/semc/msm7x30/
 
-	if [ "${kernel3}" != "Y" ]; then
+	if [ "${kernel3}" = "Y" ]; then
+		do_patch kernel3_fixes.patch
+		do_patch kernel3_governor.patch
+		do_patch kernel3_underclock.patch
+
+		do_append "TARGET_RECOVERY_PIXEL_FORMAT := \"RGBX_8888\"" ${android}/device/semc/msm7x30-common/BoardConfigCommon.mk
+
+		do_append "/proc/sys/kernel/sched_autogroup_enabled 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
+
+		do_append "/sys/devices/system/cpu/cpufreq/smartass/awake_ideal_freq 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
+		do_append "/sys/devices/system/cpu/cpufreq/smartass/sleep_ideal_freq 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
+		do_append "/sys/devices/system/cpu/cpufreq/smartass/sleep_wakeup_freq 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
+		do_append "/sys/devices/system/cpu/cpufreq/smartass/max_cpu_load 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
+		do_append "/sys/devices/system/cpu/cpufreq/smartass/min_cpu_load 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
+		do_append "/sys/devices/system/cpu/cpufreq/smartass/ramp_up_step 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
+		do_append "/sys/devices/system/cpu/cpufreq/smartass/ramp_down_step 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
+		do_append "/sys/devices/system/cpu/cpufreq/smartass/up_rate_us 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
+		do_append "/sys/devices/system/cpu/cpufreq/smartass/down_rate_us 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
+		do_append "/sys/devices/system/cpu/cpufreq/smartass/boost_pulse 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
+
+		do_append "/sys/devices/system/cpu/cpufreq/smartassH3/awake_ideal_freq 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
+		do_append "/sys/devices/system/cpu/cpufreq/smartassH3/sleep_ideal_freq 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
+		do_append "/sys/devices/system/cpu/cpufreq/smartassH3/sleep_wakeup_freq 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
+		do_append "/sys/devices/system/cpu/cpufreq/smartassH3/max_cpu_load 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
+		do_append "/sys/devices/system/cpu/cpufreq/smartassH3/min_cpu_load 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
+		do_append "/sys/devices/system/cpu/cpufreq/smartassH3/ramp_up_step 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
+		do_append "/sys/devices/system/cpu/cpufreq/smartassH3/ramp_down_step 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
+		do_append "/sys/devices/system/cpu/cpufreq/smartassH3/up_rate_us 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
+		do_append "/sys/devices/system/cpu/cpufreq/smartassH3/down_rate_us 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
+		do_append "/sys/devices/system/cpu/cpufreq/smartassH3/boost_pulse 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
+	else
 		if [ "${kernel_xtended_perm}" = "Y" ]; then
 			echo "--- Xtended permissions"
 			do_patch kernel_smartass_perm.patch
@@ -446,20 +476,19 @@ if [ "${kernel_mods}" = "Y" ]; then
 		fi
 	fi
 
-	if [ "${kernel3}" = "Y" ]; then
-		#cp ${patches}/nAa3_iyokan_defconfig arch/arm/configs/nAa_iyokan_defconfig
-		#do_patch kernel3_iyokan_adds.patch
-		#do_patch kernel3_iyokan_mods.patch
-		#do_patch kernel3_fixes.patch
-		do_append "TARGET_RECOVERY_PIXEL_FORMAT := \"RGBX_8888\"" ${android}/device/semc/msm7x30-common/BoardConfigCommon.mk
-	fi
-
 	for device in ${devices}
 	do
 		if [ -f arch/arm/configs/nAa_${device}_defconfig ]; then
 			echo "--- Config ${device}"
 			cp arch/arm/configs/nAa_${device}_defconfig arch/arm/configs/cm_${device}_defconfig
+
 			do_replace "# CONFIG_SCHED_AUTOGROUP is not set" "CONFIG_SCHED_AUTOGROUP=y" arch/arm/configs/cm_${device}_defconfig
+
+			if [ "${kernel3}" = "Y" ]; then
+				do_append "CONFIG_CPU_FREQ_GOV_SMARTASS2=y" arch/arm/configs/cm_${device}_defconfig
+				do_append "CONFIG_CPU_FREQ_GOV_SMARTASSH3=y" arch/arm/configs/cm_${device}_defconfig
+				do_append "CONFIG_CPU_FREQ_VDD_LEVELS=y" arch/arm/configs/cm_${device}_defconfig
+			fi
 		else
 			echo "--- No kernel config for ${device}"
 		fi

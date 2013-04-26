@@ -1,9 +1,0 @@
-diff --git a/prebuilt/ueventd.semc.rc b/prebuilt/ueventd.semc.rc
-index 0d56b55..9ab662d 100755
---- a/prebuilt/ueventd.semc.rc
-+++ b/prebuilt/ueventd.semc.rc
-@@ -73,3 +73,4 @@
- /sys/devices/virtual/input/input*   bmp180_resolution  0640  system   system
- /sys/devices/i2c-0/0-0040/leds/* delay_on  0644 system system
- /sys/devices/i2c-0/0-0040/leds/* delay_off 0644 system system
-+/proc/sys/kernel/sched_autogroup_enabled 0666 root system
