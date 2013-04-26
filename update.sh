@@ -449,7 +449,11 @@ if [ "${kernel_mods}" = "Y" ]; then
 	if [ "${kernel_xtended_perm}" = "Y" ]; then
 		echo "--- Xtended permissions"
 		do_patch kernel_smartass_perm.patch
-		do_patch kernel_autogroup_perm.patch
+		if [ "${kernel3}" = "Y" ]; then
+			do_patch kernel3_autogroup_perm.patch
+		else
+			do_patch kernel_autogroup_perm.patch
+		fi
 	fi
 
 	for device in ${devices}
