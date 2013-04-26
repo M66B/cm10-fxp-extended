@@ -426,17 +426,7 @@ if [ "${kernel_mods}" = "Y" ]; then
 		do_patch kernel3_underclock.patch
 
 		do_append "TARGET_RECOVERY_PIXEL_FORMAT := \"RGBX_8888\"" ${android}/device/semc/msm7x30-common/BoardConfigCommon.mk
-
-		do_append "/proc/sys/kernel/sched_autogroup_enabled 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
-		do_append "/sys/devices/system/cpu/cpufreq/smartass/* 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
-		do_append "/sys/devices/system/cpu/cpufreq/smartassH3/* 0666 root system" ${android}/device/semc/msm7x30-common/prebuilt/ueventd.semc.rc
 	else
-		if [ "${kernel_xtended_perm}" = "Y" ]; then
-			echo "--- Xtended permissions"
-			do_patch kernel_smartass_perm.patch
-			do_patch kernel_autogroup_perm.patch
-		fi
-
 		if [ "${kernel_wifi_range}" = "Y" ]; then
 			echo "--- Wi-Fi range"
 			do_patch kernel_wifi_range.patch
@@ -454,6 +444,12 @@ if [ "${kernel_mods}" = "Y" ]; then
 				fi
 			done
 		fi
+	fi
+
+	if [ "${kernel_xtended_perm}" = "Y" ]; then
+		echo "--- Xtended permissions"
+		do_patch kernel_smartass_perm.patch
+		do_patch kernel_autogroup_perm.patch
 	fi
 
 	for device in ${devices}
