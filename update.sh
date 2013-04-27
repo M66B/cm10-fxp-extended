@@ -562,7 +562,6 @@ fi
 if [ "${cellbroadcast}" = "Y" ]; then
 	echo "*** Cell broadcast ***"
 	do_append "PRODUCT_PACKAGES += CellBroadcastReceiver" ${android}/build/target/product/core.mk
-	#do_append "PRODUCT_PROPERTY_OVERRIDES += ro.cellbroadcast.emergencyids=0-65534" ${android}/build/target/product/core.mk
 	cd ${android}/device/semc/mogami-common
 	do_patch cb_settings.patch
 fi
