@@ -422,8 +422,6 @@ if [ "${kernel_mods}" = "Y" ]; then
 
 	if [ "${kernel3}" = "Y" ]; then
 		do_patch kernel3_fixes.patch
-		do_patch kernel3_governor.patch
-		do_patch kernel3_sio.patch
 		do_patch kernel3_underclock.patch
 		do_patch kernel3_hdmi.patch
 		do_patch kernel3_hdmi_dependencies.patch
@@ -469,10 +467,6 @@ if [ "${kernel_mods}" = "Y" ]; then
 			do_replace "# CONFIG_SCHED_AUTOGROUP is not set" "CONFIG_SCHED_AUTOGROUP=y" arch/arm/configs/cm_${device}_defconfig
 
 			if [ "${kernel3}" = "Y" ]; then
-				do_append "CONFIG_CPU_FREQ_GOV_SMARTASS2=y" arch/arm/configs/cm_${device}_defconfig
-				do_append "CONFIG_CPU_FREQ_GOV_SMARTASSH3=y" arch/arm/configs/cm_${device}_defconfig
-				do_append "CONFIG_CPU_FREQ_VDD_LEVELS=y" arch/arm/configs/cm_${device}_defconfig
-				do_append "CONFIG_IOSCHED_SIO=y" arch/arm/configs/cm_${device}_defconfig
 				do_replace "# CONFIG_LBDAF is not set" "CONFIG_LBDAF=y" arch/arm/configs/cm_${device}_defconfig
 				do_replace "# CONFIG_CLEANCACHE is not set" "CONFIG_CLEANCACHE=y" arch/arm/configs/cm_${device}_defconfig
 				do_replace "# CONFIG_TUN is not set" "CONFIG_TUN=y" arch/arm/configs/cm_${device}_defconfig
