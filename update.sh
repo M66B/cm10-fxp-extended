@@ -473,6 +473,7 @@ if [ "${kernel_mods}" = "Y" ]; then
 				do_append "CONFIG_CPU_FREQ_GOV_SMARTASSH3=y" arch/arm/configs/cm_${device}_defconfig
 				do_append "CONFIG_CPU_FREQ_VDD_LEVELS=y" arch/arm/configs/cm_${device}_defconfig
 				do_append "CONFIG_IOSCHED_SIO=y" arch/arm/configs/cm_${device}_defconfig
+				do_replace "# CONFIG_LBDAF is not set" "CONFIG_LBDAF=y" arch/arm/configs/cm_${device}_defconfig
 			fi
 		else
 			echo "--- No kernel config for ${device}"
