@@ -3,20 +3,20 @@
 #chmod 755 /data/local/userinit.sh
 #chown root:root /data/local/userinit.sh
 
+mount -o remount,rw /system
 
 #Disable aGPS
-mount -o remount,rw /system
 sed -i '/ro.ril.def.agps.mode/d' /system/build.prop
 sed -i '/ro.ril.def.agps.feature/d' /system/build.prop
 echo "ro.ril.def.agps.mode=0" >>/system/build.prop
 echo "ro.ril.def.agps.feature=1" >>/system/build.prop
-mount -o remount,ro /system
 log -p i -t userinit.sh "Disabled aGPS"
 
 #Disable button backlights
-dev=/sys/devices/i2c-0/0-0040/leds
-echo 1 > $dev/button-backlight/max_current
+sed -i 's/echo 4000 > $dev\/button-backlight\/max_current/echo 1 >> $dev\/button-backlight\/max_current/g' /etc/hw_config.sh
 log -p i -t userinit.sh "Disabled button backlights"
+
+mount -o remount,ro /system
 
 #Wifi scan interval
 setprop wifi.supplicant_scan_interval 180
