@@ -467,9 +467,7 @@ if [ "${kernel_mods}" = "Y" ]; then
 			do_replace "# CONFIG_SCHED_AUTOGROUP is not set" "CONFIG_SCHED_AUTOGROUP=y" arch/arm/configs/cm_${device}_defconfig
 
 			if [ "${kernel3}" = "Y" ]; then
-				do_replace "# CONFIG_LBDAF is not set" "CONFIG_LBDAF=y" arch/arm/configs/cm_${device}_defconfig
 				do_replace "# CONFIG_CLEANCACHE is not set" "CONFIG_CLEANCACHE=y" arch/arm/configs/cm_${device}_defconfig
-				do_replace "# CONFIG_TUN is not set" "CONFIG_TUN=y" arch/arm/configs/cm_${device}_defconfig
 
 				# TODO:
 				#  Wlan undervolt
