@@ -427,6 +427,7 @@ if [ "${kernel_mods}" = "Y" ]; then
 		do_patch kernel3_underclock.patch
 		do_patch kernel3_hdmi.patch
 		do_patch kernel3_hdmi_dependencies.patch
+		do_patch kernel3_usb_tether.patch
 
 		do_append "TARGET_RECOVERY_PIXEL_FORMAT := \"RGBX_8888\"" ${android}/device/semc/msm7x30-common/BoardConfigCommon.mk
 	else

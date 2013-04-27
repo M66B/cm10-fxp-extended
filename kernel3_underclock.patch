@@ -2,7 +2,7 @@ diff --git a/arch/arm/mach-msm/acpuclock-7x30.c b/arch/arm/mach-msm/acpuclock-7x
 index 7ee4e5b..d190d98 100644
 --- a/arch/arm/mach-msm/acpuclock-7x30.c
 +++ b/arch/arm/mach-msm/acpuclock-7x30.c
-@@ -112,11 +114,11 @@ static struct clk *acpuclk_sources[MAX_SOURCE];
+@@ -112,14 +114,17 @@ static struct clk *acpuclk_sources[MAX_SOURCE];
   * know all the h/w requirements.
   */
  static struct clkctl_acpu_speed acpu_freq_tbl[] = {
@@ -18,3 +18,9 @@ index 7ee4e5b..d190d98 100644
  	{ 1, 245760, PLL_3,    5, 2,  61440000,  900, VDD_RAW(900) },
  	{ 1, 368640, PLL_3,    5, 1,  122800000, 900, VDD_RAW(900) },
  	/* AXI has MSMC1 implications. See above. */
++	{ 1, 460800, PLL_1,    2, 0,  153600000, 950, VDD_RAW(950) },
++	{ 1, 576000, PLL_1,    2, 0,  153600000, 1000, VDD_RAW(1000) },
++	{ 1, 652800, PLL_1,    2, 0,  153600000, 1050, VDD_RAW(1050) },
+ 	{ 1, 768000, PLL_1,    2, 0,  153600000, 1050, VDD_RAW(1050) },
+ 	/*
+ 	 * AXI has MSMC1 implications. See above.
