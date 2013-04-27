@@ -537,11 +537,8 @@ if [ "${kernel3}" = "Y" ]; then
 	done
 
 	#Wi-Fi
-	if [ "${buildbot}" = "Y" ]; then
-		cp ~/lib/firmware/ti-connectivity/wl127x-fw-5-sr.bin ${android}/device/semc/mogami-common/prebuilt/wl127x-fw-5-sr.bin
-	else
-		cp /lib/firmware/ti-connectivity/wl127x-fw-5-sr.bin ${android}/device/semc/mogami-common/prebuilt/wl127x-fw-5-sr.bin
-	fi
+	wl127x_fw=${android}/device/semc/mogami-common/prebuilt/wl127x-fw-5-sr.bin
+	wget -O ${wl127x_fw} https://github.com/TI-OpenLink/firmwares/raw/linux-firmware/ti-connectivity/wl127x-fw-5-sr.bin
 	do_append "PRODUCT_COPY_FILES += device/semc/mogami-common/prebuilt/wl127x-fw-5-sr.bin:root/firmware/wl127x-fw-5-sr.bin" ${android}/device/semc/mogami-common/mogami.mk
 	do_replace "wl12xx_sdio.ko" "wlcore_sdio.ko" ${android}/device/semc/mogami-common/prebuilt/wifiload
 fi
