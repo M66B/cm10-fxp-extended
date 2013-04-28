@@ -1,0 +1,136 @@
+diff --git a/arch/arm/configs/nAa_anzu_defconfig b/arch/arm/configs/nAa_anzu_defconfig
+index 96343d9..0236fb5 100644
+--- a/arch/arm/configs/nAa_anzu_defconfig
++++ b/arch/arm/configs/nAa_anzu_defconfig
+@@ -2145,6 +2145,7 @@ CONFIG_FB_MSM=y
+ # CONFIG_FB_MSM_BACKLIGHT is not set
+ CONFIG_FB_MSM_LOGO=y
+ CONFIG_FB_MSM_LCDC_HW=y
++CONFIG_FB_MSM_HDPI=y
+ CONFIG_FB_MSM_TRIPLE_BUFFER=y
+ # CONFIG_FB_MSM_MDP22 is not set
+ # CONFIG_FB_MSM_MDP30 is not set
+diff --git a/arch/arm/configs/nAa_haida_defconfig b/arch/arm/configs/nAa_haida_defconfig
+index 90297d4..1f558b9 100644
+--- a/arch/arm/configs/nAa_haida_defconfig
++++ b/arch/arm/configs/nAa_haida_defconfig
+@@ -2145,6 +2145,7 @@ CONFIG_FB_MSM=y
+ # CONFIG_FB_MSM_BACKLIGHT is not set
+ CONFIG_FB_MSM_LOGO=y
+ CONFIG_FB_MSM_LCDC_HW=y
++CONFIG_FB_MSM_HDPI=y
+ CONFIG_FB_MSM_TRIPLE_BUFFER=y
+ # CONFIG_FB_MSM_MDP22 is not set
+ # CONFIG_FB_MSM_MDP30 is not set
+diff --git a/arch/arm/configs/nAa_hallon_defconfig b/arch/arm/configs/nAa_hallon_defconfig
+index 728c9d0..9423ddd 100644
+--- a/arch/arm/configs/nAa_hallon_defconfig
++++ b/arch/arm/configs/nAa_hallon_defconfig
+@@ -2145,6 +2145,7 @@ CONFIG_FB_MSM=y
+ # CONFIG_FB_MSM_BACKLIGHT is not set
+ CONFIG_FB_MSM_LOGO=y
+ CONFIG_FB_MSM_LCDC_HW=y
++CONFIG_FB_MSM_HDPI=y
+ CONFIG_FB_MSM_TRIPLE_BUFFER=y
+ # CONFIG_FB_MSM_MDP22 is not set
+ # CONFIG_FB_MSM_MDP30 is not set
+diff --git a/arch/arm/configs/nAa_iyokan_defconfig b/arch/arm/configs/nAa_iyokan_defconfig
+index 2f6062f..e32613f 100644
+--- a/arch/arm/configs/nAa_iyokan_defconfig
++++ b/arch/arm/configs/nAa_iyokan_defconfig
+@@ -2148,6 +2148,7 @@ CONFIG_FB_MSM=y
+ # CONFIG_FB_MSM_BACKLIGHT is not set
+ CONFIG_FB_MSM_LOGO=y
+ CONFIG_FB_MSM_LCDC_HW=y
++CONFIG_FB_MSM_HDPI=y
+ CONFIG_FB_MSM_TRIPLE_BUFFER=y
+ # CONFIG_FB_MSM_MDP22 is not set
+ # CONFIG_FB_MSM_MDP30 is not set
+diff --git a/arch/arm/configs/nAa_urushi_defconfig b/arch/arm/configs/nAa_urushi_defconfig
+index e44bb2e..e7a5d93 100644
+--- a/arch/arm/configs/nAa_urushi_defconfig
++++ b/arch/arm/configs/nAa_urushi_defconfig
+@@ -2142,6 +2142,7 @@ CONFIG_FB_MSM=y
+ # CONFIG_FB_MSM_BACKLIGHT is not set
+ CONFIG_FB_MSM_LOGO=y
+ CONFIG_FB_MSM_LCDC_HW=y
++CONFIG_FB_MSM_HDPI=y
+ CONFIG_FB_MSM_TRIPLE_BUFFER=y
+ # CONFIG_FB_MSM_MDP22 is not set
+ # CONFIG_FB_MSM_MDP30 is not set
+diff --git a/arch/arm/mach-msm/Kconfig b/arch/arm/mach-msm/Kconfig
+index 180a0c5..042098b 100644
+--- a/arch/arm/mach-msm/Kconfig
++++ b/arch/arm/mach-msm/Kconfig
+@@ -504,6 +504,7 @@ config MACH_SEMC_COCONUT
+ config MACH_SEMC_HAIDA
+ 	depends on ARCH_MSM7X30
+ 	depends on !MSM_STACKED_MEMORY
++	select FB_MSM_HDPI
+ 	select SUPPORT_ALIEN_USB_CHARGER
+ 	default y
+ 	bool "SonyEricsson Haida"
+@@ -513,6 +514,7 @@ config MACH_SEMC_HAIDA
+ config MACH_SEMC_URUSHI
+ 	depends on ARCH_MSM7X30
+ 	depends on !MSM_STACKED_MEMORY
++	select FB_MSM_HDPI
+ 	select SUPPORT_ALIEN_USB_CHARGER
+ 	default y
+ 	bool "SonyEricsson Urushi"
+@@ -522,6 +524,7 @@ config MACH_SEMC_URUSHI
+ config MACH_SEMC_ANZU
+ 	depends on ARCH_MSM7X30
+ 	depends on !MSM_STACKED_MEMORY
++	select FB_MSM_HDPI
+ 	select SUPPORT_ALIEN_USB_CHARGER
+ 	default y
+ 	bool "SonyEricsson Anzu"
+@@ -530,6 +533,7 @@ config MACH_SEMC_ANZU
+ 
+ config MACH_SEMC_IYOKAN
+ 	depends on ARCH_MSM7X30
++	select FB_MSM_HDPI
+ 	depends on !MSM_STACKED_MEMORY
+ 	select SUPPORT_ALIEN_USB_CHARGER
+ 	default y
+@@ -540,6 +544,7 @@ config MACH_SEMC_IYOKAN
+ config MACH_SEMC_HALLON
+ 	depends on ARCH_MSM7X30
+ 	depends on !MSM_STACKED_MEMORY
++	select FB_MSM_HDPI
+ 	select SUPPORT_ALIEN_USB_CHARGER
+ 	default y
+ 	bool "SonyEricsson Hallon"
+diff --git a/arch/arm/mach-msm/board-semc_mogami.c b/arch/arm/mach-msm/board-semc_mogami.c
+index 0f5ed46..827682e 100644
+--- a/arch/arm/mach-msm/board-semc_mogami.c
++++ b/arch/arm/mach-msm/board-semc_mogami.c
+@@ -195,7 +195,11 @@
+ #include "board-msm7x30-regulator.h"
+ #include "pm.h"
+ 
+-#define MSM_PMEM_SF_SIZE	0x1600000
++#ifdef CONFIG_FB_MSM_HDPI
++#define MSM_PMEM_SF_SIZE  0x1C00000
++#else
++#define MSM_PMEM_SF_SIZE  0x1600000
++#endif
+ #ifdef CONFIG_FB_MSM_TRIPLE_BUFFER
+ #define MSM_FB_PRIM_BUF_SIZE   (864 * 480 * 4 * 3) /* 4bpp * 3 Pages */
+ #else
+diff --git a/drivers/video/msm/Kconfig b/drivers/video/msm/Kconfig
+index 48a794b..d0779c2 100644
+--- a/drivers/video/msm/Kconfig
++++ b/drivers/video/msm/Kconfig
+@@ -31,6 +31,10 @@ config FB_MSM_LCDC_HW
+ 	bool
+ 	default n
+ 
++config FB_MSM_HDPI
++	bool "Increased pmem size needed for HDPI devices"
++	default n
++
+ config FB_MSM_TRIPLE_BUFFER
+ 	bool "Support for triple frame buffer"
+ 	default n
