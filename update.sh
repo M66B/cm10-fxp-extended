@@ -468,26 +468,12 @@ if [ "${kernel_mods}" = "Y" ]; then
 
 			if [ "${kernel3}" = "Y" ]; then
 				do_replace "# CONFIG_CLEANCACHE is not set" "CONFIG_CLEANCACHE=y" arch/arm/configs/cm_${device}_defconfig
+				do_replace "CONFIG_LOCALVERSION=\"-nAa" "CONFIG_LOCALVERSION=\"-nAa-Xtd" arch/arm/configs/cm_${device}_defconfig
 
 				# TODO:
 				#  Wlan undervolt
-				#  ipsec
-				#  CIFS/NTFS/SLOW WORK
 				#  USB OTG
-
 				#  CONFIG_MOGAMI_VIBRATOR_ON_VOLTAGE=2600 (mango)
-				#  CONFIG_NF_CT_ACCT=y (!3.0)
-				#  CONFIG_NETFILTER_XT_TARGET_TPROXY=y
-				#  CONFIG_NETFILTER_XT_TARGET_TRACE=y
-				#  CONFIG_NETFILTER_XT_TARGET_TCPMSS=y
-				#  CONFIG_NETFILTER_XT_MATCH_CONNBYTES=y
-				#  CONFIG_NETFILTER_XT_MATCH_HASHLIMIT=y
-				#  CONFIG_NETFILTER_XT_MATCH_TCPMSS=y
-				#  CONFIG_IP_NF_MATCH_ADDRTYPE=y
-				#  CONFIG_IP_NF_TARGET_REJECT_SKERR=y (!3.0)
-				#  CONFIG_IP_NF_TARGET_LOG=y
-				#  CONFIG_NF_NAT_SNMP_BASIC=y (!3.0)
-				#  CONFIG_IP_NF_RAW=y
 			fi
 		else
 			echo "--- No kernel config for ${device}"
