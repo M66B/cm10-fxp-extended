@@ -469,8 +469,8 @@ if [ "${kernel_mods}" = "Y" ]; then
 			if [ "${kernel3}" = "Y" ]; then
 				do_replace "CONFIG_LOCALVERSION=\"-nAa" "CONFIG_LOCALVERSION=\"-nAa-Xtd" arch/arm/configs/cm_${device}_defconfig
 				do_replace "# CONFIG_CLEANCACHE is not set" "CONFIG_CLEANCACHE=y" arch/arm/configs/cm_${device}_defconfig
-				do_replace "# CONFIG_USB_OTG is not set" "CONFIG_USB_OTG=y" arch/arm/configs/cm_${device}_defconfig
-				do_replace "# CONFIG_USB_OTG_WHITELIST is not set" "CONFIG_USB_OTG_WHITELIST=y" arch/arm/configs/cm_${device}_defconfig
+				#do_replace "# CONFIG_USB_OTG is not set" "CONFIG_USB_OTG=y" arch/arm/configs/cm_${device}_defconfig
+				#do_replace "# CONFIG_USB_OTG_WHITELIST is not set" "CONFIG_USB_OTG_WHITELIST=y" arch/arm/configs/cm_${device}_defconfig
 
 				# TODO:
 				#  Wlan undervolt
