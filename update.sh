@@ -426,8 +426,6 @@ if [ "${kernel_mods}" = "Y" ]; then
 		do_patch kernel3_hdmi.patch
 		do_patch kernel3_hdmi_dependencies.patch
 		do_patch kernel3_usb_tether.patch
-		do_patch kernel3_vibrator.patch
-		do_patch kernel3_undervolt.patch
 
 		do_append "TARGET_RECOVERY_PIXEL_FORMAT := \"RGBX_8888\"" ${android}/device/semc/msm7x30-common/BoardConfigCommon.mk
 	else
@@ -469,8 +467,10 @@ if [ "${kernel_mods}" = "Y" ]; then
 			do_replace "# CONFIG_SCHED_AUTOGROUP is not set" "CONFIG_SCHED_AUTOGROUP=y" arch/arm/configs/cm_${device}_defconfig
 
 			if [ "${kernel3}" = "Y" ]; then
-				do_replace "# CONFIG_CLEANCACHE is not set" "CONFIG_CLEANCACHE=y" arch/arm/configs/cm_${device}_defconfig
 				do_replace "CONFIG_LOCALVERSION=\"-nAa" "CONFIG_LOCALVERSION=\"-nAa-Xtd" arch/arm/configs/cm_${device}_defconfig
+				do_replace "# CONFIG_CLEANCACHE is not set" "CONFIG_CLEANCACHE=y" arch/arm/configs/cm_${device}_defconfig
+				do_replace "# CONFIG_USB_OTG is not set" "CONFIG_USB_OTG=y" arch/arm/configs/cm_${device}_defconfig
+				do_replace "# CONFIG_USB_OTG_WHITELIST is not set" "CONFIG_USB_OTG_WHITELIST=y" arch/arm/configs/cm_${device}_defconfig
 
 				# TODO:
 				#  Wlan undervolt
