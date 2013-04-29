@@ -328,7 +328,7 @@ fi
 #Synchronize
 echo "*** Repo sync ***"
 cd ${android}
-${repo} forall -c "git reset --hard && git clean -df"
+${repo} forall -c "git remote -v | head -n 1 | tr -d '\n' && echo -n ': ' && git reset --hard && git clean -df"
 if [ $? -ne 0 ]; then
 	exit
 fi
@@ -426,7 +426,8 @@ if [ "${kernel_mods}" = "Y" ]; then
 		do_patch kernel3_hdmi.patch
 		do_patch kernel3_hdmi_dependencies.patch
 		do_patch kernel3_usb_tether.patch
-		do_patch kernel3_pmem_hdpi.patch
+		do_patch kernel3_vibrator.patch
+		do_patch kernel3_undervolt.patch
 
 		do_append "TARGET_RECOVERY_PIXEL_FORMAT := \"RGBX_8888\"" ${android}/device/semc/msm7x30-common/BoardConfigCommon.mk
 	else
@@ -732,7 +733,7 @@ if [ "${trebuchet_cm10_1}" = "Y" ]; then
 	fi
 	cd ${android}/packages/apps/Trebuchet
 	do_patch trebuchet_port.patch
-	do_patch trebuchet_fix_build.patch
+	#do_patch trebuchet_fix_build.patch
 fi
 
 #DeskClock CM10.1
