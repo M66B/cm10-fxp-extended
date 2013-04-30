@@ -420,7 +420,6 @@ if [ "${kernel_mods}" = "Y" ]; then
 
 	if [ "${kernel3}" = "Y" ]; then
 		do_patch kernel3_fixes.patch
-		do_patch kernel3_cifs.patch
 		do_patch kernel3_underclock.patch
 		do_patch kernel3_hdmi.patch
 		do_patch kernel3_hdmi_dependencies.patch
