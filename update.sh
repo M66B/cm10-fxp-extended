@@ -45,15 +45,15 @@ fi
 
 #Linaro
 
-linaro_name=arm-eabi-4.7-linaro
-linaro_file=android-toolchain-eabi-4.7-daily-linux-x86.tar.bz2
-linaro_url=https://android-build.linaro.org/jenkins/view/Toolchain/job/linaro-android_toolchain-4.7-bzr/lastSuccessfulBuild/artifact/build/out/${linaro_file}
+linaro_name=arm-eabi-4.8-linaro
+linaro_file=gcc-linaro-4.8-2013.04.tar.bz2
+linaro_url=https://launchpad.net/gcc-linaro/4.8/4.8-2013.04/+download/${linaro_file}
 
 #bootimage
 
 kernel3=Y
 kernel_mods=Y
-kernel_linaro=Y
+kernel_linaro=N
 kernel_xtended_perm=Y
 kernel_wifi_range=Y
 kernel_displaylink=Y
@@ -247,6 +247,7 @@ echo "*** Local manifest ***"
 mkdir -p ${android}/.repo/local_manifests
 cp ${patches}/cmxtended.xml ${android}/.repo/local_manifests/cmxtended.xml
 if [ "${init}" = "Y" ]; then
+	cd ${android}
 	${repo} sync
 fi
 
@@ -254,7 +255,6 @@ fi
 if [ "${kernel3}" = "Y" ]; then
 	echo "--- Kernel 3.0"
 	sed -i "/msm7x30-2.6.32.x-nAa/d" ${android}/.repo/local_manifests/cmxtended.xml
-	kernel_linaro=N
 else
 	echo "--- Kernel 2.6.32"
 	sed -i "/msm7x30-3.0.x-nAa/d" ${android}/.repo/local_manifests/cmxtended.xml
@@ -471,6 +471,11 @@ if [ "${kernel_mods}" = "Y" ]; then
 				do_replace "# CONFIG_CLEANCACHE is not set" "CONFIG_CLEANCACHE=y" arch/arm/configs/cm_${device}_defconfig
 				#do_replace "# CONFIG_USB_OTG is not set" "CONFIG_USB_OTG=y" arch/arm/configs/cm_${device}_defconfig
 				#do_replace "# CONFIG_USB_OTG_WHITELIST is not set" "CONFIG_USB_OTG_WHITELIST=y" arch/arm/configs/cm_${device}_defconfig
+
+				if [ "${kernel_linaro}" = "Y" ]; then
+					do_replace "CONFIG_ARM_UNWIND=y" "# CONFIG_ARM_UNWIND is not set" arch/arm/configs/cm_${device}_defconfig
+					do_append "CONFIG_FRAME_POINTER=y"  arch/arm/configs/cm_${device}_defconfig
+				fi
 			fi
 		else
 			echo "--- No kernel config for ${device}"
