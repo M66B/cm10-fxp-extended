@@ -471,11 +471,6 @@ if [ "${kernel_mods}" = "Y" ]; then
 				do_replace "# CONFIG_CLEANCACHE is not set" "CONFIG_CLEANCACHE=y" arch/arm/configs/cm_${device}_defconfig
 				#do_replace "# CONFIG_USB_OTG is not set" "CONFIG_USB_OTG=y" arch/arm/configs/cm_${device}_defconfig
 				#do_replace "# CONFIG_USB_OTG_WHITELIST is not set" "CONFIG_USB_OTG_WHITELIST=y" arch/arm/configs/cm_${device}_defconfig
-
-				# TODO:
-				#  Wlan undervolt
-				#  USB OTG
-				#  CONFIG_MOGAMI_VIBRATOR_ON_VOLTAGE=2600 (mango)
 			fi
 		else
 			echo "--- No kernel config for ${device}"
