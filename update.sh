@@ -476,10 +476,10 @@ if [ "${kernel_mods}" = "Y" ]; then
 				#do_replace "# CONFIG_USB_OTG is not set" "CONFIG_USB_OTG=y" arch/arm/configs/cm_${device}_defconfig
 				#do_replace "# CONFIG_USB_OTG_WHITELIST is not set" "CONFIG_USB_OTG_WHITELIST=y" arch/arm/configs/cm_${device}_defconfig
 
-				if [ "${kernel_linaro}" = "Y" ]; then
-					#do_replace "CONFIG_ARM_UNWIND=y" "# CONFIG_ARM_UNWIND is not set" arch/arm/configs/cm_${device}_defconfig
-					#do_append "CONFIG_FRAME_POINTER=y"  arch/arm/configs/cm_${device}_defconfig
-				fi
+				#if [ "${kernel_linaro}" = "Y" ]; then
+				#	do_replace "CONFIG_ARM_UNWIND=y" "# CONFIG_ARM_UNWIND is not set" arch/arm/configs/cm_${device}_defconfig
+				#	do_append "CONFIG_FRAME_POINTER=y"  arch/arm/configs/cm_${device}_defconfig
+				#fi
 			fi
 		else
 			echo "--- No kernel config for ${device}"
