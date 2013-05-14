@@ -36,7 +36,6 @@ android=~/android/system
 devices="coconut iyokan mango smultron"
 init=N
 updates=N
-onecorebuild=N
 debug=N
 
 if [ "$1" = "init" ]; then
@@ -51,7 +50,7 @@ linaro_url=https://android-build.linaro.org/jenkins/view/Toolchain/job/linaro-an
 
 #bootimage
 
-kernel3=Y
+kernel3=N
 kernel_mods=Y
 kernel_linaro=Y
 kernel_xtended_perm=Y
@@ -78,10 +77,10 @@ eba=Y
 ssh=Y
 layout=Y
 mvolume=Y
-qcomdispl=Y
+qcomdispl=N
 boost_pulse=Y
 iw=Y
-mmsfix=Y
+mms_fix=Y
 apn_cm10_1=Y
 trebuchet_cm10_1=Y
 deskclock_cm10_1=Y
@@ -183,6 +182,14 @@ do_deldir() {
 	fi
 }
 
+do_copy() {
+	cp $1 $2
+	if [ $? -ne 0 ]; then
+		echo "!!! Error copying $1 to $2"
+		exit
+	fi
+}
+
 #Headless
 mkdir -p ~/Downloads
 
@@ -196,18 +203,18 @@ do_deldir ${android}/out/target/common/obj/APPS/TelephonyProvider_intermediates
 
 for device in ${devices}
 do
-	#ROM
-	if [ -d "${android}/out/target/product/${device}/system" ]; then
-		rm -f ${android}/out/target/product/${device}/system/build.prop
-		rm -f ${android}/out/target/product/${device}/system/lib/modules/*
-		rm -f ${android}/out/target/product/${device}/system/xbin/su
-	fi
-
 	#kernel
 	do_deldir ${android}/out/target/product/${device}/obj/KERNEL_OBJ/
 	if [ -d "${android}/out/target/product/${device}" ]; then
 		cd ${android}/out/target/product/${device}/
 		rm -f ./kernel ./*.img ./*.cpio ./*.fs
+	fi
+
+	#ROM
+	if [ -d "${android}/out/target/product/${device}/system" ]; then
+		rm -f ${android}/out/target/product/${device}/system/build.prop
+		rm -f ${android}/out/target/product/${device}/system/lib/modules/*
+		rm -f ${android}/out/target/product/${device}/system/xbin/su
 	fi
 
 	#recovery
@@ -219,6 +226,9 @@ done
 
 #Replaced projects
 if [ "${init}" = "Y" ]; then
+	cd ${android}
+	repo init -u git://github.com/CyanogenMod/android.git -b jellybean
+
 	do_deldir ${android}/system/su
 	do_deldir ${android}/packages/apps/Superuser
 	do_deldir ${android}/packages/apps/Trebuchet
@@ -245,11 +255,7 @@ fi
 #Local manifest
 echo "*** Local manifest ***"
 mkdir -p ${android}/.repo/local_manifests
-cp ${patches}/cmxtended.xml ${android}/.repo/local_manifests/cmxtended.xml
-if [ "${init}" = "Y" ]; then
-	cd ${android}
-	${repo} sync
-fi
+do_copy ${patches}/cmxtended.xml ${android}/.repo/local_manifests/cmxtended.xml
 
 #kernel
 if [ "${kernel3}" = "Y" ]; then
@@ -321,16 +327,19 @@ else
 fi
 
 #CMUpdater
-if [ "${updates}" != "Y" ]; then
-	sed -i "/android_packages_apps_CMUpdater/d" ${android}/.repo/local_manifests/cmxtended.xml
+if [ "${updates}" = "Y" ]; then
+	echo "--- updates"
+	sed -i "/CMUpdater/d" ${android}/vendor/cm/config/common.mk
 fi
 
-#Synchronize
+#Sync
 echo "*** Repo sync ***"
 cd ${android}
-${repo} forall -c "git remote -v | head -n 1 | tr -d '\n' && echo -n ': ' && git reset --hard && git clean -df"
-if [ $? -ne 0 ]; then
-	exit
+if [ "${init}" != "Y" ]; then
+	${repo} forall -c "git remote -v | head -n 1 | tr -d '\n' && echo -n ': ' && git reset --hard && git clean -df"
+	if [ $? -ne 0 ] && [ "${buildbot}" != "Y" ]; then
+		exit
+	fi
 fi
 ${repo} sync
 if [ $? -ne 0 ]; then
@@ -359,6 +368,9 @@ if [ "${kernel_linaro}" = "Y" ]; then
 		mkdir ${linaro_dir}
 		echo "--- Installing"
 		cp -R ./android-toolchain-eabi/* ${linaro_dir}
+		if [ $? -ne 0 ]; then
+			exit
+		fi
 	fi
 fi
 
@@ -391,13 +403,6 @@ fi
 if [ "${apn_cm10_1}" = "Y" ]; then
 	cd ${android}/vendor/cm/prebuilt/common/etc
 	wget -N https://raw.github.com/CyanogenMod/android_vendor_cm/cm-10.1/prebuilt/common/etc/apns-conf.xml
-fi
-
-#One core build
-if [ "${onecorebuild}" = "Y" ]; then
-	echo "*** One core build"
-	cd ${android}/build
-	do_patch onecore.patch
 fi
 
 #--- kernel ---
@@ -463,7 +468,7 @@ if [ "${kernel_mods}" = "Y" ]; then
 	do
 		if [ -f arch/arm/configs/nAa_${device}_defconfig ]; then
 			echo "--- Config ${device}"
-			cp arch/arm/configs/nAa_${device}_defconfig arch/arm/configs/cm_${device}_defconfig
+			do_copy arch/arm/configs/nAa_${device}_defconfig arch/arm/configs/cm_${device}_defconfig
 
 			do_replace "# CONFIG_SCHED_AUTOGROUP is not set" "CONFIG_SCHED_AUTOGROUP=y" arch/arm/configs/cm_${device}_defconfig
 
@@ -476,6 +481,22 @@ if [ "${kernel_mods}" = "Y" ]; then
 		else
 			echo "--- No kernel config for ${device}"
 		fi
+	done
+fi
+
+#pincode
+if [ "${pin}" = "Y" ]; then
+	echo "*** Pincode"
+	cd ${android}/bootable/recovery
+	do_patch recovery_check_pin.patch
+	cd ${android}/device/semc/msm7x30-common
+	do_patch msm7x30_check_pin.patch
+	cd ${android}/device/semc/mogami-common
+	do_patch mogami_check_pin.patch
+	for device in ${devices}
+	do
+		initrc=${android}/device/semc/${device}/recovery/init.rc
+		do_replace "    restart adbd" "    #restart adbd" ${initrc}
 	done
 fi
 
@@ -503,20 +524,13 @@ if [ "${bootlogo}" = "Y" ]; then
 	${tmp}/to565 -rle <${tmp}/logo_M_new.raw >${android}/device/semc/msm7x30-common/prebuilt/logo_M.rle
 fi
 
-#pincode
-if [ "${pin}" = "Y" ]; then
-	echo "*** Pincode"
-	cd ${android}/bootable/recovery
-	do_patch recovery_check_pin.patch
-	cd ${android}/device/semc/msm7x30-common
-	do_patch msm7x30_check_pin.patch
-	cd ${android}/device/semc/mogami-common
-	do_patch mogami_check_pin.patch
-	for device in ${devices}
-	do
-		initrc=${android}/device/semc/${device}/recovery/init.rc
-		do_replace "    restart adbd" "    #restart adbd" ${initrc}
-	done
+#goo.im
+if [ "${updates}" = "Y" ]; then
+	echo "*** goo.im ***"
+	do_append "PRODUCT_PROPERTY_OVERRIDES += \\" ${android}/device/semc/msm7x30-common/msm7x30.mk
+	do_append "    ro.goo.developerid=M66B \\" ${android}/device/semc/msm7x30-common/msm7x30.mk
+	do_append "    ro.goo.rom=Xtended \\" ${android}/device/semc/msm7x30-common/msm7x30.mk
+	do_append "    ro.goo.version=\$(shell date +%s)" ${android}/device/semc/msm7x30-common/msm7x30.mk
 fi
 
 if [ "${kernel3}" = "Y" ]; then
@@ -541,6 +555,14 @@ if [ "${kernel3}" = "Y" ]; then
 fi
 
 #--- ROM ---
+
+#MMS fix
+if [ "${mms_fix}" = "Y" ]; then
+	echo "*** MMS fix ***"
+	cd ${android}/packages/apps/Mms
+	do_patch mms_cursor.patch
+	do_patch mms_cursor2.patch
+fi
 
 #Cell broadcast
 if [ "${cellbroadcast}" = "Y" ]; then
@@ -572,7 +594,7 @@ if [ "${openpdroid}" = "Y" ]; then
 	do_patch openpdroid_network_location.patch
 
 	mkdir -p ${android}/privacy
-	cp ~/Downloads/OpenPDroidPatches/PDroid.jpeg ${android}/privacy
+	do_copy ~/Downloads/OpenPDroidPatches/PDroid.jpeg ${android}/privacy
 	do_append "PRODUCT_COPY_FILES += privacy/PDroid.jpeg:system/media/PDroid.jpeg" ${android}/vendor/cm/config/common.mk
 fi
 
@@ -693,15 +715,6 @@ if [ "${boost_pulse}" = "Y" ]; then
 	do_patch power_boost_pulse.patch
 fi
 
-#goo.im
-if [ "${updates}" = "Y" ]; then
-	echo "*** goo.im ***"
-	do_append "PRODUCT_PROPERTY_OVERRIDES += \\" ${android}/device/semc/msm7x30-common/msm7x30.mk
-	do_append "    ro.goo.developerid=M66B \\" ${android}/device/semc/msm7x30-common/msm7x30.mk
-	do_append "    ro.goo.rom=Xtended \\" ${android}/device/semc/msm7x30-common/msm7x30.mk
-	do_append "    ro.goo.version=\$(shell date +%s)" ${android}/device/semc/msm7x30-common/msm7x30.mk
-fi
-
 #iw
 if [ "${iw}" = "Y" ]; then
 	echo "*** iw ***"
@@ -709,14 +722,6 @@ if [ "${iw}" = "Y" ]; then
 	do_patch iw.patch
 	cd ${android}/vendor/semc
 	do_patch vendor_semc_iw.patch
-fi
-
-#MMS fix
-if [ "${mmsfix}" = "Y" ]; then
-	echo "*** MMS fix ***"
-	cd ${android}/packages/apps/Mms
-	do_patch mms_cursor.patch
-	do_patch mms_cursor2.patch
 fi
 
 #Trebuchet CM10.1
