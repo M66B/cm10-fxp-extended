@@ -1,5 +1,5 @@
 diff --git a/recovery.c b/recovery.c
-index 0f56d0e..9e30136 100644
+index 6778ac9..ad3bc87 100644
 --- a/recovery.c
 +++ b/recovery.c
 @@ -783,6 +783,53 @@ setup_adbd() {
@@ -56,7 +56,7 @@ index 0f56d0e..9e30136 100644
  int
  main(int argc, char **argv) {
  
-@@ -964,14 +1011,15 @@ main(int argc, char **argv) {
+@@ -970,14 +1017,15 @@ main(int argc, char **argv) {
          }
      }
  

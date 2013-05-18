@@ -66,7 +66,7 @@ pin=Y
 #ROM
 
 cellbroadcast=Y
-openpdroid=Y
+openpdroid=N
 nano=Y
 terminfo=Y
 emptydrawer=Y
