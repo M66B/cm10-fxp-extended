@@ -1,13 +1,14 @@
 diff --git a/recovery.c b/recovery.c
-index 6778ac9..ad3bc87 100644
+index 6778ac9..9c4cdd8 100644
 --- a/recovery.c
 +++ b/recovery.c
-@@ -783,6 +783,53 @@ setup_adbd() {
+@@ -783,6 +783,61 @@ setup_adbd() {
      property_set("service.adb.root", "1");
  }
  
 +int get_pin() {
 +    char code[5] = "";
++    char owner[80] = "";
 +    char pin[] = "????";
 +
 +    // Read pin code
@@ -20,12 +21,19 @@ index 6778ac9..ad3bc87 100644
 +        fclose(fp);
 +    }
 +
++    // Read owner
++    FILE* fpo = fopen("/cache/pin/owner", "r");
++    if (fpo != NULL) {
++        fgets(owner, sizeof(owner), fpo);
++        fclose(fpo);
++    }
++
 +    if (*code == 0)
 +        *pin = 0;
 +    else {
 +        int i;
 +        char item[] = "----";
-+        const char* headers[] = { "Enter pincode:", "", item, "", NULL };
++        const char* headers[] = { owner, "", "Enter pincode:", "", item, "", NULL };
 +        const char* digits[] = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", NULL };
 +
 +        // Get pincode
@@ -56,7 +64,7 @@ index 6778ac9..ad3bc87 100644
  int
  main(int argc, char **argv) {
  
-@@ -970,14 +1017,15 @@ main(int argc, char **argv) {
+@@ -970,14 +1025,15 @@ main(int argc, char **argv) {
          }
      }
  
