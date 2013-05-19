@@ -56,6 +56,7 @@ kernel_linaro=Y
 kernel_xtended_perm=Y
 kernel_wifi_range=Y
 kernel_displaylink=Y
+kernel_volumes=Y
 
 bootlogo=Y
 bootlogoh=logo_H_extended.png
@@ -201,8 +202,7 @@ do_deldir ${android}/out/target/common/obj/JAVA_LIBRARIES/framework_intermediate
 do_deldir ${android}/out/target/common/obj/JAVA_LIBRARIES/framework2_intermediates
 do_deldir ${android}/out/target/common/obj/APPS/TelephonyProvider_intermediates
 
-for device in ${devices}
-do
+for device in ${devices}; do
 	#kernel
 	do_deldir ${android}/out/target/product/${device}/obj/KERNEL_OBJ/
 	if [ -d "${android}/out/target/product/${device}" ]; then
@@ -410,8 +410,7 @@ fi
 #Linaro
 if [ "${kernel_linaro}" = "Y" ]; then
 	echo "*** Kernel Linaro toolchain"
-	for device in ${devices}
-	do
+	for device in ${devices}; do
 		do_replace "arm-eabi-4.4.3" "${linaro_name}" ${android}/device/semc/${device}/BoardConfig.mk
 	done
 fi
@@ -443,14 +442,18 @@ if [ "${kernel_mods}" = "Y" ]; then
 		if [ "${kernel_displaylink}" = "Y" ]; then
 			echo "--- DisplayLink"
 			do_patch kernel_fbudl.patch
-			for device in ${devices}
-			do
+			for device in ${devices}; do
 				kconfig=${android}/kernel/semc/msm7x30/arch/arm/configs/cyanogen_${device}_defconfig
 				if [ -f ${kconfig} ]; then
 					do_replace "# CONFIG_FB_UDL is not set" "CONFIG_FB_UDL=m" ${kconfig}
 					#do_replace "CONFIG_USB_OTG_WHITELIST=y" "CONFIG_USB_OTG_WHITELIST=n" ${kconfig}
 				fi
 			done
+		fi
+		
+		if [ "${kernel_volumes}" = "Y" ]; then
+			echo "--- Volumes"
+			do_patch kernel_volumes.patch
 		fi
 	fi
 
@@ -464,8 +467,7 @@ if [ "${kernel_mods}" = "Y" ]; then
 		fi
 	fi
 
-	for device in ${devices}
-	do
+	for device in ${devices}; do
 		if [ -f arch/arm/configs/nAa_${device}_defconfig ]; then
 			echo "--- Config ${device}"
 			do_copy arch/arm/configs/nAa_${device}_defconfig arch/arm/configs/cm_${device}_defconfig
@@ -493,8 +495,7 @@ if [ "${pin}" = "Y" ]; then
 	do_patch msm7x30_check_pin.patch
 	cd ${android}/device/semc/mogami-common
 	do_patch mogami_check_pin.patch
-	for device in ${devices}
-	do
+	for device in ${devices}; do
 		initrc=${android}/device/semc/${device}/recovery/init.rc
 		do_replace "    restart adbd" "    #restart adbd" ${initrc}
 	done
@@ -542,8 +543,7 @@ if [ "${kernel3}" = "Y" ]; then
 
 	#boot logo
 	do_replace "logo.rle" "initlogo.rle" ${android}/device/semc/msm7x30-common/custombootimg.mk
-	for device in ${devices}
-	do
+	for device in ${devices}; do
 		do_replace "logo.rle" "initlogo.rle" ${android}/device/semc/${device}/${device}.mk
 	done
 
