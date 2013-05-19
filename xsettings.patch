@@ -383,7 +383,7 @@ index 47cbfe0..6df1237 100644
          return true;
      }
 diff --git a/src/com/android/settings/cyanogenmod/BootReceiver.java b/src/com/android/settings/cyanogenmod/BootReceiver.java
-index 0704a66..8f71904 100644
+index 0704a66..4edb63d 100644
 --- a/src/com/android/settings/cyanogenmod/BootReceiver.java
 +++ b/src/com/android/settings/cyanogenmod/BootReceiver.java
 @@ -22,12 +22,20 @@ import android.content.Intent;
@@ -415,7 +415,7 @@ index 0704a66..8f71904 100644
  
      @Override
      public void onReceive(Context ctx, Intent intent) {
-@@ -64,45 +73,155 @@ public class BootReceiver extends BroadcastReceiver {
+@@ -64,45 +73,162 @@ public class BootReceiver extends BroadcastReceiver {
                  SystemProperties.set(KSM_SETTINGS_PROP, "false");
              }
          }
@@ -437,6 +437,13 @@ index 0704a66..8f71904 100644
 +            File pfile = new File(SecuritySettings.BOOT_PINCODE_FILE);
 +            pfile.delete();
 +        }
++        String owner = prefs.getString(Settings.Secure.LOCK_SCREEN_OWNER_INFO, null);
++        if (owner == null) {
++            File pfile = new File("/cache/pin/owner");
++            pfile.delete();
++        }
++        else
++            Utils.fileWriteOneLine("/cache/pin/owner", owner.replace("\n", " ").replace("\r", " "));
      }
  
      private void configureCPU(Context ctx) {
@@ -598,7 +605,7 @@ index 0704a66..8f71904 100644
          }
      }
  
-@@ -114,21 +233,40 @@ public class BootReceiver extends BroadcastReceiver {
+@@ -114,21 +240,40 @@ public class BootReceiver extends BroadcastReceiver {
              return;
          }
  
@@ -651,7 +658,7 @@ index 0704a66..8f71904 100644
          }
      }
  
-@@ -140,4 +278,51 @@ public class BootReceiver extends BroadcastReceiver {
+@@ -140,4 +285,51 @@ public class BootReceiver extends BroadcastReceiver {
          Utils.fileWriteOneLine(MemoryManagement.KSM_RUN_FILE, ksm ? "1" : "0");
          Log.d(TAG, "KSM settings restored.");
      }
