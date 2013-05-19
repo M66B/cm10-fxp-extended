@@ -1,5 +1,19 @@
+diff --git a/src/com/android/mms/data/WorkingMessage.java b/src/com/android/mms/data/WorkingMessage.java
+index 14dd7b4..52eaffe 100755
+--- a/src/com/android/mms/data/WorkingMessage.java
++++ b/src/com/android/mms/data/WorkingMessage.java
+@@ -1473,6 +1473,9 @@ public class WorkingMessage {
+         cursor = SqliteWrapper.query(context, cr,
+                 Mms.Draft.CONTENT_URI, MMS_DRAFT_PROJECTION,
+                 selection, null, null);
++        if (cursor == null) {
++            return null;
++        }
+ 
+         Uri uri;
+         try {
 diff --git a/src/com/android/mms/ui/ComposeMessageActivity.java b/src/com/android/mms/ui/ComposeMessageActivity.java
-index fb135d5..2ee4e7f 100644
+index fb135d5..caf460e 100644
 --- a/src/com/android/mms/ui/ComposeMessageActivity.java
 +++ b/src/com/android/mms/ui/ComposeMessageActivity.java
 @@ -4118,12 +4118,14 @@ public class ComposeMessageActivity extends Activity
@@ -12,7 +26,7 @@ index fb135d5..2ee4e7f 100644
 -                            if (msgId == targetMsgId) {
 -                                newSelectionPos = cursor.getPosition();
 -                                break;
-+                        if (cursor != null) {
++                        if (cursor != null)
 +                            cursor.moveToPosition(-1);
 +                            while (cursor.moveToNext()) {
 +                                long msgId = cursor.getLong(COLUMN_ID);
@@ -32,12 +46,3 @@ index fb135d5..2ee4e7f 100644
                          initRecipientsEditor();
                      }
  
-@@ -4207,7 +4209,7 @@ public class ComposeMessageActivity extends Activity
-                     if (cursor == null) {
-                         return;
-                     }
--                    if (tid > 0 && cursor.getCount() == 0) {
-+                    if (tid > 0 && cursor != null && cursor.getCount() == 0) {
-                         // We just deleted the last message and the thread will get deleted
-                         // by a trigger in the database. Clear the threadId so next time we
-                         // need the threadId a new thread will get created.
