@@ -1,0 +1,50 @@
+diff --git a/Fmapplication/src/com/ti/fmapp/FmRxAppConstants.java b/Fmapplication/src/com/ti/fmapp/FmRxAppConstants.java
+index c86353a..0a4b700 100644
+--- a/Fmapplication/src/com/ti/fmapp/FmRxAppConstants.java
++++ b/Fmapplication/src/com/ti/fmapp/FmRxAppConstants.java
+@@ -155,9 +155,9 @@ public interface FmRxAppConstants {
+     public static final String INTENT_RXTUNE = "android.intent.action.START_RXFREQ";
+ 
+     /* Europe / US band limits */
+-    public static final float APP_FM_FIRST_FREQ_US_EUROPE_KHZ = (float) 87.5;
++    public static final float APP_FM_FIRST_FREQ_US_EUROPE_KHZ = (float) 50.0;
+ 
+-    public static final float APP_FM_LAST_FREQ_US_EUROPE_KHZ = (float) 108.0;
++    public static final float APP_FM_LAST_FREQ_US_EUROPE_KHZ = (float) 200.0;
+ 
+     /* Japan band limits */
+     public static final float APP_FM_FIRST_FREQ_JAPAN_KHZ = (float) 76.0;
+diff --git a/fm_stack/HSW_FMStack/stack/inc/fmc_common.h b/fm_stack/HSW_FMStack/stack/inc/fmc_common.h
+index bbd0583..3c7dd9f 100644
+--- a/fm_stack/HSW_FMStack/stack/inc/fmc_common.h
++++ b/fm_stack/HSW_FMStack/stack/inc/fmc_common.h
+@@ -95,8 +95,8 @@ typedef  FMC_UINT  FmcFreq;
+ #define FMC_UNDEFINED_FREQ						((FmcFreq)0xFFFFFFFF)
+ 
+ /* Europe / US band limits */
+-#define FMC_FIRST_FREQ_US_EUROPE_KHZ				((FmcFreq)87500)
+-#define FMC_LAST_FREQ_US_EUROPE_KHZ 			((FmcFreq)108000)
++#define FMC_FIRST_FREQ_US_EUROPE_KHZ				((FmcFreq)50000)
++#define FMC_LAST_FREQ_US_EUROPE_KHZ 			((FmcFreq)200000)
+ 
+ /* Japan band limits */
+ #define FMC_FIRST_FREQ_JAPAN_KHZ					((FmcFreq)76000)
+diff --git a/fmreceiverif/src/java/com/ti/fm/IFmConstants.java b/fmreceiverif/src/java/com/ti/fm/IFmConstants.java
+index 8bac408..050a98b 100644
+--- a/fmreceiverif/src/java/com/ti/fm/IFmConstants.java
++++ b/fmreceiverif/src/java/com/ti/fm/IFmConstants.java
+@@ -41,10 +41,10 @@ public interface IFmConstants {
+     public static final int FM_BAND_JAPAN = 1;
+ 
+     /* Europe / US band limits */
+-    public static final int FM_FIRST_FREQ_US_EUROPE_KHZ = 87500;
+-    public static final int FM_LAST_FREQ_US_EUROPE_KHZ = 108000;
+-    public static final float FM_FIRST_FREQ_US_EUROPE_KHZ_FLOAT = new Float(87.5);
+-    public static final float FM_LAST_FREQ_US_EUROPE_KHZ_FLOAT = new Float(108.0);
++    public static final int FM_FIRST_FREQ_US_EUROPE_KHZ = 50000;
++    public static final int FM_LAST_FREQ_US_EUROPE_KHZ = 200000;
++    public static final float FM_FIRST_FREQ_US_EUROPE_KHZ_FLOAT = new Float(50.0);
++    public static final float FM_LAST_FREQ_US_EUROPE_KHZ_FLOAT = new Float(200.0);
+ 
+     /* Japan band limits */
+     public static final int FM_FIRST_FREQ_JAPAN_KHZ = 76000;
