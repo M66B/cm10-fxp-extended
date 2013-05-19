@@ -13,7 +13,7 @@ index 14dd7b4..52eaffe 100755
          Uri uri;
          try {
 diff --git a/src/com/android/mms/ui/ComposeMessageActivity.java b/src/com/android/mms/ui/ComposeMessageActivity.java
-index fb135d5..caf460e 100644
+index fb135d5..2d2454c 100644
 --- a/src/com/android/mms/ui/ComposeMessageActivity.java
 +++ b/src/com/android/mms/ui/ComposeMessageActivity.java
 @@ -4118,12 +4118,14 @@ public class ComposeMessageActivity extends Activity
@@ -26,7 +26,7 @@ index fb135d5..caf460e 100644
 -                            if (msgId == targetMsgId) {
 -                                newSelectionPos = cursor.getPosition();
 -                                break;
-+                        if (cursor != null)
++                        if (cursor != null) {
 +                            cursor.moveToPosition(-1);
 +                            while (cursor.moveToNext()) {
 +                                long msgId = cursor.getLong(COLUMN_ID);
