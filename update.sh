@@ -82,6 +82,7 @@ qcomdispl=Y
 boost_pulse=Y
 iw=Y
 mms_fix=Y
+serialno_fix=Y
 apn_cm10_1=Y
 trebuchet_cm10_1=Y
 deskclock_cm10_1=Y
@@ -512,6 +513,13 @@ if [ "${mms_fix}" = "Y" ]; then
 	echo "*** MMS fix ***"
 	cd ${android}/packages/apps/Mms
 	do_patch mms_cursor.patch
+fi
+
+#Serialno fix
+if [ "${serialno_fix}" = "Y" ]; then
+	echo "*** Serial# fix ***"
+	cd ${android}/system/core
+	do_patch serial.patch
 fi
 
 #Cell broadcast
