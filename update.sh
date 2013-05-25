@@ -50,12 +50,11 @@ linaro_url=https://android-build.linaro.org/jenkins/view/Toolchain/job/linaro-an
 
 #bootimage
 
-kernel3=N
 kernel_mods=Y
 kernel_linaro=Y
 kernel_xtended_perm=Y
 kernel_wifi_range=Y
-kernel_displaylink=Y
+kernel_displaylink=N
 kernel_volumes=Y
 kernel_backlight=Y
 
@@ -258,15 +257,6 @@ echo "*** Local manifest ***"
 mkdir -p ${android}/.repo/local_manifests
 do_copy ${patches}/cmxtended.xml ${android}/.repo/local_manifests/cmxtended.xml
 
-#kernel
-if [ "${kernel3}" = "Y" ]; then
-	echo "--- Kernel 3.0"
-	sed -i "/msm7x30-2.6.32.x-nAa/d" ${android}/.repo/local_manifests/cmxtended.xml
-else
-	echo "--- Kernel 2.6.32"
-	sed -i "/msm7x30-3.0.x-nAa/d" ${android}/.repo/local_manifests/cmxtended.xml
-fi
-
 #su koush
 if [ "${superuser_koush}" = "Y" ]; then
 	echo "--- Superuser koush"
@@ -418,59 +408,41 @@ fi
 
 #nAa msm7x30 kernel
 #caf 2.6.32: M7630AABBQMLZA41601050
-#caf 3.0.8: M7630AABBQMLZA404033I
 if [ "${kernel_mods}" = "Y" ]; then
 	echo "*** Kernel ***"
 	cd ${android}/kernel/semc/msm7x30/
 
-	if [ "${kernel3}" = "Y" ]; then
-		do_patch kernel3_fixes.patch
-		do_patch kernel3_underclock.patch
-		do_patch kernel3_hdmi.patch
-		do_patch kernel3_hdmi_dependencies.patch
-		do_patch kernel3_usb_tether.patch
-		if [ "${kernel_linaro}" = "Y" ]; then
-			do_patch kernel3_linaro.patch
-		fi
+	if [ "${kernel_wifi_range}" = "Y" ]; then
+		echo "--- Wi-Fi range"
+		do_patch kernel_wifi_range.patch
+	fi
 
-		do_append "TARGET_RECOVERY_PIXEL_FORMAT := \"RGBX_8888\"" ${android}/device/semc/msm7x30-common/BoardConfigCommon.mk
-	else
-		if [ "${kernel_wifi_range}" = "Y" ]; then
-			echo "--- Wi-Fi range"
-			do_patch kernel_wifi_range.patch
-		fi
+	if [ "${kernel_displaylink}" = "Y" ]; then
+		echo "--- DisplayLink"
+		do_patch kernel_fbudl.patch
+		for device in ${devices}; do
+			kconfig=${android}/kernel/semc/msm7x30/arch/arm/configs/cyanogen_${device}_defconfig
+			if [ -f ${kconfig} ]; then
+				do_replace "# CONFIG_FB_UDL is not set" "CONFIG_FB_UDL=m" ${kconfig}
+				#do_replace "CONFIG_USB_OTG_WHITELIST=y" "CONFIG_USB_OTG_WHITELIST=n" ${kconfig}
+			fi
+		done
+	fi
 
-		if [ "${kernel_displaylink}" = "Y" ]; then
-			echo "--- DisplayLink"
-			do_patch kernel_fbudl.patch
-			for device in ${devices}; do
-				kconfig=${android}/kernel/semc/msm7x30/arch/arm/configs/cyanogen_${device}_defconfig
-				if [ -f ${kconfig} ]; then
-					do_replace "# CONFIG_FB_UDL is not set" "CONFIG_FB_UDL=m" ${kconfig}
-					#do_replace "CONFIG_USB_OTG_WHITELIST=y" "CONFIG_USB_OTG_WHITELIST=n" ${kconfig}
-				fi
-			done
-		fi
-		
-		if [ "${kernel_volumes}" = "Y" ]; then
-			echo "--- Volumes"
-			do_patch kernel_volumes.patch
-		fi
+	if [ "${kernel_volumes}" = "Y" ]; then
+		echo "--- Volumes"
+		do_patch kernel_volumes.patch
+	fi
 
-		if [ "${kernel_backlight}" = "Y" ]; then
-			echo "--- Backlight"
-			do_patch kernel_backlight.patch
-		fi
+	if [ "${kernel_backlight}" = "Y" ]; then
+		echo "--- Backlight"
+		do_patch kernel_backlight.patch
 	fi
 
 	if [ "${kernel_xtended_perm}" = "Y" ]; then
 		echo "--- Xtended permissions"
 		do_patch kernel_smartass_perm.patch
-		if [ "${kernel3}" = "Y" ]; then
-			do_patch kernel3_autogroup_perm.patch
-		else
-			do_patch kernel_autogroup_perm.patch
-		fi
+		do_patch kernel_autogroup_perm.patch
 	fi
 
 	for device in ${devices}; do
@@ -479,13 +451,6 @@ if [ "${kernel_mods}" = "Y" ]; then
 			do_copy arch/arm/configs/nAa_${device}_defconfig arch/arm/configs/cm_${device}_defconfig
 
 			do_replace "# CONFIG_SCHED_AUTOGROUP is not set" "CONFIG_SCHED_AUTOGROUP=y" arch/arm/configs/cm_${device}_defconfig
-
-			if [ "${kernel3}" = "Y" ]; then
-				do_replace "CONFIG_LOCALVERSION=\"-nAa" "CONFIG_LOCALVERSION=\"-nAa-Xtd" arch/arm/configs/cm_${device}_defconfig
-				do_replace "# CONFIG_CLEANCACHE is not set" "CONFIG_CLEANCACHE=y" arch/arm/configs/cm_${device}_defconfig
-				#do_replace "# CONFIG_USB_OTG is not set" "CONFIG_USB_OTG=y" arch/arm/configs/cm_${device}_defconfig
-				#do_replace "# CONFIG_USB_OTG_WHITELIST is not set" "CONFIG_USB_OTG_WHITELIST=y" arch/arm/configs/cm_${device}_defconfig
-			fi
 		else
 			echo "--- No kernel config for ${device}"
 		fi
@@ -538,26 +503,6 @@ if [ "${updates}" = "Y" ]; then
 	do_append "    ro.goo.developerid=M66B \\" ${android}/device/semc/msm7x30-common/msm7x30.mk
 	do_append "    ro.goo.rom=Xtended \\" ${android}/device/semc/msm7x30-common/msm7x30.mk
 	do_append "    ro.goo.version=\$(shell date +%s)" ${android}/device/semc/msm7x30-common/msm7x30.mk
-fi
-
-if [ "${kernel3}" = "Y" ]; then
-	echo "*** Kernel 3.x ***"
-
-	#recovery key check
-	cd ${android}/device/semc/msm7x30-common
-	do_patch msm7x30_kernel3.patch
-
-	#boot logo
-	do_replace "logo.rle" "initlogo.rle" ${android}/device/semc/msm7x30-common/custombootimg.mk
-	for device in ${devices}; do
-		do_replace "logo.rle" "initlogo.rle" ${android}/device/semc/${device}/${device}.mk
-	done
-
-	#Wi-Fi
-	wl127x_fw=${android}/device/semc/mogami-common/prebuilt/wl127x-fw-5-sr.bin
-	wget -O ${wl127x_fw} https://github.com/TI-OpenLink/firmwares/raw/linux-firmware/ti-connectivity/wl127x-fw-5-sr.bin
-	do_append "PRODUCT_COPY_FILES += device/semc/mogami-common/prebuilt/wl127x-fw-5-sr.bin:root/firmware/wl127x-fw-5-sr.bin" ${android}/device/semc/mogami-common/mogami.mk
-	do_replace "wl12xx_sdio.ko" "wlcore_sdio.ko" ${android}/device/semc/mogami-common/prebuilt/wifiload
 fi
 
 #--- ROM ---
