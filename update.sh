@@ -83,6 +83,7 @@ boost_pulse=Y
 iw=Y
 mms_fix=Y
 serialno_fix=Y
+wifi_adhoc=Y
 apn_cm10_1=Y
 trebuchet_cm10_1=Y
 deskclock_cm10_1=Y
@@ -520,6 +521,14 @@ if [ "${serialno_fix}" = "Y" ]; then
 	echo "*** Serial# fix ***"
 	cd ${android}/system/core
 	do_patch serial.patch
+fi
+
+#Wi-Fi ad-hoc
+if [ "${wifi_adhoc}" = "Y" ];then
+	echo "*** Wi-Fi ad-hoc ***"
+	for device in ${devices}; do
+		sed -i '6 i WifiAdhoc = 1' ${android}device/semc/${device}/config/tiwlan.ini
+	done
 fi
 
 #Cell broadcast
