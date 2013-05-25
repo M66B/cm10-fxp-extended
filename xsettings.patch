@@ -99,7 +99,7 @@ index 5931dae..12b194b 100644
  
      <!-- Performance Settings : Dithering -->
      <string name="pref_use_dithering_title">Surface improvement</string>
-@@ -4874,6 +4936,12 @@
+@@ -4874,6 +4936,14 @@
      <string name="pref_volume_wake_title">Volume rocker wake</string>
      <string name="pref_volume_wake_summary">Pressing the volume rocker up/down will wake the device</string>
  
@@ -108,15 +108,17 @@ index 5931dae..12b194b 100644
 +    <string name="pref_light_lcd_summary">LCD backlight current in µA</string>
 +    <string name="pref_light_button_title">Button backlight</string>
 +    <string name="pref_light_button_summary">Button backlight current in µA</string>
++    <string name="pref_light_keyboard_title">Keyboard backlight</string>
++    <string name="pref_light_keyboard_summary">Keyboard backlight current in µA</string>
 +
      <string name="ok">OK</string>
  
      <!-- Development settings: title for the field that shows the "App ID" development identifier
 diff --git a/res/xml/display_settings.xml b/res/xml/display_settings.xml
-index cd119fa..e8cf87d 100644
+index cd119fa..d8eca1b 100644
 --- a/res/xml/display_settings.xml
 +++ b/res/xml/display_settings.xml
-@@ -86,4 +86,16 @@
+@@ -86,4 +86,22 @@
              android:summary="@string/pref_volume_wake_summary"
              android:defaultValue="false" />
  
@@ -131,6 +133,12 @@ index cd119fa..e8cf87d 100644
 +            android:dialogTitle="@string/pref_light_button_title"
 +            android:title="@string/pref_light_button_title"
 +            android:summary="@string/pref_light_button_summary" />
++
++        <EditTextPreference
++            android:key="pref_light_keyboard"
++            android:dialogTitle="@string/pref_light_keyboard_title"
++            android:title="@string/pref_light_keyboard_title"
++            android:summary="@string/pref_light_keyboard_summary" />
 +
  </PreferenceScreen>
 diff --git a/res/xml/ioscheduler_settings.xml b/res/xml/ioscheduler_settings.xml
@@ -347,7 +355,7 @@ index 9f78820..2df0a7e 100644
  
      <PreferenceCategory android:title="@string/credentials_title"
 diff --git a/src/com/android/settings/DisplaySettings.java b/src/com/android/settings/DisplaySettings.java
-index 8d7ab38..b6f8d1b 100644
+index 8d7ab38..919207c 100644
 --- a/src/com/android/settings/DisplaySettings.java
 +++ b/src/com/android/settings/DisplaySettings.java
 @@ -33,6 +33,7 @@ import android.preference.ListPreference;
@@ -367,28 +375,31 @@ index 8d7ab38..b6f8d1b 100644
  public class DisplaySettings extends SettingsPreferenceFragment implements
          Preference.OnPreferenceChangeListener {
      private static final String TAG = "DisplaySettings";
-@@ -63,6 +66,11 @@ public class DisplaySettings extends SettingsPreferenceFragment implements
+@@ -63,6 +66,13 @@ public class DisplaySettings extends SettingsPreferenceFragment implements
      private static final String KEY_ELECTRON_BEAM_CATEGORY_ANIMATION = "category_animation_options";
      private static final String KEY_WAKEUP_CATEGORY = "category_wakeup_options";
      private static final String KEY_VOLUME_WAKE = "pref_volume_wake";
 +    public static final String KEY_LIGHT_LCD = "pref_light_lcd";
 +    public static final String KEY_LIGHT_BUTTON = "pref_light_button";
++    public static final String KEY_LIGHT_KEYBOARD = "pref_light_keyboard";
 +
 +    public static final String LIGHT_LCD_FILE = "/sys/devices/i2c-0/0-0040/leds/lcd-backlight/max_current";
 +    public static final String LIGHT_BUTTON_FILE = "/sys/devices/i2c-0/0-0040/leds/button-backlight/max_current";
++    public static final String LIGHT_KEYBOARD_FILE = "/sys/devices/i2c-0/0-0040/leds/keyboard-backlight/max_current";
  
      private static final String ROTATION_ANGLE_0 = "0";
      private static final String ROTATION_ANGLE_90 = "90";
-@@ -73,6 +81,8 @@ public class DisplaySettings extends SettingsPreferenceFragment implements
+@@ -73,6 +83,9 @@ public class DisplaySettings extends SettingsPreferenceFragment implements
  
      private CheckBoxPreference mLockScreenRotation;
      private CheckBoxPreference mVolumeWake;
 +    private EditTextPreference mLightLCDPref;
 +    private EditTextPreference mLightButtonPref;
++    private EditTextPreference mLightKeyboardPref;
      private CheckBoxPreference mElectronBeamAnimationOn;
      private CheckBoxPreference mElectronBeamAnimationOff;
      private PreferenceScreen mNotificationPulse;
-@@ -201,6 +216,20 @@ public class DisplaySettings extends SettingsPreferenceFragment implements
+@@ -201,6 +219,26 @@ public class DisplaySettings extends SettingsPreferenceFragment implements
              }
          }
  
@@ -406,10 +417,16 @@ index 8d7ab38..b6f8d1b 100644
 +            mLightButtonPref.setText(temp);
 +        }
 +        mLightButtonPref.setOnPreferenceChangeListener(this);
++
++        mLightKeyboardPref = (EditTextPreference) findPreference(KEY_LIGHT_KEYBOARD);
++        if (Utils.fileExists(LIGHT_KEYBOARD_FILE) && (temp = Utils.fileReadOneLine(LIGHT_KEYBOARD_FILE)) != null) {
++            mLightKeyboardPref.setText(temp);
++        }
++        mLightKeyboardPref.setOnPreferenceChangeListener(this);
      }
  
      private void updateDisplayRotationPreferenceDescription() {
-@@ -429,6 +458,14 @@ public class DisplaySettings extends SettingsPreferenceFragment implements
+@@ -429,6 +467,18 @@ public class DisplaySettings extends SettingsPreferenceFragment implements
              writeFontSizePreference(objValue);
          }
  
@@ -419,6 +436,10 @@ index 8d7ab38..b6f8d1b 100644
 +
 +        if (KEY_LIGHT_BUTTON.equals(key)) {
 +            Utils.fileWriteOneLine(LIGHT_BUTTON_FILE, (String) objValue);
++        }
++
++        if (KEY_LIGHT_KEYBOARD.equals(key)) {
++            Utils.fileWriteOneLine(LIGHT_KEYBOARD_FILE, (String) objValue);
 +        }
 +
          return true;
@@ -495,7 +516,7 @@ index 47cbfe0..6df1237 100644
          return true;
      }
 diff --git a/src/com/android/settings/cyanogenmod/BootReceiver.java b/src/com/android/settings/cyanogenmod/BootReceiver.java
-index 0704a66..19f73a5 100644
+index 0704a66..8dc13db 100644
 --- a/src/com/android/settings/cyanogenmod/BootReceiver.java
 +++ b/src/com/android/settings/cyanogenmod/BootReceiver.java
 @@ -17,17 +17,27 @@
@@ -534,7 +555,7 @@ index 0704a66..19f73a5 100644
  
      @Override
      public void onReceive(Context ctx, Intent intent) {
-@@ -64,45 +75,179 @@ public class BootReceiver extends BroadcastReceiver {
+@@ -64,45 +75,198 @@ public class BootReceiver extends BroadcastReceiver {
                  SystemProperties.set(KSM_SETTINGS_PROP, "false");
              }
          }
@@ -550,35 +571,54 @@ index 0704a66..19f73a5 100644
 +        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
 +
 +        // Restore pin code
-+        String pincode = prefs.getString(SecuritySettings.KEY_BOOT_PINCODE, null);
-+        if (pincode != null && pincode.length() == 4)
-+            Utils.fileWriteOneLine(SecuritySettings.BOOT_PINCODE_FILE, pincode);
-+        else {
-+            File pfile = new File(SecuritySettings.BOOT_PINCODE_FILE);
-+            pfile.delete();
++        try {
++            String pincode = prefs.getString(SecuritySettings.KEY_BOOT_PINCODE, null);
++            if (pincode != null && pincode.length() == 4)
++                Utils.fileWriteOneLine(SecuritySettings.BOOT_PINCODE_FILE, pincode);
++            else {
++                File pfile = new File(SecuritySettings.BOOT_PINCODE_FILE);
++                pfile.delete();
++            }
++        }
++        catch (Exception e) {
++            e.printStackTrace();
 +        }
 +
 +        // Copy owner info
-+        final ContentResolver res = ctx.getContentResolver();
-+        final boolean ownerInfoEnabled = Settings.Secure.getInt(res,
-+                Settings.Secure.LOCK_SCREEN_OWNER_INFO_ENABLED, 1) != 0;
-+        String owner = ownerInfoEnabled ?
-+                Settings.Secure.getString(res, Settings.Secure.LOCK_SCREEN_OWNER_INFO) : null;
-+        if (owner == null) {
-+            File pfile = new File("/cache/pin/owner");
-+            pfile.delete();
++        try {
++            final ContentResolver res = ctx.getContentResolver();
++            final boolean ownerInfoEnabled = Settings.Secure.getInt(res,
++                    Settings.Secure.LOCK_SCREEN_OWNER_INFO_ENABLED, 1) != 0;
++            String owner = ownerInfoEnabled ?
++                    Settings.Secure.getString(res, Settings.Secure.LOCK_SCREEN_OWNER_INFO) : null;
++            if (owner == null) {
++                File pfile = new File("/cache/pin/owner");
++                pfile.delete();
++            }
++            else
++                Utils.fileWriteOneLine("/cache/pin/owner", owner.replace("\n", " ").replace("\r", " "));
 +        }
-+        else
-+            Utils.fileWriteOneLine("/cache/pin/owner", owner.replace("\n", " ").replace("\r", " "));
++        catch (Exception e) {
++            e.printStackTrace();
++        }
 +
-+        // Light settings
-+        String light_lcd = prefs.getString(DisplaySettings.KEY_LIGHT_LCD, null);
-+        if (light_lcd != null && light_lcd.length() > 0) {
-+            Utils.fileWriteOneLine(DisplaySettings.LIGHT_LCD_FILE, light_lcd);
++        // Restore light settings
++        try {
++            String lcd_light = prefs.getString(DisplaySettings.KEY_LIGHT_LCD, null);
++            if (lcd_light != null && lcd_light.length() > 0) {
++                Utils.fileWriteOneLine(DisplaySettings.LIGHT_LCD_FILE, lcd_light);
++            }
++            String button_light = prefs.getString(DisplaySettings.KEY_LIGHT_BUTTON, null);
++            if (button_light != null && button_light.length() > 0) {
++                Utils.fileWriteOneLine(DisplaySettings.LIGHT_BUTTON_FILE, button_light);
++            }
++            String keyboard_light = prefs.getString(DisplaySettings.KEY_LIGHT_KEYBOARD, null);
++            if (keyboard_light != null && keyboard_light.length() > 0) {
++                Utils.fileWriteOneLine(DisplaySettings.LIGHT_KEYBOARD_FILE, keyboard_light);
++            }
 +        }
-+        String button_lcd = prefs.getString(DisplaySettings.KEY_LIGHT_BUTTON, null);
-+        if (button_lcd != null && button_lcd.length() > 0) {
-+            Utils.fileWriteOneLine(DisplaySettings.LIGHT_BUTTON_FILE, button_lcd);
++        catch (Exception e) {
++            e.printStackTrace();
 +        }
      }
  
@@ -741,7 +781,7 @@ index 0704a66..19f73a5 100644
          }
      }
  
-@@ -114,21 +259,40 @@ public class BootReceiver extends BroadcastReceiver {
+@@ -114,21 +278,40 @@ public class BootReceiver extends BroadcastReceiver {
              return;
          }
  
@@ -794,7 +834,7 @@ index 0704a66..19f73a5 100644
          }
      }
  
-@@ -140,4 +304,51 @@ public class BootReceiver extends BroadcastReceiver {
+@@ -140,4 +323,51 @@ public class BootReceiver extends BroadcastReceiver {
          Utils.fileWriteOneLine(MemoryManagement.KSM_RUN_FILE, ksm ? "1" : "0");
          Log.d(TAG, "KSM settings restored.");
      }

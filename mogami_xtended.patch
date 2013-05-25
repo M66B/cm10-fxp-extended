@@ -2,7 +2,7 @@ diff --git a/prebuilt/init.semc.rc b/prebuilt/init.semc.rc
 index 96f1d45..8f87acd 100644
 --- a/prebuilt/init.semc.rc
 +++ b/prebuilt/init.semc.rc
-@@ -115,6 +116,26 @@ on boot
+@@ -115,6 +116,28 @@ on boot
      write /sys/devices/system/cpu/cpufreq/ondemand/sampling_down_factor 4
      write /sys/devices/system/cpu/cpufreq/ondemand/down_differential 10
  
@@ -23,8 +23,10 @@ index 96f1d45..8f87acd 100644
 +
 +    chown root system /sys/devices/i2c-0/0-0040/leds/lcd-backlight/max_current
 +    chown root system /sys/devices/i2c-0/0-0040/leds/button-backlight/max_current
++    chown root system /sys/devices/i2c-0/0-0040/leds/keyboard-backlight/max_current
 +    chmod 664 /sys/devices/i2c-0/0-0040/leds/lcd-backlight/max_current
 +    chmod 664 /sys/devices/i2c-0/0-0040/leds/button-backlight/max_current
++    chmod 664 /sys/devices/i2c-0/0-0040/leds/keyboard-backlight/max_current
 +
      mount debugfs /sys/kernel/debug /sys/kernel/debug
  
