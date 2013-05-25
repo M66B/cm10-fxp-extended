@@ -99,6 +99,40 @@ index 5931dae..12b194b 100644
  
      <!-- Performance Settings : Dithering -->
      <string name="pref_use_dithering_title">Surface improvement</string>
+@@ -4874,6 +4936,12 @@
+     <string name="pref_volume_wake_title">Volume rocker wake</string>
+     <string name="pref_volume_wake_summary">Pressing the volume rocker up/down will wake the device</string>
+ 
++    <!-- Light options -->
++    <string name="pref_light_lcd_title">LCD backlight</string>
++    <string name="pref_light_lcd_summary">LCD backlight current in uA</string>
++    <string name="pref_light_button_title">Button backlight</string>
++    <string name="pref_light_button_summary">Button backlight current in uA</string>
++
+     <string name="ok">OK</string>
+ 
+     <!-- Development settings: title for the field that shows the "App ID" development identifier
+diff --git a/res/xml/display_settings.xml b/res/xml/display_settings.xml
+index cd119fa..e8cf87d 100644
+--- a/res/xml/display_settings.xml
++++ b/res/xml/display_settings.xml
+@@ -86,4 +86,16 @@
+             android:summary="@string/pref_volume_wake_summary"
+             android:defaultValue="false" />
+ 
++        <EditTextPreference
++            android:key="pref_light_lcd"
++            android:dialogTitle="@string/pref_light_lcd_title"
++            android:title="@string/pref_light_lcd_title"
++            android:summary="@string/pref_light_lcd_summary" />
++
++        <EditTextPreference
++            android:key="pref_light_button"
++            android:dialogTitle="@string/pref_light_button_title"
++            android:title="@string/pref_light_button_title"
++            android:summary="@string/pref_light_button_summary" />
++
+ </PreferenceScreen>
 diff --git a/res/xml/ioscheduler_settings.xml b/res/xml/ioscheduler_settings.xml
 index e8eb267..b9e4dd3 100644
 --- a/res/xml/ioscheduler_settings.xml
@@ -312,6 +346,84 @@ index 9f78820..2df0a7e 100644
      </PreferenceCategory>
  
      <PreferenceCategory android:title="@string/credentials_title"
+diff --git a/src/com/android/settings/DisplaySettings.java b/src/com/android/settings/DisplaySettings.java
+index 8d7ab38..b6f8d1b 100644
+--- a/src/com/android/settings/DisplaySettings.java
++++ b/src/com/android/settings/DisplaySettings.java
+@@ -33,6 +33,7 @@ import android.preference.ListPreference;
+ import android.preference.Preference;
+ import android.preference.PreferenceCategory;
+ import android.preference.PreferenceScreen;
++import android.preference.EditTextPreference;
+ import android.provider.Settings;
+ import android.provider.Settings.SettingNotFoundException;
+ import android.util.Log;
+@@ -42,6 +43,8 @@ import com.android.settings.DreamSettings;
+ import com.android.settings.cyanogenmod.DisplayRotation;
+ import java.util.ArrayList;
+ 
++import com.android.settings.Utils;
++
+ public class DisplaySettings extends SettingsPreferenceFragment implements
+         Preference.OnPreferenceChangeListener {
+     private static final String TAG = "DisplaySettings";
+@@ -63,6 +66,11 @@ public class DisplaySettings extends SettingsPreferenceFragment implements
+     private static final String KEY_ELECTRON_BEAM_CATEGORY_ANIMATION = "category_animation_options";
+     private static final String KEY_WAKEUP_CATEGORY = "category_wakeup_options";
+     private static final String KEY_VOLUME_WAKE = "pref_volume_wake";
++    public static final String KEY_LIGHT_LCD = "pref_light_lcd";
++    public static final String KEY_LIGHT_BUTTON = "pref_light_button";
++
++    public static final String LIGHT_LCD_FILE = "/sys/devices/i2c-0/0-0040/leds/lcd-backlight/max_current";
++    public static final String LIGHT_BUTTON_FILE = "/sys/devices/i2c-0/0-0040/leds/button-backlight/max_current";
+ 
+     private static final String ROTATION_ANGLE_0 = "0";
+     private static final String ROTATION_ANGLE_90 = "90";
+@@ -73,6 +81,8 @@ public class DisplaySettings extends SettingsPreferenceFragment implements
+ 
+     private CheckBoxPreference mLockScreenRotation;
+     private CheckBoxPreference mVolumeWake;
++    private EditTextPreference mLightLCDPref;
++    private EditTextPreference mLightButtonPref;
+     private CheckBoxPreference mElectronBeamAnimationOn;
+     private CheckBoxPreference mElectronBeamAnimationOff;
+     private PreferenceScreen mNotificationPulse;
+@@ -201,6 +216,20 @@ public class DisplaySettings extends SettingsPreferenceFragment implements
+             }
+         }
+ 
++        // Lights
++        String temp;
++
++        mLightLCDPref = (EditTextPreference) findPreference(KEY_LIGHT_LCD);
++        if (Utils.fileExists(LIGHT_LCD_FILE) && (temp = Utils.fileReadOneLine(LIGHT_LCD_FILE)) != null) {
++            mLightLCDPref.setText(temp);
++        }
++        mLightLCDPref.setOnPreferenceChangeListener(this);
++
++        mLightButtonPref = (EditTextPreference) findPreference(KEY_LIGHT_BUTTON);
++        if (Utils.fileExists(LIGHT_BUTTON_FILE) && (temp = Utils.fileReadOneLine(LIGHT_BUTTON_FILE)) != null) {
++            mLightButtonPref.setText(temp);
++        }
++        mLightButtonPref.setOnPreferenceChangeListener(this);
+     }
+ 
+     private void updateDisplayRotationPreferenceDescription() {
+@@ -429,6 +458,14 @@ public class DisplaySettings extends SettingsPreferenceFragment implements
+             writeFontSizePreference(objValue);
+         }
+ 
++        if (KEY_LIGHT_LCD.equals(key)) {
++            Utils.fileWriteOneLine(LIGHT_LCD_FILE, (String) objValue);
++        }
++
++        if (KEY_LIGHT_BUTTON.equals(key)) {
++            Utils.fileWriteOneLine(LIGHT_BUTTON_FILE, (String) objValue);
++        }
++
+         return true;
+     }
+ }
 diff --git a/src/com/android/settings/SecuritySettings.java b/src/com/android/settings/SecuritySettings.java
 index 47cbfe0..6df1237 100644
 --- a/src/com/android/settings/SecuritySettings.java
@@ -383,10 +495,10 @@ index 47cbfe0..6df1237 100644
          return true;
      }
 diff --git a/src/com/android/settings/cyanogenmod/BootReceiver.java b/src/com/android/settings/cyanogenmod/BootReceiver.java
-index 0704a66..c8c9446 100644
+index 0704a66..19f73a5 100644
 --- a/src/com/android/settings/cyanogenmod/BootReceiver.java
 +++ b/src/com/android/settings/cyanogenmod/BootReceiver.java
-@@ -17,17 +17,26 @@
+@@ -17,17 +17,27 @@
  package com.android.settings.cyanogenmod;
  
  import android.content.BroadcastReceiver;
@@ -402,6 +514,7 @@ index 0704a66..c8c9446 100644
  
  import com.android.settings.Utils;
 +import com.android.settings.SecuritySettings;
++import com.android.settings.DisplaySettings;
 +
 +import com.google.common.base.Joiner;
  
@@ -413,7 +526,7 @@ index 0704a66..c8c9446 100644
  
  public class BootReceiver extends BroadcastReceiver {
  
-@@ -36,6 +45,7 @@ public class BootReceiver extends BroadcastReceiver {
+@@ -36,6 +46,7 @@ public class BootReceiver extends BroadcastReceiver {
      private static final String CPU_SETTINGS_PROP = "sys.cpufreq.restored";
      private static final String IOSCHED_SETTINGS_PROP = "sys.iosched.restored";
      private static final String KSM_SETTINGS_PROP = "sys.ksm.restored";
@@ -421,7 +534,7 @@ index 0704a66..c8c9446 100644
  
      @Override
      public void onReceive(Context ctx, Intent intent) {
-@@ -64,45 +74,168 @@ public class BootReceiver extends BroadcastReceiver {
+@@ -64,45 +75,179 @@ public class BootReceiver extends BroadcastReceiver {
                  SystemProperties.set(KSM_SETTINGS_PROP, "false");
              }
          }
@@ -434,8 +547,9 @@ index 0704a66..c8c9446 100644
 +            SystemProperties.set(MEMORY_SETTINGS_PROP, "false");
 +        }
 +
-+        // Restore pin code
 +        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
++
++        // Restore pin code
 +        String pincode = prefs.getString(SecuritySettings.KEY_BOOT_PINCODE, null);
 +        if (pincode != null && pincode.length() == 4)
 +            Utils.fileWriteOneLine(SecuritySettings.BOOT_PINCODE_FILE, pincode);
@@ -456,6 +570,16 @@ index 0704a66..c8c9446 100644
 +        }
 +        else
 +            Utils.fileWriteOneLine("/cache/pin/owner", owner.replace("\n", " ").replace("\r", " "));
++
++        // Light settings
++        String light_lcd = prefs.getString(DisplaySettings.KEY_LIGHT_LCD, null);
++        if (light_lcd != null && light_lcd.length() > 0) {
++            Utils.fileWriteOneLine(DisplaySettings.LIGHT_LCD_FILE, light_lcd);
++        }
++        String button_lcd = prefs.getString(DisplaySettings.KEY_LIGHT_BUTTON, null);
++        if (button_lcd != null && button_lcd.length() > 0) {
++            Utils.fileWriteOneLine(DisplaySettings.LIGHT_BUTTON_FILE, button_lcd);
++        }
      }
  
      private void configureCPU(Context ctx) {
@@ -617,7 +741,7 @@ index 0704a66..c8c9446 100644
          }
      }
  
-@@ -114,21 +247,40 @@ public class BootReceiver extends BroadcastReceiver {
+@@ -114,21 +259,40 @@ public class BootReceiver extends BroadcastReceiver {
              return;
          }
  
@@ -670,7 +794,7 @@ index 0704a66..c8c9446 100644
          }
      }
  
-@@ -140,4 +292,51 @@ public class BootReceiver extends BroadcastReceiver {
+@@ -140,4 +304,51 @@ public class BootReceiver extends BroadcastReceiver {
          Utils.fileWriteOneLine(MemoryManagement.KSM_RUN_FILE, ksm ? "1" : "0");
          Log.d(TAG, "KSM settings restored.");
      }
