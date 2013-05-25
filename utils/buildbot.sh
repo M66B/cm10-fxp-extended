@@ -1,14 +1,15 @@
 #!/bin/bash
 {
+	export TMPDIR=~/tmp
+
 	goofull=N
 	goodevices="iyokan mango coconut smultron"
 	gootarget=/home/M66B/public_html/test
 
-	echo "Cleanup"
-	cd ~/android/system
 	if [ "${goofull}" = "Y" ]; then
-		for goodevice in ${goodevices}
-		do
+		echo "Full"
+		cd ~/android/system
+		for goodevice in ${goodevices}; do
 			echo "-- ${goodevice}"
 			rm -R out/target/product/${goodevice}
 		done
@@ -24,13 +25,10 @@
 	. build/envsetup.sh
 
 	echo "Build"
-	for goodevice in ${goodevices}
-	do
+	for goodevice in ${goodevices}; do
 		echo "-- ${goodevice}"
-		if [ "${full}" = "Y" ]; then
-			brunch cm_${goodevice}-userdebug
-			mmm external/openssh
-		fi
+		brunch cm_${goodevice}-userdebug
+		mmm external/openssh
 		brunch cm_${goodevice}-userdebug
 		rom="$(ls -t1 out/target/product/${goodevice}/cm-10-*-UNOFFICIAL-${goodevice}.zip | head -n1)"
 		echo "-- ${rom} --> ${gootarget}/${goodevice}"
@@ -38,4 +36,4 @@
 	done
 
 	echo "Done"
-} >~/xtended.log 2>&1
+} >~/x10.log 2>&1
