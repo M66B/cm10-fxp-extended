@@ -527,7 +527,7 @@ fi
 if [ "${wifi_adhoc}" = "Y" ];then
 	echo "*** Wi-Fi ad-hoc ***"
 	for device in ${devices}; do
-		sed -i '6 i WifiAdhoc = 1' ${android}device/semc/${device}/config/tiwlan.ini
+		sed -i '6 i WifiAdhoc = 1' ${android}/device/semc/${device}/config/tiwlan.ini
 	done
 fi
 
