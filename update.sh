@@ -520,7 +520,7 @@ fi
 if [ "${serialno_fix}" = "Y" ]; then
 	echo "*** Serial# fix ***"
 	cd ${android}/system/core
-	do_patch serial.patch
+	do_patch serialno.patch
 fi
 
 #Wi-Fi ad-hoc
