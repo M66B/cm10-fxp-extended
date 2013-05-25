@@ -1,79 +1,66 @@
-diff --git a/arch/arm/mach-msm/qdsp5v2/snddev_data_timpani.c b/arch/arm/mach-msm/qdsp5v2/snddev_data_timpani.c
-index 68666b7..8ec84e9 100644
---- a/arch/arm/mach-msm/qdsp5v2/snddev_data_timpani.c
-+++ b/arch/arm/mach-msm/qdsp5v2/snddev_data_timpani.c
-@@ -74,10 +74,10 @@ static struct snddev_icodec_data snddev_iearpiece_ffa_data = {
- 	.default_sample_rate = 48000,
- 	.pamp_on = NULL,
- 	.pamp_off = NULL,
--	.max_voice_rx_vol[VOC_NB_INDEX] = -700,
--	.min_voice_rx_vol[VOC_NB_INDEX] = -2200,
--	.max_voice_rx_vol[VOC_WB_INDEX] = -1400,
--	.min_voice_rx_vol[VOC_WB_INDEX] = -2900,
-+	.max_voice_rx_vol[VOC_NB_INDEX] = 1000, //700,
-+	.min_voice_rx_vol[VOC_NB_INDEX] = -1900, //-2200,
-+	.max_voice_rx_vol[VOC_WB_INDEX] = -1100, //-1400,
-+	.min_voice_rx_vol[VOC_WB_INDEX] = -2600, //-2900,
- };
+diff --git a/arch/arm/mach-msm/qdsp5v2/snddev_ecodec.c b/arch/arm/mach-msm/qdsp5v2/snddev_ecodec.c
+index 1bab06c..c122702 100644
+--- a/arch/arm/mach-msm/qdsp5v2/snddev_ecodec.c
++++ b/arch/arm/mach-msm/qdsp5v2/snddev_ecodec.c
+@@ -27,6 +27,8 @@
+ #include <mach/qdsp5v2/afe.h>
+ #include <mach/debug_mm.h>
  
- static struct platform_device msm_iearpiece_ffa_device = {
-@@ -233,10 +233,10 @@ static struct snddev_ecodec_data snddev_bt_sco_earpiece_data = {
- 	.conf_pcm_ctl_val = BT_SCO_PCM_CTL_VAL,
- 	.conf_aux_codec_intf = BT_SCO_AUX_CODEC_INTF,
- 	.conf_data_format_padding_val = BT_SCO_DATA_FORMAT_PADDING,
--	.max_voice_rx_vol[VOC_NB_INDEX] = 400,
--	.min_voice_rx_vol[VOC_NB_INDEX] = -1100,
--	.max_voice_rx_vol[VOC_WB_INDEX] = 400,
--	.min_voice_rx_vol[VOC_WB_INDEX] = -1100,
-+	.max_voice_rx_vol[VOC_NB_INDEX] = 1000, //400,
-+	.min_voice_rx_vol[VOC_NB_INDEX] = -500, //-1100,
-+	.max_voice_rx_vol[VOC_WB_INDEX] = 1000, //400,
-+	.min_voice_rx_vol[VOC_WB_INDEX] = -500, //-1100,
- };
++static int marimba_eoff = 750;
++
+ /* Context for each external codec device */
+ struct snddev_ecodec_state {
+ 	struct snddev_ecodec_data *data;
+@@ -349,10 +351,19 @@ static int snddev_ecodec_probe(struct platform_device *pdev)
+ 	ecodec->sample_rate = 8000; /* Default to 8KHz */
+ 	 if (pdata->capability & SNDDEV_CAP_RX) {
+ 		for (i = 0; i < VOC_RX_VOL_ARRAY_NUM; i++) {
++			printk(KERN_WARNING "Marimba vol %s/%d %d..%d %d\n",
++				pdata->name, i,
++				pdata->min_voice_rx_vol[i],
++				pdata->max_voice_rx_vol[i],
++				marimba_eoff);
+ 			dev_info->max_voc_rx_vol[i] =
+ 				pdata->max_voice_rx_vol[i];
+ 			dev_info->min_voc_rx_vol[i] =
+ 				pdata->min_voice_rx_vol[i];
++			if (dev_info->max_voc_rx_vol[i] != dev_info->min_voc_rx_vol[i]) {
++				dev_info->max_voc_rx_vol[i] += marimba_eoff;
++				dev_info->min_voc_rx_vol[i] += marimba_eoff;
++			}
+ 		}
+ 	}
+ error:
+diff --git a/arch/arm/mach-msm/qdsp5v2/snddev_icodec.c b/arch/arm/mach-msm/qdsp5v2/snddev_icodec.c
+index 5c23504..ed25fcb 100644
+--- a/arch/arm/mach-msm/qdsp5v2/snddev_icodec.c
++++ b/arch/arm/mach-msm/qdsp5v2/snddev_icodec.c
+@@ -36,6 +36,8 @@
+ #include <mach/rpc_pmapp.h>
+ #include <mach/qdsp5v2/audio_acdb_def.h>
  
- static struct snddev_ecodec_data snddev_bt_sco_mic_data = {
-@@ -294,10 +294,10 @@ static struct snddev_icodec_data snddev_ihs_stereo_rx_data = {
- 	.pamp_off = NULL,
- 	.voltage_on = msm_snddev_hsed_voltage_on,
- 	.voltage_off = msm_snddev_hsed_voltage_off,
--	.max_voice_rx_vol[VOC_NB_INDEX] = -700,
--	.min_voice_rx_vol[VOC_NB_INDEX] = -2200,
--	.max_voice_rx_vol[VOC_WB_INDEX] = -300,
--	.min_voice_rx_vol[VOC_WB_INDEX] = -1800,
-+	.max_voice_rx_vol[VOC_NB_INDEX] = 600, //-700,
-+	.min_voice_rx_vol[VOC_NB_INDEX] = -900, //-2200,
-+	.max_voice_rx_vol[VOC_WB_INDEX] = 1000, //-300,
-+	.min_voice_rx_vol[VOC_WB_INDEX] = -500, //-1800,
- };
++static int marimba_ioff = 750;
++
+ #define SMPS_AUDIO_PLAYBACK_ID	"AUPB"
+ #define SMPS_AUDIO_RECORD_ID	"AURC"
  
- static struct platform_device msm_headset_stereo_device = {
-@@ -694,10 +694,10 @@ static struct snddev_icodec_data snddev_ihs_ffa_mono_rx_data = {
- 	.default_sample_rate = 48000,
- 	.pamp_on = msm_snddev_hsed_voltage_on,
- 	.pamp_off = msm_snddev_hsed_voltage_off,
--	.max_voice_rx_vol[VOC_NB_INDEX] = -700,
--	.min_voice_rx_vol[VOC_NB_INDEX] = -2200,
--	.max_voice_rx_vol[VOC_WB_INDEX] = -300,
--	.min_voice_rx_vol[VOC_WB_INDEX] = -1800,
-+	.max_voice_rx_vol[VOC_NB_INDEX] = 600, //-700,
-+	.min_voice_rx_vol[VOC_NB_INDEX] = -900, //-2200,
-+	.max_voice_rx_vol[VOC_WB_INDEX] = 1000, //-300,
-+	.min_voice_rx_vol[VOC_WB_INDEX] = -500, //-1800,
- };
- 
- static struct platform_device msm_ihs_ffa_mono_rx_device = {
-@@ -740,10 +740,10 @@ static struct snddev_icodec_data snddev_ihs_stereo_speaker_stereo_rx_data = {
- 	.pamp_off = msm_snddev_poweramp_off,
- 	.voltage_on = msm_snddev_hsed_voltage_on,
- 	.voltage_off = msm_snddev_hsed_voltage_off,
--	.max_voice_rx_vol[VOC_NB_INDEX] = -500,
--	.min_voice_rx_vol[VOC_NB_INDEX] = -2000,
--	.max_voice_rx_vol[VOC_WB_INDEX] = -300,
--	.min_voice_rx_vol[VOC_WB_INDEX] = -1800,
-+	.max_voice_rx_vol[VOC_NB_INDEX] = 800, //-500,
-+	.min_voice_rx_vol[VOC_NB_INDEX] = -700, //-2000,
-+	.max_voice_rx_vol[VOC_WB_INDEX] = 1000, //-300,
-+	.min_voice_rx_vol[VOC_WB_INDEX] = -500, //-1800,
- };
- 
- static struct platform_device msm_ihs_stereo_speaker_stereo_rx_device = {
+@@ -772,10 +774,19 @@ static int snddev_icodec_probe(struct platform_device *pdev)
+ 	dev_info->sample_rate = pdata->default_sample_rate;
+ 	if (pdata->capability & SNDDEV_CAP_RX) {
+ 		for (i = 0; i < VOC_RX_VOL_ARRAY_NUM; i++) {
++			printk(KERN_WARNING "Marimba vol %s/%d %d..%d %d\n",
++				pdata->name, i,
++				pdata->min_voice_rx_vol[i],
++				pdata->max_voice_rx_vol[i],
++				marimba_ioff);
+ 			dev_info->max_voc_rx_vol[i] =
+ 				pdata->max_voice_rx_vol[i];
+ 			dev_info->min_voc_rx_vol[i] =
+ 				pdata->min_voice_rx_vol[i];
++			if (dev_info->max_voc_rx_vol[i] != dev_info->min_voc_rx_vol[i]) {
++				dev_info->max_voc_rx_vol[i] += marimba_ioff;
++				dev_info->min_voc_rx_vol[i] += marimba_ioff;
++			}
+ 		}
+ 		dev_info->dev_ops.enable_sidetone =
+ 		snddev_icodec_enable_sidetone;

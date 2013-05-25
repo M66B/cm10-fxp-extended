@@ -57,6 +57,7 @@ kernel_xtended_perm=Y
 kernel_wifi_range=Y
 kernel_displaylink=Y
 kernel_volumes=Y
+kernel_backlight=Y
 
 bootlogo=Y
 bootlogoh=logo_H_extended.png
@@ -454,6 +455,11 @@ if [ "${kernel_mods}" = "Y" ]; then
 		if [ "${kernel_volumes}" = "Y" ]; then
 			echo "--- Volumes"
 			do_patch kernel_volumes.patch
+		fi
+
+		if [ "${kernel_backlight}" = "Y" ]; then
+			echo "--- Backlight"
+			do_patch kernel_backlight.patch
 		fi
 	fi
 
