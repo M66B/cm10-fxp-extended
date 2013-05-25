@@ -105,9 +105,9 @@ index 5931dae..12b194b 100644
  
 +    <!-- Light options -->
 +    <string name="pref_light_lcd_title">LCD backlight</string>
-+    <string name="pref_light_lcd_summary">LCD backlight current in uA</string>
++    <string name="pref_light_lcd_summary">LCD backlight current in µA</string>
 +    <string name="pref_light_button_title">Button backlight</string>
-+    <string name="pref_light_button_summary">Button backlight current in uA</string>
++    <string name="pref_light_button_summary">Button backlight current in µA</string>
 +
      <string name="ok">OK</string>
  
