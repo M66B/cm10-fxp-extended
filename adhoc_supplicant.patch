@@ -1,0 +1,13 @@
+diff --git a/wpa_supplicant/events.c b/wpa_supplicant/events.c
+index c886037..2e9e86f 100644
+--- a/wpa_supplicant/events.c
++++ b/wpa_supplicant/events.c
+@@ -705,7 +705,7 @@ static struct wpa_ssid * wpa_scan_res_match(struct wpa_supplicant *wpa_s,
+ 		if (bss->caps & IEEE80211_CAP_IBSS) {
+ 			wpa_dbg(wpa_s, MSG_DEBUG, "   skip - IBSS (adhoc) "
+ 				"network");
+-			continue;
++			// allow IBSS
+ 		}
+ 
+ 		if (!freq_allowed(ssid->freq_list, bss->freq)) {

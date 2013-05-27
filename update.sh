@@ -529,6 +529,11 @@ if [ "${wifi_adhoc}" = "Y" ];then
 	for device in ${devices}; do
 		sed -i '6 i WifiAdhoc = 1' ${android}/device/semc/${device}/config/tiwlan.ini
 	done
+	cd ${android}/external/wpa_supplicant_8
+	do_patch adhoc_supplicant.patch
+	cd ${android}/packages/apps/Settings
+	do_patch adhoc_settings.patch
+	#https://mitulmodi.wordpress.com/2012/03/20/test1/
 fi
 
 #Cell broadcast
