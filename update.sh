@@ -92,6 +92,7 @@ superuser_embed=Y
 busybox_cm10_1=Y
 cmfilemanager_cm10_1=Y
 apollo_cm10_1=Y
+calculator_cm10_1=Y
 cwm_cm10_1=Y
 
 #Local configuration
@@ -238,6 +239,7 @@ if [ "${init}" = "Y" ]; then
 	do_deldir ${android}/packages/apps/CMUpdater
 	do_deldir ${android}/packages/apps/CMFileManager
 	do_deldir ${android}/packages/apps/Apollo
+	do_deldir ${android}/packages/apps/Calculator
 	do_deldir ${android}/bootable/recovery
 	do_deldir ${android}/external/busybox
 	do_deldir ${android}/kernel/semc/msm7x30
@@ -249,6 +251,7 @@ if [ "${init}" = "Y" ]; then
 	do_deldir ${android}/.repo/projects/packages/apps/CMUpdater.git
 	do_deldir ${android}/.repo/projects/packages/apps/CMFileManager.git
 	do_deldir ${android}/.repo/projects/packages/apps/Apollo.git
+	do_deldir ${android}/.repo/projects/packages/apps/Calculator.git
 	do_deldir ${android}/.repo/projects/bootable/recovery.git
 	do_deldir ${android}/.repo/projects/external/busybox.git
 	do_deldir ${android}/.repo/projects/kernel/semc/msm7x30.git
@@ -310,6 +313,13 @@ if [ "${apollo_cm10_1}" = "Y" ]; then
 	echo "--- Apollo CM10.1"
 else
 	sed -i "/android_packages_apps_Apollo/d" ${android}/.repo/local_manifests/cmxtended.xml
+fi
+
+#Calculator CM10.1
+if [ "${calculator_cm10_1}" = "Y" ]; then
+	echo "--- Calculator CM10.1"
+else
+	sed -i "/android_packages_apps_Calculator/d" ${android}/.repo/local_manifests/cmxtended.xml
 fi
 
 #CWM CM10.1
@@ -737,6 +747,13 @@ if [ "${apollo_cm10_1}" = "Y" ]; then
 	echo "*** Apollo CM10.1 ***"
 	cd ${android}/packages/apps/Apollo
 	do_patch apollo_cm_10_1.patch
+fi
+
+#Calculator CM10.1
+if [ "${calculator_cm10_1}" = "Y" ]; then
+	echo "*** Calculator CM10.1 ***"
+	cd ${android}/packages/apps/Calculator
+	do_patch calculator_cm_10_1.patch
 fi
 
 #CWM CM10.1
