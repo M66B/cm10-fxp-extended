@@ -45,6 +45,11 @@
 	<remove-project name="CyanogenMod/android_packages_apps_Apollo" />
 	<project name="CyanogenMod/android_packages_apps_Apollo" path="packages/apps/Apollo" remote="github" revision="cm-10.1" />
 
+	<!-- CM10.1 Calculator -->
+	<remove-project name="CyanogenMod/android_packages_apps_Calculator" />
+	<project name="CyanogenMod/android_packages_apps_Calculator" path="packages/apps/Calculator" remote="github" revision="cm-10.1" />
+
+
 	<!-- CM10.1 CWM -->
 	<remove-project name="CyanogenMod/android_bootable_recovery" />
 	<project name="CyanogenMod/android_bootable_recovery" path="bootable/recovery" remote="github" revision="cm-10.1" />
