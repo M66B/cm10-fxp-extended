@@ -1,0 +1,14 @@
+diff --git a/res/xml/calculator_widget_info.xml b/res/xml/calculator_widget_info.xml
+index d7c8698..45c5cd0 100644
+--- a/res/xml/calculator_widget_info.xml
++++ b/res/xml/calculator_widget_info.xml
+@@ -2,7 +2,5 @@
+     android:minWidth="250dp"
+     android:minHeight="250dp"
+     android:initialLayout="@layout/widget"
+-    android:initialKeyguardLayout="@layout/widget"
+     android:updatePeriodMillis="0"
+-    android:widgetCategory="home_screen|keyguard"
+-    android:resizeMode="vertical" />
+\ No newline at end of file
++    android:resizeMode="vertical" />
