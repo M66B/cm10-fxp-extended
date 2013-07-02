@@ -229,6 +229,7 @@ done
 
 #Replaced projects
 if [ "${init}" = "Y" ]; then
+	mkdir -p ${android}
 	cd ${android}
 	repo init -u git://github.com/CyanogenMod/android.git -b jellybean
 
