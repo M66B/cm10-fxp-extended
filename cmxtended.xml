@@ -49,10 +49,11 @@
 	<remove-project name="CyanogenMod/android_packages_apps_Calculator" />
 	<project name="CyanogenMod/android_packages_apps_Calculator" path="packages/apps/Calculator" remote="github" revision="cm-10.1" />
 
-
 	<!-- CM10.1 CWM -->
 	<remove-project name="CyanogenMod/android_bootable_recovery" />
 	<project name="CyanogenMod/android_bootable_recovery" path="bootable/recovery" remote="github" revision="cm-10.1" />
+	<remove-project name="CyanogenMod/android_external_zlib" />
+	<project name="CyanogenMod/android_external_zlib" path="external/zlib" remote="github" revision="cm-10.1" />
 
 	<!-- Build iw from source -->
 	<project name="dickychiang/iw" path="external/iw" remote="github" revision="android" />
